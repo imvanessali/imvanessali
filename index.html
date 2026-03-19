@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>imvanessali</title>
+  <style>
+    @font-face {
+      font-family: 'Luminaire Script';
+      src: url('fonts/Luminaire-Script-Regular.otf') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #000;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .name {
+      font-family: 'Luminaire Script', cursive;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .name:hover {
+      opacity: 0.4;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .overlay-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .overlay-header .back {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      font-weight: 400;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      transition: color 0.2s ease;
+    }
+
+    .overlay-header .back:hover {
+      color: #000;
+    }
+
+    .overlay-header .copy-btn {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 0;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .overlay-header .copy-btn:hover {
+      background: #16a34a;
+    }
+
+    .overlay-header .copy-btn.copied {
+      background: #000;
+      color: #fff;
+    }
+
+    .overlay-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .overlay-content pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #1a1a1a;
+    }
+
+    .overlay-content pre::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+      color: #000;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @media (max-width: 600px) {
+      .overlay-header {
+        padding: 1rem;
+      }
+      .overlay-content {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="name" id="trigger">imvanessali</div>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-header">
+      <button class="back" id="back">← Back</button>
+      <button class="copy-btn" id="copyBtn">Copy to Your Agent</button>
+    </div>
+    <div class="overlay-content">
+      <pre id="markdownContent"></pre>
+    </div>
+  </div>
+
+  <script>
+    const trigger = document.getElementById('trigger');
+    const overlay = document.getElementById('overlay');
+    const back = document.getElementById('back');
+    const copyBtn = document.getElementById('copyBtn');
+    const markdownContent = document.getElementById('markdownContent');
+
+    let mdText = '';
+
+    fetch('content.md')
+      .then(r => r.text())
+      .then(text => { mdText = text; });
+
+    trigger.addEventListener('click', () => {
+      markdownContent.textContent = mdText;
+      overlay.classList.add('open');
+    });
+
+    back.addEventListener('click', () => {
+      overlay.classList.remove('open');
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(mdText);
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy to Your Agent';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = mdText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.textContent = 'Copy to Your Agent'; }, 2000);
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') overlay.classList.remove('open');
+    });
+  </script>
+
+</body>
+</html>
