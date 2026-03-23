@@ -118,35 +118,41 @@
   <script>
     const copyBtn = document.getElementById('copyBtn');
     const markdownContent = document.getElementById('markdownContent');
+    const btnLabel = 'Let Your Agent Deep-Dive on Me';
 
     let mdText = '';
+    let promptText = '';
 
-    fetch('content.md')
-      .then(r => r.text())
-      .then(text => {
-        mdText = text;
-        markdownContent.textContent = text;
-      });
+    Promise.all([
+      fetch('content.md').then(r => r.text()),
+      fetch('prompt.md').then(r => r.text())
+    ]).then(([content, prompt]) => {
+      mdText = content;
+      promptText = prompt.replace('{{CONTEXT}}', content);
+      markdownContent.textContent = content;
+    });
 
-    copyBtn.addEventListener('click', async () => {
+    async function copyToClipboard(text) {
       try {
-        await navigator.clipboard.writeText(mdText);
-        copyBtn.textContent = 'Copied!';
-        copyBtn.classList.add('copied');
-        setTimeout(() => {
-          copyBtn.textContent = 'Let Your Agent Deep-Dive on Me';
-          copyBtn.classList.remove('copied');
-        }, 2000);
+        await navigator.clipboard.writeText(text);
       } catch {
         const ta = document.createElement('textarea');
-        ta.value = mdText;
+        ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => { copyBtn.textContent = 'Let Your Agent Deep-Dive on Me'; }, 2000);
       }
+    }
+
+    copyBtn.addEventListener('click', async () => {
+      await copyToClipboard(promptText);
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = btnLabel;
+        copyBtn.classList.remove('copied');
+      }, 2000);
     });
   </script>
 
