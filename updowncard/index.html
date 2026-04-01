@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UpDownCard | Memorize Everything by Swiping Up & Down</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: #0a0a0b;
+      overflow-x: hidden;
+    }
+    
+    .display-font {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .bg-lime-brand { background-color: #B9FF66; }
+    .text-lime-brand { color: #B9FF66; }
+    .border-lime-brand { border-color: #B9FF66; }
+    
+    .card-container { perspective: 1200px; }
+    
+    .swipe-card {
+      transform-style: preserve-3d;
+      will-change: transform, opacity;
+    }
+    
+    .card-shadow {
+      box-shadow: 
+        0 8px 0 0 rgba(185, 255, 102, 0.15),
+        0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .card-inner {
+      background: linear-gradient(145deg, #1a1a1d 0%, #111113 100%);
+      border: 1px solid rgba(185, 255, 102, 0.2);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(185, 255, 102, 0.3) transparent;
+    }
+    
+    .card-inner::-webkit-scrollbar { width: 4px; }
+    .card-inner::-webkit-scrollbar-track { background: transparent; }
+    .card-inner::-webkit-scrollbar-thumb { background: rgba(185, 255, 102, 0.3); border-radius: 2px; }
+    
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    
+    .card-content {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      letter-spacing: 0.01em;
+    }
+    
+    @media (max-width: 640px) {
+      .card-content { font-size: 1rem; line-height: 1.6; }
+    }
+    
+    .about-modal-content {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .blur-content { transition: filter 0.4s ease-out; }
+    .blur-content.blurred { filter: blur(8px); user-select: none; }
+    
+    .progress-ring { transform: rotate(-90deg); }
+    
+    .deck-card {
+      background: linear-gradient(145deg, #1a1a1d 0%, #111113 100%);
+      border: 1.5px solid rgba(185, 255, 102, 0.3);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .deck-card:hover {
+      border-color: rgba(185, 255, 102, 0.6);
+      transform: translateY(-2px);
+    }
+    
+    .add-card {
+      border: 1.5px dashed rgba(185, 255, 102, 0.3);
+      background: transparent;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .add-card:hover {
+      border-color: rgba(185, 255, 102, 0.6);
+      background: rgba(185, 255, 102, 0.03);
+    }
+
+    /* View transitions */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Study view locks scroll */
+    body.study-mode { overflow: hidden; touch-action: none; }
+  </style>
+</head>
+<body class="min-h-screen text-white antialiased selection:bg-[#B9FF66] selection:text-black">
+  <div class="grain-overlay"></div>
+
+  <!-- ==================== LIBRARY VIEW ==================== -->
+  <div id="libraryView" class="view active">
+    <header class="px-6 pt-8 pb-4">
+      <div class="max-w-2xl mx-auto flex flex-col items-center gap-2">
+        <div class="flex items-center gap-2">
+          <div class="relative w-3 h-4" style="transform: rotate(10deg);">
+            <div class="w-full h-full rounded-sm" style="background-color: #B9FF66; transform: translateY(-2px);"></div>
+          </div>
+          <span class="text-lg font-semibold tracking-tight display-font text-white">UpDownCard</span>
+        </div>
+        <button id="aboutLinkLib" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          Why I built this?
+        </button>
+      </div>
+    </header>
+
+    <main class="px-6 pb-20">
+      <div class="max-w-2xl mx-auto">
+        <div id="deckGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <!-- Decks rendered by JS -->
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b] to-transparent">
+      <div class="max-w-2xl mx-auto flex justify-center gap-6">
+        <button id="shareBtnLib" class="flex items-center gap-2 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="share" class="w-4 h-4"></i>
+          <span>Share</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== STUDY VIEW ==================== -->
+  <div id="studyView" class="view">
+    <header class="fixed top-0 left-0 right-0 z-50 px-6 py-5">
+      <div class="max-w-2xl mx-auto flex items-center justify-between">
+        <button id="backBtn" class="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>Decks</span>
+        </button>
+        <span id="deckTitle" class="text-sm text-zinc-500 display-font truncate max-w-[50%]"></span>
+        <div class="w-16"></div>
+      </div>
+    </header>
+
+    <main class="min-h-screen flex items-center justify-center px-4 pt-20 pb-16">
+      <div class="card-container w-full max-w-2xl">
+        <div id="swipeCard" class="swipe-card">
+          <div class="flex items-center justify-center gap-2 mb-2.5">
+            <svg class="progress-ring w-5 h-5" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" stroke-width="4"/>
+              <circle id="progressCircle" cx="18" cy="18" r="14" fill="none" stroke="#B9FF66" stroke-width="4" 
+                      stroke-dasharray="88" stroke-dashoffset="70.4" stroke-linecap="round"/>
+            </svg>
+            <span class="text-sm text-zinc-500 display-font whitespace-nowrap">
+              <span id="currentIndex">1</span>/<span id="totalCards">5</span>
+            </span>
+          </div>
+          <div id="cardInner" class="card-inner rounded-[32px] p-6 sm:p-8 card-shadow">
+            <div id="cardFields"></div>
+            <div id="instructionsArea" class="mt-6 pt-6 border-t border-zinc-800/50">
+              <div class="flex flex-col gap-3 text-sm text-white">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="chevron-up" class="w-4 h-4 text-lime-brand"></i>
+                  </div>
+                  <span>Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> for next card</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-lime-brand"></i>
+                  </div>
+                  <span>Swipe down or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↓</kbd> to reveal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4">
+      <div class="max-w-2xl mx-auto flex justify-center gap-6">
+        <button id="shareBtn" class="flex items-center gap-2 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="share" class="w-4 h-4"></i>
+          <span>Share</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="modalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative">
+        <button id="closeModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">Why I built this?</h2>
+          <p class="text-zinc-300 leading-relaxed">
+            All sentences are sourced from podcast transcripts generously made public by <a href="https://x.com/lennysan" target="_blank" rel="noopener noreferrer" class="text-lime-brand hover:underline">Lenny</a>.
+          </p>
+          <p class="text-zinc-300 leading-relaxed">
+            "Why not learn authentic English expressions while mastering top-tier product thinking at the same time?" That is why I built this website.
+          </p>
+          <p class="text-zinc-300 leading-relaxed">
+            Swipe up for the next card, and swipe down to reveal hidden content. It's like flashcards, but more TikTok-y.
+          </p>
+          <div class="pt-4 border-t border-zinc-800">
+            <a href="https://x.com/imvanessali" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-lime-brand hover:underline display-font">
+              Built by @imvanessali
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Format Guide Modal -->
+  <div id="formatModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="formatModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
+        <button id="closeFormatModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">JSON Format Guide</h2>
+          <div class="space-y-4">
+            <p class="text-zinc-300 leading-relaxed">Upload a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file to create your own flashcard deck. Your file should follow this structure:</p>
+            <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
+              <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">{
+  <span class="text-lime-brand">"_title"</span>: <span class="text-amber-400">"word"</span>,
+  <span class="text-lime-brand">"_blur"</span>: [<span class="text-amber-400">"meaning"</span>, <span class="text-amber-400">"sentence"</span>],
+  <span class="text-lime-brand">"cards"</span>: [
+    {
+      <span class="text-zinc-500">"word"</span>: <span class="text-amber-400">"abandon"</span>,
+      <span class="text-zinc-500">"phonetic"</span>: <span class="text-amber-400">"/əˈbændən/"</span>,
+      <span class="text-zinc-500">"meaning"</span>: <span class="text-amber-400">"放弃"</span>,
+      <span class="text-zinc-500">"sentence"</span>: <span class="text-amber-400">"Never abandon your dreams."</span>
+    }
+  ]
+}</code></pre>
+            </div>
+            <div class="space-y-3">
+              <h3 class="text-lg font-semibold display-font text-white">Three config fields</h3>
+              <div class="space-y-2">
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_title</code>
+                  <p class="text-zinc-400 text-sm">Which field to show as the card heading (always visible). Defaults to the first field if omitted.</p>
+                </div>
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_blur</code>
+                  <p class="text-zinc-400 text-sm">Array of field names to blur-hide initially. Swipe down to reveal. All other fields stay visible.</p>
+                </div>
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">cards</code>
+                  <p class="text-zinc-400 text-sm">Array of card objects. Each card can have any fields you want — they'll be rendered automatically.</p>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <h3 class="text-lg font-semibold display-font text-white">Legacy format</h3>
+              <p class="text-zinc-400 text-sm">A plain array of objects also works — it will use the built-in vocabulary layout with <code class="px-1 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">word</code> as title and everything else blurred:</p>
+              <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
+                <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">[
+  { <span class="text-zinc-500">"word"</span>: <span class="text-amber-400">"metric"</span>, <span class="text-zinc-500">"meaning"</span>: <span class="text-amber-400">"指标"</span>, ... },
+  ...
+]</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for upload -->
+  <input type="file" id="fileInput" accept=".json" class="hidden">
+
+  <script>
+    lucide.createIcons();
+
+    // ==================== DECK LIBRARY ====================
+
+    let decks = [];
+
+    function initLibrary() {
+      // Built-in deck
+      decks = [{
+        id: 'builtin-lenny',
+        name: "Lenny's Newsletter",
+        cardCount: null,
+        src: 'vocabulary_learning.json',
+        data: null
+      }];
+
+      // Restore uploaded decks from sessionStorage
+      try {
+        const saved = sessionStorage.getItem('uploadedDecks');
+        if (saved) decks.push(...JSON.parse(saved));
+      } catch (e) {}
+
+      renderDeckGrid();
+    }
+
+    function saveUploadedDecks() {
+      const uploaded = decks.filter(d => d.id !== 'builtin-lenny');
+      try { sessionStorage.setItem('uploadedDecks', JSON.stringify(uploaded)); } catch (e) {}
+    }
+
+    function renderDeckGrid() {
+      const grid = document.getElementById('deckGrid');
+      grid.innerHTML = '';
+
+      decks.forEach((deck, i) => {
+        const el = document.createElement('div');
+        el.className = 'deck-card rounded-2xl p-5 cursor-pointer flex flex-col justify-between aspect-[3/4]';
+        el.innerHTML = `
+          <div>
+            <h3 class="display-font font-semibold text-white text-base leading-tight mb-1">${escapeHtml(deck.name)}</h3>
+            <p class="text-zinc-500 display-font text-xs">${deck.cardCount !== null ? deck.cardCount + ' cards' : ''}</p>
+          </div>
+          <div class="mt-3">
+            <span class="inline-block px-2 py-0.5 rounded-full text-xs display-font ${deck.id === 'builtin-lenny' ? 'bg-lime-brand/10 text-lime-brand' : 'bg-zinc-800 text-zinc-400'}">${deck.id === 'builtin-lenny' ? 'Built-in' : 'Uploaded'}</span>
+          </div>
+        `;
+        el.addEventListener('click', () => openDeck(i));
+        grid.appendChild(el);
+      });
+
+      // Add (+) card
+      const addEl = document.createElement('label');
+      addEl.className = 'add-card rounded-2xl cursor-pointer flex flex-col items-center justify-center aspect-[3/4] gap-3';
+      addEl.setAttribute('for', 'fileInput');
+      addEl.innerHTML = `
+        <div class="w-10 h-10 rounded-xl border border-zinc-700 flex items-center justify-center">
+          <i data-lucide="plus" class="w-5 h-5 text-zinc-500"></i>
+        </div>
+        <span class="text-zinc-500 display-font text-xs">Upload JSON</span>
+        <button id="formatHelpInline" class="mt-1 flex items-center gap-1 text-zinc-600 hover:text-lime-brand transition-colors display-font text-xs" onclick="event.preventDefault(); event.stopPropagation(); openModal(formatModal);">
+          <i data-lucide="help-circle" class="w-3 h-3"></i>
+          <span>Format Guide</span>
+        </button>
+      `;
+      grid.appendChild(addEl);
+
+      lucide.createIcons();
+    }
+
+    // ==================== VIEW SWITCHING ====================
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      if (viewId === 'studyView') {
+        document.body.classList.add('study-mode');
+      } else {
+        document.body.classList.remove('study-mode');
+      }
+    }
+
+    function openDeck(index) {
+      const deck = decks[index];
+      document.getElementById('deckTitle').textContent = deck.name;
+
+      if (deck.data) {
+        loadDeck(deck.data);
+        showView('studyView');
+      } else if (deck.src) {
+        fetch(deck.src)
+          .then(r => r.json())
+          .then(data => {
+            deck.data = data;
+            // Update card count
+            const count = Array.isArray(data) ? data.length : (data.cards ? data.cards.length : 0);
+            deck.cardCount = count;
+            renderDeckGrid();
+            loadDeck(data);
+            showView('studyView');
+          })
+          .catch(err => alert('Failed to load deck: ' + err.message));
+      }
+    }
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+      showView('libraryView');
+    });
+
+    // ==================== STUDY LOGIC ====================
+
+    let cards = [];
+    let blurFields = [];
+    let titleField = '';
+    let allFields = [];
+    let currentIndex = 0;
+    let revealed = false;
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    const swipeCard = document.getElementById('swipeCard');
+    const cardInner = document.getElementById('cardInner');
+    const cardFieldsEl = document.getElementById('cardFields');
+    const currentIndexEl = document.getElementById('currentIndex');
+    const totalCardsEl = document.getElementById('totalCards');
+    const progressCircle = document.getElementById('progressCircle');
+    const instructionsArea = document.getElementById('instructionsArea');
+
+    function loadDeck(data) {
+      if (Array.isArray(data)) {
+        cards = data.sort(() => Math.random() - 0.5).slice(0, 50);
+        titleField = 'word';
+        blurFields = [];
+        allFields = [];
+        if (cards.length > 0) {
+          allFields = Object.keys(cards[0]).filter(k => !k.startsWith('_'));
+          blurFields = allFields.filter(k => k !== 'word');
+        }
+      } else if (data && typeof data === 'object' && Array.isArray(data.cards)) {
+        cards = data.cards.sort(() => Math.random() - 0.5).slice(0, 50);
+        allFields = cards.length > 0 ? Object.keys(cards[0]).filter(k => !k.startsWith('_')) : [];
+        titleField = data._title || allFields[0] || '';
+        blurFields = Array.isArray(data._blur) ? data._blur : allFields.filter(k => k !== titleField);
+      } else {
+        alert('Invalid JSON format. Please check the Format Guide.');
+        return;
+      }
+
+      currentIndex = 0;
+      revealed = false;
+      totalCardsEl.textContent = cards.length;
+      updateCard();
+      updateProgress();
+
+      gsap.fromTo(swipeCard, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' });
+    }
+
+    function renderCard(card) {
+      cardFieldsEl.innerHTML = '';
+
+      if (titleField && card[titleField] !== undefined) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'mb-3';
+        titleEl.innerHTML = `<h2 class="text-2xl sm:text-3xl font-bold text-white display-font">${escapeHtml(String(card[titleField]))}</h2>`;
+        cardFieldsEl.appendChild(titleEl);
+      }
+
+      const visibleFields = allFields.filter(k => k !== titleField && !blurFields.includes(k));
+      if (visibleFields.length > 0) {
+        const visibleEl = document.createElement('div');
+        visibleEl.className = 'mb-3';
+        visibleEl.innerHTML = visibleFields.map(k =>
+          `<p class="text-zinc-400 display-font text-sm mb-1">
+            <span class="text-zinc-600">${escapeHtml(k)}</span>
+            <span class="text-zinc-500 mx-1.5">·</span>
+            <span class="text-zinc-300">${escapeHtml(String(card[k]))}</span>
+          </p>`
+        ).join('');
+        cardFieldsEl.appendChild(visibleEl);
+      }
+
+      if (blurFields.length > 0) {
+        const blurEl = document.createElement('div');
+        blurEl.id = 'blurredContent';
+        blurEl.className = 'blur-content blurred';
+        blurEl.innerHTML = blurFields.filter(k => k !== titleField && card[k] !== undefined).map(k => {
+          const val = String(card[k]);
+          if (val.length > 60) {
+            return `<div class="mb-3">
+              <span class="text-zinc-600 display-font text-xs uppercase tracking-wider">${escapeHtml(k)}</span>
+              <p class="card-content text-zinc-100 mt-1">${escapeHtml(val)}</p>
+            </div>`;
+          }
+          return `<p class="text-zinc-400 display-font text-sm mb-2">
+            <span class="text-zinc-600">${escapeHtml(k)}</span>
+            <span class="text-zinc-500 mx-1.5">·</span>
+            <span class="text-lime-brand">${escapeHtml(val)}</span>
+          </p>`;
+        }).join('');
+        cardFieldsEl.appendChild(blurEl);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Swipe & keyboard
+    swipeCard.addEventListener('touchstart', handleTouchStart, { passive: true });
+    swipeCard.addEventListener('touchmove', handleTouchMove, { passive: true });
+    swipeCard.addEventListener('touchend', handleEnd);
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('studyView').classList.contains('active')) return;
+      if (e.key === 'ArrowUp') goToNextCard();
+      else if (e.key === 'ArrowDown') revealBlurred();
+    });
+
+    function handleTouchStart(e) {
+      if (!e.touches || !e.touches[0]) return;
+      isDragging = true;
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      swipeCard.style.transition = 'none';
+    }
+
+    function handleTouchMove(e) {
+      if (!isDragging || !e.touches || !e.touches[0]) return;
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      const limitedDelta = Math.max(-120, Math.min(120, deltaY));
+      const opacity = deltaY < 0 ? Math.max(0, 1 - Math.abs(deltaY) / 100) : 1;
+      swipeCard.style.transform = `translate3d(0, ${limitedDelta}px, 0)`;
+      swipeCard.style.opacity = opacity;
+    }
+
+    function handleEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      const deltaY = currentY - startY;
+      swipeCard.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
+      swipeCard.style.transform = 'translate3d(0, 0, 0)';
+      swipeCard.style.opacity = 1;
+      if (deltaY < -40) goToNextCard();
+      else if (deltaY > 40 && !revealed) revealBlurred();
+    }
+
+    function goToNextCard() {
+      if (cards.length === 0) return;
+      animateCardExit('up', () => {
+        currentIndex = currentIndex >= cards.length - 1 ? 0 : currentIndex + 1;
+        revealed = false;
+        updateCard();
+        animateCardEnter();
+      });
+    }
+
+    function revealBlurred() {
+      if (revealed) return;
+      revealed = true;
+      const blurEl = document.getElementById('blurredContent');
+      if (blurEl) blurEl.classList.remove('blurred');
+      if (currentIndex === 0 && instructionsArea) instructionsArea.style.display = 'none';
+    }
+
+    function updateCard() {
+      if (cards.length === 0) return;
+      renderCard(cards[currentIndex]);
+      cardInner.scrollTop = 0;
+      if (instructionsArea) instructionsArea.style.display = currentIndex === 0 ? 'block' : 'none';
+      updateProgress();
+    }
+
+    function updateProgress() {
+      currentIndexEl.textContent = currentIndex + 1;
+      const progress = (currentIndex + 1) / cards.length;
+      const circumference = 88;
+      const offset = circumference * (1 - progress);
+      gsap.to(progressCircle, { strokeDashoffset: offset, duration: 0.25, ease: 'power2.out' });
+    }
+
+    function animateCardExit(direction, callback) {
+      gsap.to(swipeCard, {
+        y: direction === 'up' ? -100 : 100,
+        opacity: 0, duration: 0.2, ease: 'power2.in', onComplete: callback
+      });
+    }
+
+    function animateCardEnter() {
+      gsap.fromTo(swipeCard, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
+    }
+
+    // ==================== FILE UPLOAD ====================
+
+    const fileInput = document.getElementById('fileInput');
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          const deckCards = Array.isArray(data) ? data : (data.cards || []);
+          const deckName = file.name.replace(/\.json$/i, '');
+          const newDeck = {
+            id: 'upload-' + Date.now(),
+            name: deckName,
+            cardCount: deckCards.length,
+            src: null,
+            data: data
+          };
+          decks.push(newDeck);
+          saveUploadedDecks();
+          renderDeckGrid();
+        } catch (err) {
+          alert('Failed to parse JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      fileInput.value = '';
+    });
+
+    // ==================== MODALS ====================
+
+    function openModal(modal) {
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+      gsap.fromTo(modal.querySelector('.about-modal-content'),
+        { opacity: 0, y: 30, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }
+      );
+    }
+
+    function closeModalFn(modal) {
+      gsap.to(modal.querySelector('.about-modal-content'), {
+        opacity: 0, y: 20, scale: 0.95, duration: 0.25, ease: 'power2.in',
+        onComplete: () => modal.classList.add('hidden')
+      });
+    }
+
+    const aboutModal = document.getElementById('aboutModal');
+    const formatModal = document.getElementById('formatModal');
+
+    // About — from both views
+    document.getElementById('aboutLinkLib').addEventListener('click', () => openModal(aboutModal));
+    document.getElementById('closeModal').addEventListener('click', () => closeModalFn(aboutModal));
+    document.getElementById('modalOverlay').addEventListener('click', () => closeModalFn(aboutModal));
+
+    // Format guide
+    document.getElementById('closeFormatModal').addEventListener('click', () => closeModalFn(formatModal));
+    document.getElementById('formatModalOverlay').addEventListener('click', () => closeModalFn(formatModal));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!aboutModal.classList.contains('hidden')) closeModalFn(aboutModal);
+        if (!formatModal.classList.contains('hidden')) closeModalFn(formatModal);
+      }
+    });
+
+    // ==================== SHARE ====================
+
+    async function handleShare(btn) {
+      const textEl = btn.querySelector('span');
+      const shareData = { title: 'UpDownCard', text: 'Memorize Everything by Swiping Up & Down', url: window.location.href };
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        try { await navigator.share(shareData); return; } catch (err) { if (err.name !== 'AbortError') console.log('Share failed:', err); }
+      }
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        textEl.textContent = 'Link copied!';
+        setTimeout(() => textEl.textContent = 'Share', 2000);
+      } catch (err) {
+        textEl.textContent = 'Failed';
+        setTimeout(() => textEl.textContent = 'Share', 2000);
+      }
+    }
+
+    document.getElementById('shareBtn').addEventListener('click', function() { handleShare(this); });
+    document.getElementById('shareBtnLib').addEventListener('click', function() { handleShare(this); });
+
+    // ==================== INIT ====================
+
+    initLibrary();
+  </script>
+</body>
+</html>
