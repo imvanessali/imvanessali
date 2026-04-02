@@ -277,16 +277,7 @@
                   <p class="text-zinc-400 text-sm">Array of card objects. Each card can have any fields you want — they'll be rendered automatically.</p>
                 </div>
               </div>
-            </div>
-            <div class="space-y-3">
-              <h3 class="text-lg font-semibold display-font text-white">Legacy format</h3>
-              <p class="text-zinc-400 text-sm">A plain array of objects also works — it will use the built-in vocabulary layout with <code class="px-1 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">word</code> as title and everything else blurred:</p>
-              <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
-                <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">[
-  { <span class="text-zinc-500">"word"</span>: <span class="text-amber-400">"metric"</span>, <span class="text-zinc-500">"meaning"</span>: <span class="text-amber-400">"指标"</span>, ... },
-  ...
-]</code></pre>
-              </div>
+              <p class="text-zinc-500 text-sm">Only this object-based schema is supported.</p>
             </div>
           </div>
         </div>
@@ -392,7 +383,7 @@
           .then(data => {
             deck.data = data;
             // Update card count
-            const count = Array.isArray(data) ? data.length : (data.cards ? data.cards.length : 0);
+            const count = Array.isArray(data.cards) ? data.cards.length : 0;
             deck.cardCount = count;
             renderDeckGrid();
             loadDeck(data);
@@ -427,22 +418,13 @@
     const instructionsArea = document.getElementById('instructionsArea');
 
     function loadDeck(data) {
-      if (Array.isArray(data)) {
-        cards = data.sort(() => Math.random() - 0.5).slice(0, 50);
-        titleField = 'word';
-        blurFields = [];
-        allFields = [];
-        if (cards.length > 0) {
-          allFields = Object.keys(cards[0]).filter(k => !k.startsWith('_'));
-          blurFields = allFields.filter(k => k !== 'word');
-        }
-      } else if (data && typeof data === 'object' && Array.isArray(data.cards)) {
+      if (data && typeof data === 'object' && Array.isArray(data.cards)) {
         cards = data.cards.sort(() => Math.random() - 0.5).slice(0, 50);
         allFields = cards.length > 0 ? Object.keys(cards[0]).filter(k => !k.startsWith('_')) : [];
         titleField = data._title || allFields[0] || '';
         blurFields = Array.isArray(data._blur) ? data._blur : allFields.filter(k => k !== titleField);
       } else {
-        alert('Invalid JSON format. Please check the Format Guide.');
+        alert('Invalid JSON format. Expected an object with _title, _blur, and cards.');
         return;
       }
 
@@ -602,7 +584,10 @@
       reader.onload = (evt) => {
         try {
           const data = JSON.parse(evt.target.result);
-          const deckCards = Array.isArray(data) ? data : (data.cards || []);
+          if (!data || typeof data !== 'object' || !Array.isArray(data.cards)) {
+            throw new Error('Expected an object with _title, _blur, and cards.');
+          }
+          const deckCards = data.cards;
           const deckName = file.name.replace(/\.json$/i, '');
           const newDeck = {
             id: 'upload-' + Date.now(),
