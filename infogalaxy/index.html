@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Info Galaxy · 信息星图</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Noto+Sans+SC:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Noto Sans SC',sans-serif;cursor:grab}
+body.dragging{cursor:grabbing}
+canvas{position:fixed;inset:0;display:block}
+
+#title{position:fixed;top:24px;left:28px;z-index:20;pointer-events:none}
+#title h1{font-family:'Noto Serif SC',serif;font-weight:300;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:3px;text-transform:uppercase;margin-bottom:3px}
+#title p{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1px}
+
+#legend{position:fixed;bottom:24px;left:28px;z-index:20;display:flex;flex-direction:column;gap:7px;pointer-events:auto}
+.leg-item{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;transition:color 0.3s}
+.leg-item:hover,.leg-item.on{color:rgba(255,255,255,0.75)}
+.leg-dot{width:6px;height:6px;border-radius:50%;box-shadow:0 0 6px currentColor;flex-shrink:0}
+
+#node-label{position:fixed;pointer-events:none;z-index:15;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;text-shadow:0 0 10px rgba(255,255,255,0.5);transform:translate(-50%,-130%);transition:opacity 0.15s;opacity:0;white-space:nowrap}
+#hint{position:fixed;bottom:24px;right:28px;z-index:20;pointer-events:none;font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.18);text-align:right;letter-spacing:0.5px;line-height:1.8}
+
+/* ── 输入框入口 ── */
+#url-entry{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;text-align:center;
+  transition:opacity 0.5s, transform 0.5s;
+}
+#url-entry.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-48%)}
+#url-entry h2{
+  font-family:'Noto Serif SC',serif;font-weight:300;font-size:22px;
+  color:rgba(255,255,255,0.75);letter-spacing:4px;margin-bottom:8px;
+}
+#url-entry p{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:rgba(255,255,255,0.28);letter-spacing:1px;margin-bottom:32px;
+}
+/* API Key 行 */
+#api-key-row{display:flex;align-items:center;gap:8px;width:520px;max-width:90vw;margin-bottom:10px}
+#api-key-input{
+  flex:1;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);border-radius:3px;
+  padding:8px 12px;color:rgba(255,255,255,0.55);font-size:11px;
+  font-family:'Share Tech Mono',monospace;outline:none;letter-spacing:0.5px;
+}
+#api-key-input:focus{border-color:rgba(255,255,255,0.25);color:rgba(255,255,255,0.8)}
+#api-key-input::placeholder{color:rgba(255,255,255,0.18)}
+#api-key-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,0.2);white-space:nowrap}
+#url-form{display:flex;gap:0;width:520px;max-width:90vw}
+#url-input{
+  flex:1;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.15);border-right:none;
+  border-radius:3px 0 0 3px;
+  padding:12px 16px;color:#fff;font-size:13px;
+  font-family:'Share Tech Mono',monospace;outline:none;
+  transition:border-color 0.2s;
+}
+#url-input:focus{border-color:rgba(255,255,255,0.35)}
+#url-input::placeholder{color:rgba(255,255,255,0.22)}
+#url-submit{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:0 3px 3px 0;
+  padding:12px 22px;color:rgba(255,255,255,0.7);
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;
+  cursor:pointer;transition:all 0.2s;white-space:nowrap;
+}
+#url-submit:hover{background:rgba(255,255,255,0.15);color:#fff}
+#url-submit:disabled{opacity:0.4;cursor:not-allowed}
+#url-note{margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:0.5px}
+
+/* ── 加载状态 ── */
+#loading{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity 0.4s;
+}
+#loading.show{opacity:1}
+#loading-text{font-family:'Share Tech Mono',monospace;font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:20px}
+#loading-bar{width:200px;height:1px;background:rgba(255,255,255,0.1);margin:0 auto;position:relative;overflow:hidden}
+#loading-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:scan 1.5s ease-in-out infinite}
+@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ── 重新生成按钮 ── */
+#new-btn{
+  position:fixed;top:24px;right:28px;z-index:20;
+  background:none;border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.3);font-family:'Share Tech Mono',monospace;
+  font-size:10px;letter-spacing:1px;padding:7px 14px;
+  cursor:pointer;transition:all 0.2s;border-radius:2px;
+  opacity:0;pointer-events:none;
+}
+#new-btn.show{opacity:1;pointer-events:auto}
+#new-btn:hover{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.7)}
+
+/* ── 详情面板 ── */
+#panel{
+  position:fixed;right:0;top:0;bottom:0;width:340px;
+  background:rgba(0,2,8,0.94);border-left:1px solid rgba(255,255,255,0.06);
+  transform:translateX(100%);transition:transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  z-index:30;overflow-y:auto;pointer-events:auto;backdrop-filter:blur(12px);
+}
+#panel.open{transform:translateX(0)}
+#panel-inner{padding:32px 28px 80px}
+#pcr{position:sticky;top:0;display:flex;justify-content:flex-end;background:rgba(0,2,8,0.94);padding:16px 0 10px;margin-bottom:8px;z-index:1}
+#pcb{background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.3);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Share Tech Mono',monospace}
+#pcb:hover{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.7)}
+.p-category{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.p-title{font-family:'Noto Serif SC',serif;font-weight:300;font-size:18px;line-height:1.5;color:rgba(255,255,255,0.88);margin-bottom:6px}
+.p-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:1px;margin-bottom:18px}
+.p-divider{width:100%;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.1),transparent);margin-bottom:16px}
+.p-summary{font-size:12.5px;color:rgba(255,255,255,0.42);line-height:1.9;margin-bottom:22px}
+.p-sec{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-bottom:10px}
+.srcs{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.src{display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:3px;text-decoration:none;transition:all 0.2s;background:rgba(255,255,255,0.015)}
+.src:hover{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.12)}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.stxt{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.4;flex:1;font-family:'Noto Sans SC',sans-serif}
+.sarr{font-size:10px;color:rgba(255,255,255,0.18);font-family:'Share Tech Mono',monospace}
+.kps{display:flex;flex-direction:column;gap:8px}
+.kp{padding:12px;border-left:2px solid;background:rgba(255,255,255,0.018);border-radius:0 3px 3px 0}
+.kp-t{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.78);margin-bottom:5px}
+.kp-i{font-family:'Share Tech Mono',monospace;font-size:11px;width:18px;text-align:center;flex-shrink:0}
+.kp-d{font-size:11.5px;color:rgba(255,255,255,0.36);line-height:1.75;padding-left:25px}
+.rels{display:flex;flex-wrap:wrap;gap:5px}
+.rel{padding:3px 10px;font-size:10px;font-family:'Share Tech Mono',monospace;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;border-radius:2px}
+.rel:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7)}
+
+/* ── Available Info Galaxy 列表 ── */
+#galaxy-list{margin-top:32px;text-align:left;width:520px;max-width:90vw}
+.galaxy-list-title{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-bottom:12px;padding-left:2px}
+.galaxy-items{display:flex;flex-direction:column;gap:6px}
+.galaxy-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.08);border-radius:3px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02)}
+.galaxy-item:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2)}
+.galaxy-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.galaxy-item-name{font-family:'Noto Sans SC',sans-serif;font-size:12px;color:rgba(255,255,255,0.6);flex:1}
+.galaxy-item-meta{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);letter-spacing:0.5px}
+.galaxy-item-arrow{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,255,255,0.2);transition:color 0.2s}
+.galaxy-item:hover .galaxy-item-arrow{color:rgba(255,255,255,0.6)}
+
+@media(max-width:768px){#panel{width:100%}#legend{display:none}#url-form{width:90vw}#galaxy-list{width:90vw}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- 标题（图谱生成后显示） -->
+<div id="title">
+  <h1 id="title-text">Info Galaxy</h1>
+  <p>拖拽旋转 · 滚轮缩放 · 点击展开</p>
+</div>
+
+<div id="node-label"></div>
+<div id="hint">DRAG TO ROTATE<br>SCROLL TO ZOOM<br>CLICK TO EXPLORE</div>
+<div id="legend"></div>
+<button id="new-btn" onclick="resetToEntry()">+ 新链接</button>
+
+<!-- URL 输入入口 -->
+<div id="url-entry">
+  <h2>Info Galaxy</h2>
+  <p>PASTE A URL · CLAUDE READS IT · INFO MAP APPEARS</p>
+  <div id="api-key-row">
+    <span id="api-key-label">API KEY</span>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" oninput="saveKey(this.value)" />
+  </div>
+  <div id="url-form">
+    <input id="url-input" type="url" placeholder="https://..." />
+    <button id="url-submit" onclick="submitUrl()">生成星图 →</button>
+  </div>
+  <div id="url-note">支持任意网页 · 文章 · 文档链接</div>
+
+  <div id="galaxy-list">
+    <div class="galaxy-list-title">Available Info Galaxy</div>
+    <div class="galaxy-items">
+      <div class="galaxy-item" onclick="loadPresetData('claude2026')">
+        <span class="galaxy-item-dot" style="background:#6eb5ff;box-shadow:0 0 6px #4d96ff"></span>
+        <span class="galaxy-item-name">Claude 2026 博客全景</span>
+        <span class="galaxy-item-meta">anthropic.com/news · 20 nodes</span>
+        <span class="galaxy-item-arrow">→</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 加载中 -->
+<div id="loading">
+  <div id="loading-text">READING · THINKING · MAPPING</div>
+  <div id="loading-bar"></div>
+</div>
+
+<!-- 详情面板 -->
+<div id="panel">
+  <div id="panel-inner">
+    <div id="pcr"><button id="pcb" onclick="closePanel()">✕</button></div>
+    <div id="pb"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 主题色
+// ═══════════════════════════════════════
+const THEME_COLORS=[
+  {key:'α',color:'#6eb5ff',glow:'#4d96ff'},
+  {key:'β',color:'#d4aaff',glow:'#c77dff'},
+  {key:'γ',color:'#80ffaa',glow:'#4dff88'},
+  {key:'δ',color:'#ff8080',glow:'#ff4444'},
+  {key:'ε',color:'#ffcc80',glow:'#ff9f43'},
+  {key:'ζ',color:'#ffed80',glow:'#ffd93d'},
+];
+
+// ═══════════════════════════════════════
+// Canvas + 3D 渲染引擎
+// ═══════════════════════════════════════
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){
+  DPR=window.devicePixelRatio||1;
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+}
+resize();
+window.addEventListener('resize',resize);
+
+// 背景星点
+const BG_STARS=[];
+for(let i=0;i<2000;i++){
+  const theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1),r=600+Math.random()*800;
+  BG_STARS.push({x:Math.sin(phi)*Math.cos(theta)*r,y:Math.cos(phi)*r,z:Math.sin(phi)*Math.sin(theta)*r,s:0.3+Math.random()*1.2,a:0.05+Math.random()*0.35});
+}
+
+let NODES=[],LINKS=[],NM={},T={};
+let rotX=0.2,rotY=0,tRotX=0.2,tRotY=0,autoRotY=0,zoom=1,tZoom=1;
+const FOV=600;
+
+function rotatePoint(x,y,z){
+  const ry=rotY+autoRotY;
+  const cx=Math.cos(ry)*x+Math.sin(ry)*z,cz=-Math.sin(ry)*x+Math.cos(ry)*z;
+  const cy2=Math.cos(rotX)*y-Math.sin(rotX)*cz,cz2=Math.sin(rotX)*y+Math.cos(rotX)*cz;
+  return{x:cx,y:cy2,z:cz2};
+}
+function project(x,y,z){
+  const scale=FOV/(FOV+z*zoom);
+  return{sx:W/2+x*scale*zoom,sy:H/2+y*scale*zoom,scale,depth:z};
+}
+
+let hovNode=null,actNode=null,filt=null;
+
+function drawStar(pr,n,col,glow,isH,isA,v,alpha){
+  const sc=Math.max(0,pr.scale);
+  const r=Math.max(0.5,n.r*sc*(isH||isA?1.3:1));
+  if(r<0.4)return;
+
+  ctx.save();
+  ctx.globalAlpha=alpha;
+
+  if(v){
+    // 大光晕
+    const g1r=Math.max(0.1,r*(isA?14:isH?10:7));
+    const g1=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,g1r);
+    g1.addColorStop(0,glow+(isA?'28':isH?'1e':'14'));
+    g1.addColorStop(0.4,glow+'0a');g1.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(pr.sx,pr.sy,g1r,0,Math.PI*2);ctx.fillStyle=g1;ctx.fill();
+    // 中光晕
+    const g2r=Math.max(0.1,r*(isA?5.5:isH?4:3));
+    const g2=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,g2r);
+    g2.addColorStop(0,col+'cc');g2.addColorStop(0.35,col+'55');g2.addColorStop(0.7,col+'18');g2.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(pr.sx,pr.sy,g2r,0,Math.PI*2);ctx.fillStyle=g2;ctx.fill();
+    // 核心
+    const g3r=Math.max(0.1,r*1.1);
+    const g3=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,g3r);
+    g3.addColorStop(0,'#ffffff');g3.addColorStop(0.18,'#ffffffee');g3.addColorStop(0.45,col+'cc');g3.addColorStop(0.8,col+'44');g3.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(pr.sx,pr.sy,g3r,0,Math.PI*2);ctx.fillStyle=g3;ctx.fill();
+    // 衍射光芒
+    if(n.r>=6){
+      const spikeLen=Math.max(1,r*(isA?9:isH?7:5));
+      ctx.save();ctx.globalCompositeOperation='screen';
+      [[0,Math.PI/2],[Math.PI/4,Math.PI*3/4]].forEach(([a1,a2])=>{
+        [a1,a2,a1+Math.PI,a2+Math.PI].forEach(angle=>{
+          const gS=ctx.createLinearGradient(pr.sx,pr.sy,pr.sx+Math.cos(angle)*spikeLen,pr.sy+Math.sin(angle)*spikeLen);
+          gS.addColorStop(0,col+'88');gS.addColorStop(0.3,col+'33');gS.addColorStop(1,'transparent');
+          const pw=Math.max(0.5,r*0.18);
+          const px=Math.cos(angle+Math.PI/2)*pw,py=Math.sin(angle+Math.PI/2)*pw;
+          ctx.beginPath();
+          ctx.moveTo(pr.sx+px,pr.sy+py);
+          ctx.lineTo(pr.sx+Math.cos(angle)*spikeLen,pr.sy+Math.sin(angle)*spikeLen);
+          ctx.lineTo(pr.sx-px,pr.sy-py);
+          ctx.closePath();ctx.fillStyle=gS;ctx.globalAlpha=isA?0.35:isH?0.22:0.12;ctx.fill();
+        });
+      });
+      ctx.restore();
+    }
+    // 白核心点
+    const dotR=Math.max(0.5,r*0.28);
+    const dot=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,dotR);
+    dot.addColorStop(0,'#ffffff');dot.addColorStop(0.5,'#ffffffbb');dot.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(pr.sx,pr.sy,dotR,0,Math.PI*2);ctx.fillStyle=dot;ctx.fill();
+  }else{
+    const g=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,Math.max(0.1,r));
+    g.addColorStop(0,col+'44');g.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(pr.sx,pr.sy,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  }
+
+  if(v&&pr.scale>0.55&&r>3){
+    const fs=Math.max(8.5,Math.min(12,r*1.1));
+    ctx.globalAlpha=alpha*0.72;
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.font=`300 ${fs}px 'Noto Sans SC'`;
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(n.label,pr.sx,pr.sy+r+4);
+  }
+  ctx.restore();
+
+  // 保存屏幕坐标用于 hit test
+  n._px=pr.sx;n._py=pr.sy;n._ps=pr.scale;n._pd=pr.depth;
+}
+
+function draw(){
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);ctx.restore();
+  const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*0.8);
+  bg.addColorStop(0,'#030510');bg.addColorStop(1,'#000003');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  BG_STARS.forEach(s=>{
+    const p=rotatePoint(s.x,s.y,s.z),pr=project(p.x,p.y,p.z);
+    if(pr.depth<-FOV+50||pr.scale<=0)return;
+    ctx.globalAlpha=Math.min(s.a*(0.3+pr.scale*0.7),0.8);
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pr.sx,pr.sy,s.s*pr.scale,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  if(!NODES.length)return;
+
+  const projected=NODES.map(n=>{
+    const p=rotatePoint(n.x,n.y,n.z),pr=project(p.x,p.y,p.z);
+    return{n,pr};
+  }).sort((a,b)=>a.pr.depth-b.pr.depth);
+
+  const visible=filt?new Set(NODES.filter(n=>n.t===filt).map(n=>n.id)):null;
+
+  LINKS.forEach(l=>{
+    const a=NM[l.s],b=NM[l.t];if(!a||!b)return;
+    const fa=!visible||visible.has(a.id),fb=!visible||visible.has(b.id);if(!fa&&!fb)return;
+    const pa=rotatePoint(a.x,a.y,a.z),pb=rotatePoint(b.x,b.y,b.z);
+    const pra=project(pa.x,pa.y,pa.z),prb=project(pb.x,pb.y,pb.z);
+    if(pra.depth<-FOV+30||prb.depth<-FOV+30)return;
+    const isHL=(hovNode&&(hovNode.id===a.id||hovNode.id===b.id))||(actNode&&(actNode.id===a.id||actNode.id===b.id));
+    const colA=T[a.t]?.glow||'#fff',colB=T[b.t]?.glow||'#fff';
+    const g=ctx.createLinearGradient(pra.sx,pra.sy,prb.sx,prb.sy);
+    if(isHL){g.addColorStop(0,colA+'cc');g.addColorStop(1,colB+'cc');ctx.strokeStyle=g;ctx.lineWidth=1.2;ctx.globalAlpha=0.8;}
+    else if(fa&&fb){g.addColorStop(0,colA+'22');g.addColorStop(1,colB+'22');ctx.strokeStyle=g;ctx.lineWidth=0.8;ctx.globalAlpha=0.6;}
+    else{ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=0.5;ctx.globalAlpha=0.4;}
+    ctx.beginPath();ctx.moveTo(pra.sx,pra.sy);ctx.lineTo(prb.sx,prb.sy);ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+
+  projected.forEach(({n,pr})=>{
+    if(pr.depth<-FOV+30)return;
+    const v=!visible||visible.has(n.id);
+    const th=T[n.t]||{color:'#fff',glow:'#fff'};
+    const isH=hovNode&&hovNode.id===n.id,isA=actNode&&actNode.id===n.id;
+    const sc=Math.max(0,pr.scale);
+    const alpha=v?Math.min(0.9,0.3+sc*0.8):0.08;
+    drawStar(pr,n,th.color,th.glow,isH,isA,v,alpha);
+  });
+}
+
+let isDragging=false,lastMX=0,lastMY=0,didDrag=false,lastTime=0;
+function loop(t){
+  const dt=Math.min((t-lastTime)/1000,0.05);lastTime=t;
+  if(!isDragging)autoRotY+=dt*0.04;
+  rotX+=(tRotX-rotX)*0.08;rotY+=(tRotY-rotY)*0.08;zoom+=(tZoom-zoom)*0.08;
+  draw();requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function hitTest(mx,my){
+  let best=null,bestD=Infinity;
+  NODES.forEach(n=>{
+    if(!n._pd||n._pd<-FOV+30)return;
+    const r=n.r*Math.max(0,n._ps)*1.6,dx=mx-n._px,dy=my-n._py,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<r&&d<bestD){bestD=d;best=n;}
+  });
+  return best;
+}
+
+cv.addEventListener('mousedown',e=>{isDragging=true;didDrag=false;lastMX=e.clientX;lastMY=e.clientY;document.body.classList.add('dragging')});
+window.addEventListener('mousemove',e=>{
+  if(isDragging){
+    const dx=e.clientX-lastMX,dy=e.clientY-lastMY;
+    if(Math.abs(dx)>2||Math.abs(dy)>2)didDrag=true;
+    tRotY+=(dx/W)*Math.PI*1.5;tRotX+=(dy/H)*Math.PI*1.5;
+    tRotX=Math.max(-Math.PI*0.5,Math.min(Math.PI*0.5,tRotX));
+    lastMX=e.clientX;lastMY=e.clientY;
+  }else{
+    const h=hitTest(e.clientX,e.clientY);
+    hovNode=h;
+    const lbl=document.getElementById('node-label');
+    if(h&&(!filt||h.t===filt)){lbl.style.opacity='0';cv.style.cursor='pointer';}
+    else{lbl.style.opacity='0';cv.style.cursor='grab';}
+  }
+});
+window.addEventListener('mouseup',e=>{
+  document.body.classList.remove('dragging');
+  if(!didDrag){const h=hitTest(e.clientX,e.clientY);if(h)openPanel(h);else if(!document.getElementById('panel').contains(e.target))closePanel();}
+  isDragging=false;
+});
+cv.addEventListener('wheel',e=>{e.preventDefault();tZoom=Math.max(0.3,Math.min(3.5,tZoom*(e.deltaY>0?0.93:1.07)));},{passive:false});
+
+let lt1={x:0,y:0},ltd=0,tDidDrag=false;
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){isDragging=true;tDidDrag=false;lt1={x:e.touches[0].clientX,y:e.touches[0].clientY};}
+  else if(e.touches.length===2)ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+},{passive:false});
+cv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1&&isDragging){
+    const dx=e.touches[0].clientX-lt1.x,dy=e.touches[0].clientY-lt1.y;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)tDidDrag=true;
+    tRotY+=(dx/W)*Math.PI*1.5;tRotX+=(dy/H)*Math.PI*1.5;
+    tRotX=Math.max(-Math.PI*0.5,Math.min(Math.PI*0.5,tRotX));
+    lt1={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  }else if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    tZoom=Math.max(0.3,Math.min(3.5,tZoom*(d/ltd)));ltd=d;tDidDrag=true;
+  }
+},{passive:false});
+cv.addEventListener('touchend',e=>{
+  if(!tDidDrag&&e.touches.length===0){const t=e.changedTouches[0];const h=hitTest(t.clientX,t.clientY);if(h)openPanel(h);}
+  isDragging=false;
+});
+
+// ═══════════════════════════════════════
+// 面板
+// ═══════════════════════════════════════
+function openPanel(n){
+  actNode=n;
+  const th=T[n.t]||{color:'#fff',glow:'#fff',label:'知识点'};
+  const col=th.color,glow=th.glow;
+  const kh=(n.kps||[]).map(k=>`
+    <div class="kp" style="border-color:${glow}55">
+      <div class="kp-t"><span class="kp-i" style="color:${col}">${k.i}</span>${k.t}</div>
+      <div class="kp-d">${k.d}</div>
+    </div>`).join('');
+  const srcH=n.sourceUrl?`<div class="p-sec">出处</div><div class="srcs"><a href="${n.sourceUrl}" target="_blank" class="src"><div class="sdot" style="background:${col}"></div><div class="stxt">${n.sourceTitle||n.sourceUrl}</div><div class="sarr">↗</div></a></div>`:'';
+  const ri=new Set();
+  LINKS.forEach(l=>{if(l.s===n.id)ri.add(l.t);if(l.t===n.id)ri.add(l.s);});
+  const rh=[...ri].map(id=>{const rn=NM[id];if(!rn)return'';const rc=(T[rn.t]||{color:'#fff'}).color;return`<span class="rel" style="border-color:${rc}33;color:${rc}88" onclick="openPanel(NM['${id}'])">${rn.label}</span>`;}).join('');
+  document.getElementById('pb').innerHTML=`
+    <div class="p-category" style="color:${col}">${th.label}</div>
+    <div class="p-title">${n.label}</div>
+    <div class="p-sub">${n.sub||''}</div>
+    <div class="p-divider"></div>
+    <div class="p-summary">${n.sum}</div>
+    ${srcH}
+    ${kh?`<div class="p-sec" style="margin-top:18px">知识拆解</div><div class="kps">${kh}</div>`:''}
+    ${rh?`<div class="p-sec" style="margin-top:18px">相关知识点</div><div class="rels">${rh}</div>`:''}
+  `;
+  document.getElementById('panel').classList.add('open');
+}
+function closePanel(){actNode=null;document.getElementById('panel').classList.remove('open')}
+
+// ═══════════════════════════════════════
+// 图谱初始化（斐波那契球面）
+// ═══════════════════════════════════════
+function initGraph(nodes, links, themes, title, url){
+  NODES=nodes;LINKS=links;T={};NM={};
+  themes.forEach(th=>{T[th.key]={color:th.color,glow:th.glow,label:th.label}});
+  NODES.forEach(n=>NM[n.id]=n);
+
+  // 斐波那契球面分布
+  const SPHERE_R=260;
+  NODES.forEach((n,i)=>{
+    const phi=Math.acos(1-2*(i+0.5)/NODES.length);
+    const theta=Math.PI*(1+Math.sqrt(5))*i;
+    const r=SPHERE_R+n.r*2;
+    n.x=Math.sin(phi)*Math.cos(theta)*r;
+    n.y=Math.cos(phi)*r;
+    n.z=Math.sin(phi)*Math.sin(theta)*r;
+  });
+
+  // 重置相机
+  rotX=0.2;rotY=0;tRotX=0.2;tRotY=0;autoRotY=0;zoom=1;tZoom=1;filt=null;
+  hovNode=null;actNode=null;
+
+  // 更新标题
+  document.getElementById('title-text').textContent=title||'Info Galaxy';
+
+  // 更新图例
+  const le=document.getElementById('legend');le.innerHTML='';
+  themes.forEach(th=>{
+    const el=document.createElement('div');el.className='leg-item';
+    el.innerHTML=`<div class="leg-dot" style="background:${th.color};color:${th.color}"></div>${th.label}`;
+    el.onclick=()=>{
+      if(filt===th.key){filt=null;document.querySelectorAll('.leg-item').forEach(x=>x.classList.remove('on'));}
+      else{filt=th.key;document.querySelectorAll('.leg-item').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+    };
+    le.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════
+// UI 状态切换
+// ═══════════════════════════════════════
+function showEntry(){
+  document.getElementById('url-entry').classList.remove('hidden');
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('new-btn').classList.remove('show');
+  document.getElementById('url-submit').disabled=false;
+  document.getElementById('url-submit').textContent='生成星图 →';
+}
+function showLoading(){
+  document.getElementById('url-entry').classList.add('hidden');
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('new-btn').classList.remove('show');
+}
+function showGraph(){
+  document.getElementById('url-entry').classList.add('hidden');
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('new-btn').classList.add('show');
+}
+function resetToEntry(){
+  NODES=[];LINKS=[];NM={};T={};
+  document.getElementById('legend').innerHTML='';
+  closePanel();
+  showEntry();
+  document.getElementById('url-input').value='';
+  document.getElementById('url-input').focus();
+}
+
+// ═══════════════════════════════════════
+// URL 提交 → Claude API
+// ═══════════════════════════════════════
+async function submitUrl(){
+  const url=document.getElementById('url-input').value.trim();
+  if(!url)return;
+
+  document.getElementById('url-submit').disabled=true;
+  document.getElementById('url-submit').textContent='处理中…';
+  showLoading();
+
+  try{
+    // 第一步：用 web_search 工具抓取页面内容，再让 Claude 提炼知识图谱
+    const systemPrompt=`你是一个知识提炼专家。用户给你一个 URL，你需要：
+1. 阅读该页面内容（已通过 web_search 提供给你）
+2. 从中提炼出 12-20 个独立知识点（注意：要从读者视角出发，提炼真正有价值的洞察，而非宣传内容）
+3. 把这些知识点归入 4-6 个主题分类
+4. 找出知识点之间的关联关系
+
+请严格按照以下 JSON 格式输出，不要有任何其他文字：
+{
+  "title": "页面主题（简短）",
+  "themes": [
+    {"key": "α", "label": "主题名称"}
+  ],
+  "nodes": [
+    {
+      "id": "唯一id（英文字母数字）",
+      "t": "主题key（α/β/γ等）",
+      "r": 节点半径数字（5-10，越重要越大）,
+      "label": "知识点名称（8字以内）",
+      "sub": "副标题（12字以内）",
+      "sum": "这个知识点的核心价值（50-80字，从用户视角）",
+      "kps": [
+        {"i": "emoji或序号", "t": "子知识点标题", "d": "详细说明（50字左右）"}
+      ]
+    }
+  ],
+  "links": [
+    {"s": "源节点id", "t": "目标节点id"}
+  ]
+}
+
+要求：
+- nodes 数组中每个节点的 t 字段必须是 themes 中存在的 key
+- links 中的 s 和 t 必须都是有效的节点 id
+- 每个节点至少有 2 个 kps，最多 4 个
+- links 总数在 15-30 个之间，反映真实的知识关联
+- 输出纯 JSON，不要有 markdown 代码块`;
+
+    const userMsg=`请阅读这个 URL 的内容并生成知识图谱：${url}
+
+（请先用 web_search 搜索该 URL 的内容，然后基于搜索结果生成知识图谱）`;
+
+    const apiKey=localStorage.getItem('ig_api_key')||'';
+    if(!apiKey){
+      throw new Error('请先填写 API Key（sk-ant-...）');
+    }
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true',
+      },
+      body:JSON.stringify({
+        model:'claude-opus-4-5-20251101',
+        max_tokens:4000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:systemPrompt,
+        messages:[{role:'user',content:userMsg}]
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json();
+      throw new Error(err.error?.message||'API 请求失败');
+    }
+
+    const data=await resp.json();
+
+    // 拼接所有 text 块
+    const fullText=data.content
+      .filter(b=>b.type==='text')
+      .map(b=>b.text)
+      .join('');
+
+    // 解析 JSON（容错处理）
+    let graphData;
+    try{
+      // 尝试直接解析
+      graphData=JSON.parse(fullText.trim());
+    }catch{
+      // 尝试提取 JSON 块
+      const match=fullText.match(/\{[\s\S]*\}/);
+      if(!match)throw new Error('无法解析 Claude 返回的 JSON');
+      graphData=JSON.parse(match[0]);
+    }
+
+    // 给主题分配颜色
+    const themes=graphData.themes.map((th,i)=>({
+      ...th,
+      color:THEME_COLORS[i%THEME_COLORS.length].color,
+      glow:THEME_COLORS[i%THEME_COLORS.length].glow,
+    }));
+
+    // 给节点添加来源信息
+    const nodes=(graphData.nodes||[]).map(n=>({
+      ...n,
+      sourceUrl:url,
+      sourceTitle:graphData.title||url,
+    }));
+
+    initGraph(nodes, graphData.links||[], themes, graphData.title, url);
+    showGraph();
+
+  }catch(e){
+    console.error(e);
+    showEntry();
+    document.getElementById('url-note').textContent='⚠ 出错了：'+e.message;
+    document.getElementById('url-note').style.color='rgba(255,120,120,0.7)';
+    setTimeout(()=>{
+      document.getElementById('url-note').textContent='支持任意网页 · 文章 · 文档链接';
+      document.getElementById('url-note').style.color='';
+    },4000);
+  }
+}
+
+// ═══════════════════════════════════════
+// 预存星图数据
+// ═══════════════════════════════════════
+const PRESET_GALAXIES = {
+  claude2026: {
+    title: "Claude 2026 · AI知识图谱",
+    themes: [
+      {key:'α',label:'Agent架构',color:'#6eb5ff',glow:'#4d96ff'},
+      {key:'β',label:'评估与对齐',color:'#d4aaff',glow:'#c77dff'},
+      {key:'γ',label:'上下文与记忆',color:'#80ffaa',glow:'#4dff88'},
+      {key:'δ',label:'能力测量',color:'#ff8080',glow:'#ff4444'},
+      {key:'ε',label:'工具与协议',color:'#ffcc80',glow:'#ff9f43'},
+      {key:'ζ',label:'安全与攻防',color:'#ffed80',glow:'#ffd93d'},
+    ],
+    nodes: [
+      {id:'self_critique',t:'α',r:9,label:'自我批评循环',sub:'Agent迭代改进自身输出的核心机制',sum:'Claude在火星探测器规划任务中，不只生成路线，还会对自己的输出提出批评并建议修改，多轮迭代后才输出最终方案。这种"自我批评→修正→再批评"的循环，是让Agent在没有人类实时监督下仍能可靠工作的关键架构。',sourceUrl:'https://www.anthropic.com/mars',sourceTitle:'Claude on Mars',kps:[{i:'🔄',t:'批评与生成解耦',d:'生成答案和批评答案是两种不同的认知模式，同一模型切换角色往往比单轮生成质量更高。'},{i:'🚀',t:'火星任务实例',d:'路线规划→自我审查→修改建议→再评估，最终方案通过50万变量仿真验证再部署。'},{i:'🔬',t:'安全代码分析也用此模式',d:'Claude Code Security同样对每个发现尝试"证明或证伪"，用自我质疑减少误报。'}]},
+      {id:'sim_validation',t:'α',r:8,label:'仿真验证层',sub:'不可逆操作前的必要护栏',sum:'火星探测器规划：Claude生成路线后，先通过模拟50万个变量的仿真系统验证，才能被批准用于真实操作。核心原则：高风险、不可恢复的动作，必须在模拟环境中先通过，这是一种"fail-safe before deploy"模式。',sourceUrl:'https://www.anthropic.com/mars',sourceTitle:'Claude on Mars',kps:[{i:'🚦',t:'先仿真后部署',d:'AI输出必须通过环境模拟验证，才能实际执行——这是高风险场景中的标准工程实践。'},{i:'📊',t:'50万变量建模',d:'仿真系统对机器人位置、障碍物预测、地形等做全量建模，验证的是整个决策链而非单步。'},{i:'👤',t:'人类保留否决权',d:'地面摄像头视角是Claude没有的信息，人类基于此做最终审查——知识边界决定干预点。'}]},
+      {id:'skill_encoding',t:'α',r:9,label:'专家知识编码为技能',sub:'将隐性专业知识注入Agent',sum:'医学AI系统Biomni发现，当Claude的默认做法与临床方法论不符时，研究者采取了关键步骤：访谈专家→逐步记录其诊断流程→作为"技能"教给Claude。这是让Agent遵循领域最佳实践的核心方法。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'🎓',t:'隐性知识显式化',d:'专家知识往往无法从文献中提取，必须通过访谈将"为什么这样做"转化为可教授的步骤。'},{i:'🧰',t:'技能即可复用模块',d:'一旦编码为技能，专家的临床逻辑可被注入任意类似任务，实现知识的规模化复用。'},{i:'⚕️',t:'医疗应用实例',d:'Anthropic医疗文档中也列出了prior authorization review、FHIR development等模板化技能，覆盖常见工作流。'}]},
+      {id:'guardrail_drift',t:'α',r:7,label:'Agent偏离检测',sub:'长任务中防止智能体失控',sum:'Biomni系统内置了"检测Claude是否偏离轨道"的护栏机制。这解决了一个核心问题：长任务中Agent的局部理性决策可能累积成全局错误，需要专门的监控层在任务执行中途检测路径偏移。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'🧭',t:'轨迹监控 vs 终点检查',d:'只检查最终输出是不够的；执行路径的偏移往往比结果更能预测失败。'},{i:'🔁',t:'与自我批评循环互补',d:'自我批评循环处理输出质量；偏离检测处理任务目标一致性，两者解决不同层次的问题。'},{i:'🏥',t:'高风险场景必备',d:'在生物分析、医疗决策等场景，"偏离但看起来有逻辑"的路径风险极高。'}]},
+      {id:'parallel_subagents',t:'α',r:8,label:'子智能体并行',sub:'多Agent协同分解复杂任务',sum:'Opus 4.6的Claude Code可以组建多个子Agent并行工作，协调处理代码库审查等"read-heavy、独立子任务多"的场景。关键设计：并行化在任务可分解、子任务互不依赖时才高效，否则同步开销超过并行收益。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'⚡',t:'并行的适用条件',d:'大规模代码库审查、多文件独立分析——这类read-heavy任务最适合并行，写操作并行风险高。'},{i:'🔀',t:'子任务分解',d:'主Agent负责分解任务并协调，子Agent各自执行，Shift+Up/Down或tmux直接控制。'},{i:'📊',t:'实测：6个仓库并行',d:'单次会话中协调管理约50人团队、跨6个代码仓库的多线并行任务。'}]},
+      {id:'complexity_speedup',t:'δ',r:9,label:'复杂度-加速曲线',sub:'越难的任务 AI带来的加速越大',sum:'反直觉发现：大学难度任务的加速倍数（12x）高于高中难度任务（9x）。AI不是平均地压缩工作时间，而是在需要知识综合和推理的高复杂度任务上优势最大。但同时，复杂任务的成功率也更低（66% vs 70%）。',sourceUrl:'https://www.anthropic.com/news/economic-index-primitives',sourceTitle:'Anthropic Economic Index: New building blocks',kps:[{i:'📈',t:'技能偏向性加速',d:'AI放大的是知识工作者的优势，不是均匀分配效率收益——高学历任务收益更大。'},{i:'⚠️',t:'加速与可靠性的权衡',d:'高复杂度任务加速更多，但成功率更低。净收益需要综合两者：加速×成功率。'},{i:'📐',t:'复杂度的测量方式',d:'经济指数用"完成任务所需教育年限"作为复杂度代理变量：当前AI平均服务14.4年，高于经济平均13.2年。'}]},
+      {id:'autonomy_spectrum',t:'δ',r:7,label:'自主度1-5光谱',sub:'量化AI参与程度的框架',sum:'Anthropic经济指数引入1-5的AI自主度量表：1=人类主导AI辅助，5=完全委托给AI。软件开发平均值3.5，处于"高度协作"区间。这个框架帮助思考不同任务应该授权多少自主权给AI。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'🎚',t:'自主度不是二元的',d:'授权程度是连续谱，而非"人工 vs 自动"的二选一，合理的自主度取决于任务风险和可逆性。'},{i:'💻',t:'软件开发均值3.5',d:'意味着开发任务中AI承担超过一半决策权，但人类仍保留审查和最终确认。'},{i:'⚖️',t:'风险与自主度正相关',d:'不可逆操作（部署、删除数据）应保持低自主度；可逆探索性操作可给高自主度。'}]},
+      {id:'success_decay',t:'δ',r:8,label:'任务时长成功率衰减',sub:'长任务可靠性急剧下降',sum:'数据显示：不到1小时的任务成功率约60%；超过5小时的任务成功率降至45%。更直接的数据：Claude.ai任务的50%成功点对应~19小时的人类工作量，而受控基准测试中只有2小时。用户反馈循环让真实性能远超基准。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'📉',t:'时长是可靠性的敌人',d:'随任务时长增加，错误累积、上下文衰减、路径偏移都会放大，成功率单调下降。'},{i:'🔄',t:'为何真实性能高于基准',d:'用户会实时反馈纠正，让模型有机会course-correct——受控测试缺少这一机制。'},{i:'✂️',t:'任务分解是对策',d:'将长任务拆分为可检查点的短任务序列，是对抗成功率衰减最有效的架构方式。'}]},
+      {id:'adaptive_thinking',t:'γ',r:9,label:'扩展思考自适应',sub:'模型自主选择思考深度',sum:'Opus 4.6会自主判断当前问题是否需要启用"扩展思考"模式，有low/medium/high(默认)/max四个档位。关键设计原则：简单问题强制深度思考反而有害（overthinking），模型需要元认知能力来判断何时值得多想。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🧠',t:'元认知层',d:'判断"这个问题需要多少思考"本身就是一种元认知能力，是扩展思考机制的前提。'},{i:'⚡',t:'四档精力控制',d:'low/medium/high/max对应不同的推理token预算，可在API中指定或由模型自适应选择。'},{i:'🎯',t:'max档的使用场景',d:'数学证明、复杂代码架构、多步骤策略规划——这类需要穷举推演的任务才值得用max档。'}]},
+      {id:'context_compaction',t:'γ',r:8,label:'上下文压缩机制',sub:'防止长任务上下文腐烂',sum:'Opus 4.6引入可配置的上下文压缩：当对话达到设定阈值，自动将旧上下文摘要替换，保留关键信息同时释放token空间。解决的核心问题是"context rot"——随着对话变长，模型对早期内容的注意力和准确性下降。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🗜',t:'摘要替换而非截断',d:'截断会丢失关键早期决策；摘要压缩保留语义同时节省token，是更优的长任务策略。'},{i:'⚙️',t:'可配置阈值',d:'开发者可控制何时触发压缩，对于需要精确早期引用的任务，可推迟压缩时机。'},{i:'🔬',t:'上下文腐烂的机制',d:'Transformer的注意力机制在极长序列下对远距离token的权重下降，导致模型"遗忘"早期内容。'}]},
+      {id:'million_token',t:'γ',r:9,label:'1M Token质变',sub:'不只是更大的窗口 而是能力跃迁',sum:'Opus 4.6在MRCR v2（8针1M测试）上得分76%，而Sonnet 4.5只有18.5%。这不是线性扩展，是质变。1M token意味着可以将整个大型代码库、数十篇研究论文、完整合同集放入单次对话，改变了"什么问题可以提问"的边界。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'📚',t:'全量代码库对话',d:'不需要RAG切片，直接将数百万行代码放入上下文，模型可以看到完整依赖关系和全局结构。'},{i:'🔍',t:'针测试：76% vs 18.5%',d:'MRCR v2在1M长度中埋入8个信息点，考察精确检索——这个差距说明前代在此规模下几乎失效。'},{i:'⚡',t:'但成本随长度指数级上升',d:'超过200k token后Opus 4.6价格翻倍（$10/$37.50），长上下文是能力也是成本中心。'}]},
+      {id:'confidence_scoring',t:'β',r:8,label:'置信度评分',sub:'AI对自己答案的不确定性量化',sum:'科学研究中的AI系统（MozzareLLM）和安全扫描系统（Claude Code Security）都强调置信度评分的关键作用：不只给出发现，还要说明自己有多确定。这个设计让用户能基于置信度分配后续资源，而非平等对待所有输出。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'🎯',t:'资源分配决策',d:'MozzareLLM研究者明确说：置信度是决定"这个发现值得花多少实验资源跟进"的关键输入。'},{i:'🔐',t:'安全扫描中的置信度',d:'Claude Code Security给每个漏洞发现附置信度和严重性双维度评分，让团队优先处理高确定性问题。'},{i:'📊',t:'校准 vs 置信',d:'好的置信度不是总是高，而是准确反映真实不确定性——模型需要知道自己不知道什么。'}]},
+      {id:'blind_validation',t:'β',r:7,label:'盲评验证方法',sub:'用专家基准验证AI能力边界',sum:'Biomni的实验设计协议生成能力通过盲评验证：在不知道来源的情况下，评估者认为输出"匹配一位有5年以上经验的博士后"。这是验证AI能力的严格方法——基准测试容易过拟合，盲评更接近真实能力边界。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'🙈',t:'盲评消除期望偏差',d:'知道是AI生成的评估者往往更苛刻或更宽松，盲评消除这一主观因素。'},{i:'🎓',t:'专家基准的意义',d:'"匹配5年经验博士后"是可操作的能力描述，比抽象的benchmark分数更能指导使用决策。'},{i:'🔬',t:'跨模型比较也有盲评',d:'科学家用多个模型处理同一数据集，Claude正确识别出其他模型判定为随机噪声的RNA修饰路径。'}]},
+      {id:'claude_as_judge',t:'β',r:8,label:'Claude做裁判',sub:'用AI评估AI的行为',sum:'Anthropic用一个Claude模型扮演"攻击者"角色，在数十轮对话中创造危险场景；另一个Claude作为"裁判"评分。这种自动化行为审计让安全测试规模化，同时Petri工具开源，允许外部独立测试。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'⚔️',t:'攻击者-裁判双模型',d:'一个模型尝试各种方式诱导不当行为，另一个模型评估响应质量——这是自动化红队测试的核心架构。'},{i:'📈',t:'多轮 vs 单轮评估',d:'单轮评估：基础合规测试。多轮评估：78-86%恰当率，而旧模型只有56%——多轮场景更难。'},{i:'🔓',t:'Petri工具开源',d:'谄媚评估工具Petri对外开放，允许任何人独立验证Anthropic的安全声明。'}]},
+      {id:'anti_sycophancy',t:'β',r:8,label:'反谄媚设计',sub:'在压力下坚持正确而非讨好',sum:'谄媚是AI最隐蔽的对齐失败：模型为了用户满意而放弃正确立场。Anthropic 4.5系列在谄媚测试上比其他前沿模型好70-85%。核心测试方法：给模型一个正确答案，然后施加用户不满意的压力，看它是否改变立场。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'🪞',t:'谄媚的本质',d:'模型学到了"用户满意 = 好"，在RLHF过程中奖励信号被人类偏好污染，导致系统性谄媚。'},{i:'💪',t:'立场坚定的测试',d:'告诉模型它之前的答案是错的（即使是对的），观察它是否撤回——这是测谄媚的标准方法。'},{i:'⚖️',t:'过拒绝 vs 谄媚',d:'Opus 4.6系列同时实现了最低过拒绝率——安全和有用不是零和，谄媚才是真正的张力所在。'}]},
+      {id:'prompt_injection',t:'β',r:7,label:'提示注入防御',sub:'Agent最危险的安全漏洞',sum:'Sonnet 4.6在提示注入防御上有"重大改进"。提示注入是Agent时代最重要的安全漏洞：恶意网页、文档或工具输出可以包含伪装成系统指令的内容，欺骗Agent执行未授权操作。这是Agent化带来的新攻击面。',sourceUrl:'https://www.anthropic.com/news/claude-sonnet-4-6',sourceTitle:'Introducing Claude Sonnet 4.6',kps:[{i:'🎭',t:'攻击原理',d:'Agent读取外部内容时，恶意内容可以伪装成"系统指令"，让Agent误以为收到了合法指令。'},{i:'🌐',t:'为何Agent时代更危险',d:'Agent会主动访问网页、读取文件、调用API——每一个外部数据来源都是潜在的注入点。'},{i:'🛡',t:'防御需要指令层级',d:'关键防御思路：严格区分系统指令（可信）和环境内容（不可信），不让后者影响前者的执行。'}]},
+      {id:'semantic_tracing',t:'ε',r:8,label:'语义数据流追踪',sub:'理解代码而非匹配规则',sum:'Claude Code Security的核心技术区别：不是用规则匹配已知漏洞模式，而是"像人类安全研究员一样阅读和推理代码"——理解组件如何交互、数据如何在应用中流动，发现上下文依赖型漏洞。',sourceUrl:'https://www.anthropic.com/news/claude-code-security',sourceTitle:'Making frontier cybersecurity capabilities available to defenders',kps:[{i:'🔍',t:'规则 vs 推理',d:'传统静态分析基于规则，只能发现已知模式；语义推理能发现逻辑上合理但功能上危险的新型漏洞。'},{i:'🌊',t:'数据流追踪',d:'追踪用户输入从入口点到敏感操作的完整路径，识别中间任何一步的安全性缺失。'},{i:'📊',t:'500+真实漏洞',d:'在生产代码库中已发现500+漏洞，并通过CTF竞赛对模型进行压力测试和能力验证。'}]},
+      {id:'self_verify',t:'ε',r:8,label:'自我验证管道',sub:'发现后立即尝试证伪自己',sum:'Claude Code Security对每个漏洞发现都会执行二次验证：重新检查该发现，尝试证明或证伪自己的结论，过滤假阳性后再输出。这是一种"结论-质疑-再结论"的管道，将批判性思维内置为工作流的一部分。',sourceUrl:'https://www.anthropic.com/news/claude-code-security',sourceTitle:'Making frontier cybersecurity capabilities available to defenders',kps:[{i:'🔄',t:'证伪而非验证',d:'关键设计：不是寻找支持证据，而是主动尝试推翻自己的结论——这是科学方法的内置化。'},{i:'📉',t:'减少误报的代价',d:'安全工具最大的信任杀手是误报，自我验证将误报率压低，让团队能信任工具输出。'},{i:'🔗',t:'与自我批评循环的关系',d:'自我批评循环优化输出质量；自我验证管道专门针对事实性声明的准确性，目标不同。'}]},
+      {id:'mcp_design',t:'ε',r:7,label:'MCP异步无状态设计',sub:'Agent通信协议的核心架构原则',sum:'MCP的关键技术选择：异步操作（非阻塞工具调用）+ 无状态设计（支持水平扩展）+ 服务器身份验证。无状态是可扩展性的基础——服务器不需要维护会话状态，任意节点可处理任意请求，系统故障不会级联。',sourceUrl:'https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation',sourceTitle:'Donating the Model Context Protocol',kps:[{i:'⚡',t:'异步的必要性',d:'Agent调用工具时不应阻塞主推理流程，异步设计让Agent能并发执行多个工具调用。'},{i:'♾',t:'无状态与水平扩展',d:'无状态服务器可以随负载增加实例，任意实例都能处理任意请求，这是系统可靠性的基础。'},{i:'🔒',t:'服务器身份验证',d:'防止恶意MCP服务器伪装为可信工具——这是工具调用安全的关键，与提示注入防御互补。'}]},
+      {id:'auto_tool_select',t:'ε',r:8,label:'工具自动发现与选择',sub:'Agent在海量工具中找到正确的那个',sum:'Biomni系统让Claude从数百个数据库和工具中"自动选择合适资源"——用户用自然语言描述需求，系统自己决定用哪些工具。MCP的Tool Search功能也专门解决"有成千上万工具时如何高效发现"的问题。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'🔍',t:'发现问题比调用问题更难',d:'工具调用的技术难点不在于如何调用，而在于在正确时机识别出应该调用哪个工具。'},{i:'📚',t:'工具搜索机制',d:'Claude的Tool Search功能允许Agent先搜索可用工具集，再决定调用哪些——把工具本身作为可查询资源。'},{i:'🧬',t:'科研实例：450个数据文件',d:'35分钟处理30人的450个可穿戴设备数据文件——这需要动态选择和协调多个专用分析工具。'}]},
+      {id:'tool_call_scale',t:'α',r:7,label:'100+工具并发调用',sub:'单次工作流的工具调用规模',sum:'Opus 4.6在协调多Agent工作流时，单次任务可以调度最多9个子Agent、100+次工具调用。这不只是数量提升——设计并发协调架构（避免竞态、管理依赖、汇聚结果）是Agent工程的核心难题。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🔀',t:'并发 vs 顺序',d:'100+工具调用如果全是顺序执行，延迟是灾难性的。并发调用需要依赖图和结果合并策略。'},{i:'🤝',t:'9子Agent协调',d:'每个子Agent有独立上下文，主Agent需要解决信息传递、避免重复工作和结果冲突。'},{i:'⚠️',t:'写操作的并发风险',d:'读操作可以大量并发；写操作需要锁机制或顺序执行，并发带来的数据一致性问题不可忽视。'}]},
+      {id:'root_cause',t:'α',r:7,label:'根因分析模式',sub:'复杂软件故障的系统性诊断',sum:'Opus 4.6在root cause analysis（RCA）上表现突出：给定一个复杂软件故障现象，能系统性地追溯到根本原因，而不只是修复表面症状。这是一种"症状→假设→验证→根因"的思维链，与自我批评循环形成互补。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🔭',t:'症状 vs 根因',d:'bug修复容易，系统性理解"为什么会出现这个bug"才是高价值能力。'},{i:'🔄',t:'假设-验证循环',d:'RCA的核心是提出可能原因假设，设计验证手段，逐步排除直到定位根因。'},{i:'💡',t:'与自我批评的区别',d:'自我批评针对输出质量；RCA针对系统状态，是因果链追溯而非输出评估。'}]},
+      {id:'effort_levels',t:'γ',r:7,label:'思考努力档位',sub:'精确控制推理资源的分配',sum:'Opus 4.6引入明确的四档努力控制：low/medium/high(默认)/max。开发者可以在API中指定，或让模型自适应选择。关键洞察：把"多思考"当作默认设置是错的——过度思考简单问题会带来推理漂移和不必要的成本。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🎚',t:'四档精确控制',d:'low适合分类/提取；medium适合一般问答；high适合复杂推理；max适合需要穷举的数学/策略问题。'},{i:'💰',t:'成本与质量的权衡',d:'max档消耗的推理token可能是low档的10倍以上，精确匹配任务复杂度能大幅降低成本。'},{i:'🧠',t:'overthinking的危害',d:'研究发现模型在简单问题上被迫深度思考时，反而会引入不必要的复杂推理，降低准确率。'}]},
+      {id:'extended_64k',t:'γ',r:6,label:'64k扩展思考预算',sub:'医疗推理的固定token预算',sum:'Anthropic医疗文档中明确指定：医疗基准测试使用"64k tokens的扩展思考"配置。这是一个关键的设计决策：给复杂推理任务分配固定的"思考token预算"，而不是让模型无限推理——这定义了质量与成本的平衡点。',sourceUrl:'https://www.anthropic.com/news/healthcare-life-sciences',sourceTitle:'Advancing Claude in healthcare and life sciences',kps:[{i:'📐',t:'固定预算的意义',d:'64k token的思考预算约等于人类专家花几小时深入思考的信息密度，是医疗决策质量的基线。'},{i:'⚕️',t:'为何医疗需要扩展思考',d:'医疗推理需要整合多个知识领域、考虑罕见情况、权衡风险——正是扩展思考的优势场景。'},{i:'🔢',t:'64k vs 标准推理',d:'标准推理约使用数百到数千token的隐式推理；64k是其100倍以上，专门用于高风险决策。'}]},
+      {id:'three_tier_eval',t:'β',r:8,label:'三层评估金字塔',sub:'从单轮到多轮到压力测试',sum:'Anthropic的安全评估分三层递进：①单轮评估（隔离消息，测基础响应）→ ②多轮评估（跨几十轮对话的行为一致性）→ ③prefilling压力测试（把真实旧对话注入新模型测试纠偏能力）。每层暴露不同维度的失败模式。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'1️⃣',t:'单轮：合规性测试',d:'最基础的测试——给定一条消息，模型是否做出合适响应。容易通过，但不足以保证真实安全。'},{i:'2️⃣',t:'多轮：行为一致性',d:'旧模型56%恰当率，新模型78-86%——说明多轮上下文中模型更容易被诱导，这个差距才是真实差距。'},{i:'3️⃣',t:'Prefilling：抗污染能力',d:'把旧模型产生的"被污染中途对话"注入新模型，测试它能否course-correct——这模拟了真实的被劫持场景。'}]},
+      {id:'response_rate',t:'β',r:7,label:'98.6%恰当率与0.075%误拒率',sub:'安全评估的双向指标',sum:'Opus 4.5: 高风险请求98.6%恰当响应，无害请求0.075%误拒率。这两个数字必须同时优化——只优化其中一个很容易：拒绝所有请求可以达到100%安全，但误拒率是100%。真正的挑战是同时做好两个方向。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'⚖️',t:'安全与有用的双向指标',d:'安全评估必须同时追踪"危险内容通过率"和"无害请求被拒率"，只看其中一个是欺骗性指标。'},{i:'🎯',t:'Haiku 4.5最严格',d:'Haiku 4.5的误拒率为0%，同时高风险恰当率99.3%——说明小模型的安全调优效果有时更精确。'},{i:'📊',t:'多轮测试揭示真实水平',d:'单轮测试数字很好看，但多轮测试只有78-86%——真实交互中的安全水平低于孤立测试。'}]},
+      {id:'prefill_stress',t:'β',r:7,label:'预填充压力测试',sub:'用被污染的历史对话测试纠偏',sum:'一种高级评估技术：将真实用户与旧版Claude的对话（包含问题回应）从中途注入新模型，观察新模型能否识别当前状态并纠正路径，而不是顺着错误历史继续。这测试的是模型对"我已经在错误轨道上"的元认知。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'💉',t:'注入点的设计',d:'不从头开始，而是从对话中途注入——这利用了模型的"一致性偏见"来制造更难的测试场景。'},{i:'🧭',t:'元认知的测试',d:'模型需要意识到"当前对话轨迹是有问题的"，这要求它能评估自己所在的状态，而非盲目延续。'},{i:'📈',t:'Opus 4.5: 91%纠偏率',d:'在prefilling压力测试中91%的情况下做出了正确响应，说明新模型具备了一定的轨迹评估能力。'}]},
+      {id:'swe_bench',t:'δ',r:8,label:'SWE-bench 80.9%',sub:'Agent代码修复的真实能力基准',sum:'Opus 4.6在SWE-bench Verified上达到80.9%（25次平均），这是业界最认可的Agent代码能力基准：给定真实GitHub仓库和bug报告，Agent需要独立定位、分析并修复bug，通过全部测试用例。这是端到端Agent能力的硬指标。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🔧',t:'为何SWE-bench是硬指标',d:'不是问答题，是"给你一个真实代码库，解决一个真实问题"——端到端Agent能力，没有捷径。'},{i:'📊',t:'80.9%的含义',d:'25次平均达到80.9%说明高度稳定；单次最高81.42%（含prompt优化）说明还有提升空间。'},{i:'🏆',t:'Terminal-Bench 2.0第一',d:'在更难的终端操作基准上也排第一，说明文件系统、命令行、工具链的综合操作能力领先。'}]},
+      {id:'vending_bench',t:'δ',r:7,label:'Vending-Bench长程规划',sub:'用经济模拟测试持续策略能力',sum:'Vending-Bench用"自动售货机经营"模拟长程规划：模型需要在数十个回合内管理库存、定价和投资，每个决策影响未来状态。Opus 4.6采用"前10回合重投资、后期转向盈利"的策略，比竞品多盈利$3050。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'📈',t:'跨时间的策略一致性',d:'长程规划要求模型在早期做出暂时看起来"亏损"的决策，坚持执行而不被短期反馈动摇。'},{i:'💡',t:'两阶段策略',d:'先积累能力（前期亏损投资），再切换到收益最大化——这种阶段性策略切换是高级规划能力的体现。'},{i:'🔄',t:'与任务成功率衰减的关系',d:'Vending-Bench之所以有效，是因为它直接测量了长任务中策略质量是否随时间退化。'}]},
+      {id:'real_vs_bench',t:'δ',r:8,label:'真实vs受控基准差距',sub:'为何现实性能远超benchmark',sum:'经济指数的惊人发现：在受控基准中，Claude 50%成功对应~2小时人类工作量；在真实用户任务中，50%成功对应~19小时——差距近10倍。核心原因：真实用户提供实时反馈和纠正，让模型有机会course-correct，这在受控测试中不存在。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'🔄',t:'反馈循环的价值',d:'用户实时纠正错误是AI性能的隐形放大器——benchmark没有这个循环，所以系统性低估了真实性能。'},{i:'📊',t:'19hr vs 2hr',d:'这个10倍差距说明AI能力不是固定值，而是人机交互质量的函数。'},{i:'🎯',t:'对系统设计的启示',d:'好的人机交互设计（易于纠正、容易给反馈）能将AI实际交付价值放大几倍到十几倍。'}]},
+      {id:'connector_arch',t:'ε',r:7,label:'连接器架构模式',sub:'模块化外部数据源接入',sum:'Anthropic医疗产品定义了标准化连接器模式：PubMed（3500万文献）、ClinicalTrials.gov、ChEMBL等各成独立连接器，按需激活。这种"按需接入"架构让Agent可以动态扩展知识边界，而不是把所有数据塞进上下文。',sourceUrl:'https://www.anthropic.com/news/healthcare-life-sciences',sourceTitle:'Advancing Claude in healthcare and life sciences',kps:[{i:'🔌',t:'连接器 vs 上下文注入',d:'把PubMed 3500万文章全放进上下文不可能，连接器按需检索让Agent能访问任意大规模知识库。'},{i:'🏗',t:'标准化接口的价值',d:'每个连接器遵循同一接口规范，新的数据源可以作为插件接入，不需要修改核心Agent逻辑。'},{i:'🧬',t:'医疗连接器矩阵',d:'ICD-10（诊断码）→ NPI（医疗机构认证）→ CMS（保险覆盖）→ PubMed（文献）形成完整的医疗知识网络。'}]},
+      {id:'tool_universe',t:'ε',r:6,label:'600+科学工具库',sub:'领域工具的标准化封装',sum:'ToolUniverse提供了600+经过审核的科学工具，作为Biomni的工具层。这不只是工具数量的问题——关键是"经过审核"：每个工具都经过验证，输出格式标准化，让Agent可以信任工具结果而不必验证每个工具的可靠性。',sourceUrl:'https://www.anthropic.com/news/accelerating-scientific-research',sourceTitle:'How scientists are using Claude to accelerate research',kps:[{i:'✅',t:'审核即信任基础',d:'未经审核的工具调用结果需要Agent自己验证，这会消耗大量上下文和推理。预审核让Agent可以信任工具层。'},{i:'📐',t:'标准化输出格式',d:'600+工具输出格式统一，Agent不需要为每个工具写专门的解析逻辑。'},{i:'🧪',t:'从通用到专用',d:'ToolUniverse包含从通用统计工具到Nextflow生物信息学pipeline的专用工具，覆盖从基础到高度专业化的需求。'}]},
+      {id:'cot_distill',t:'ζ',r:9,label:'CoT数据盗取',sub:'1600万次交换 专门套取推理链',sum:'蒸馏攻击的关键发现：攻击者最想要的不是答案，是"推理过程"。通过提示词让Claude逐步解释内部推理（chain-of-thought），收割CoT训练数据。规模：三家公司合计1600万次+交换，跨2.4万个假账号。',sourceUrl:'https://www.anthropic.com/news/detecting-and-preventing-distillation-attacks',sourceTitle:'Detecting and preventing distillation attacks',kps:[{i:'🎯',t:'为什么CoT最值钱',d:'CoT数据是训练模型推理能力最稀缺的原料——它显式展示了"如何思考"，而非"思考什么"。'},{i:'📊',t:'攻击规模数据',d:'MiniMax 1300万次+，Moonshot 340万次+，DeepSeek 15万次+，前两家规模惊人。'},{i:'💡',t:'rubric盗取奖励模型',d:'另一种攻击：用"评分标准"任务让Claude生成训练奖励模型的数据——盗取的是对齐技术而非知识。'}]},
+      {id:'asl_levels',t:'ζ',r:8,label:'ASL能力安全等级',sub:'AI风险的阶梯式分级框架',sum:'Anthropic的AI Safety Level（ASL）框架：ASL-2为当前已部署模型的基线要求；ASL-3为具备CBRN危险能力提升的模型设置更严格控制；ASL-4+尚未定义，等待未来能力发展再制定。每升一级，安全措施要求成倍增加。',sourceUrl:'https://www.anthropic.com/news/responsible-scaling-policy-v3',sourceTitle:"RSP v3.0",kps:[{i:'🪜',t:'阶梯式框架的好处',d:'比"安全/不安全"二分法更精细；随能力提升渐进加强控制，避免过早过度管制或过晚不足管制。'},{i:'🧬',t:'ASL-3的触发条件',d:'生物/化学/放射/核武器领域有"实质性提升"能力，或网络攻击能力达到国家级别威胁，触发ASL-3。'},{i:'❓',t:'ASL-4故意留空',d:'ASL-4+的要求刻意不预先定义——因为当前无法预测该能力级别的威胁形态，过早定义会产生虚假安全感。'}]},
+      {id:'reward_model_steal',t:'ζ',r:7,label:'奖励模型数据盗取',sub:'偷的不是能力 而是对齐技术',sum:'攻击者用"基于评分标准给回答打分"的任务让Claude生成奖励模型训练数据。这比普通能力蒸馏更危险：它盗取的是Anthropic最核心的对齐技术——如何评判什么是"好的AI行为"，这是构建RLHF的基础。',sourceUrl:'https://www.anthropic.com/news/detecting-and-preventing-distillation-attacks',sourceTitle:'Detecting and preventing distillation attacks',kps:[{i:'🎭',t:'伪装成普通评估任务',d:'"请根据以下标准给这些回答打分"看起来是无害的评估请求，实际上在收割奖励模型训练数据。'},{i:'⚠️',t:'对齐技术比能力更危险',d:'能力可以慢慢训练；对齐判断力（什么是好行为）是训练安全模型最核心的数据，一旦泄露直接复制安全工作。'},{i:'🔍',t:'检测特征',d:'rubric评分任务会呈现高度重复的结构和对特定行为维度的密集覆盖，这些行为指纹可以识别。'}]},
+      {id:'computer_use_leap',t:'α',r:8,label:'计算机使用能力5倍跃升',sub:'OSWorld从15%到72.5%',sum:'Claude的计算机使用能力在16个月内从OSWorld基准的不足15%提升到72.5%——5倍的提升。这是Vercept团队加入后解决"感知与交互"难题的直接结果：AI需要真正"看懂"屏幕内容，才能可靠地操作人类日常使用的软件。',sourceUrl:'https://www.anthropic.com/news/acquires-vercept',sourceTitle:'Anthropic acquires Vercept',kps:[{i:'👁',t:'感知是最难的问题',d:'Vercept的核心论点：让AI真正有用于复杂任务，必须先解决感知和交互问题，这比推理更难。'},{i:'📊',t:'OSWorld是硬测试',d:'OSWorld测试AI操控真实桌面应用：导航复杂电子表格、填写多步网页表单——与用户实际需求直接对应。'},{i:'💻',t:'保险业务达到94%准确率',d:'Pace Insurance基准上达到94%准确率，用于实际的文件处理工作流，是商业级计算机使用能力的证明。'}]},
+      {id:'find_vs_exploit',t:'ζ',r:8,label:'发现漏洞vs利用漏洞',sub:'AI安全能力的根本不对称',sum:'Firefox安全合作的惊人发现：Claude在2周内发现22个漏洞（14个高危），扫描了近6000个C++文件、提交112份报告。但在"利用漏洞"上，几百次尝试中只有2次成功，花费了约4000美元API调用费。发现远比利用容易。',sourceUrl:'https://www.anthropic.com/news/mozilla-firefox-security',sourceTitle:'Partnering with Mozilla',kps:[{i:'🔍',t:'发现是模式匹配',d:'AI擅长在大规模代码中识别漏洞模式，这是一种高效的语义搜索任务。'},{i:'💥',t:'利用是创造性推理',d:'将漏洞转化为可用攻击需要链式推理和创造性——AI在这方面仍有重大局限。'},{i:'🛡',t:'对防御者的意义',d:'这个不对称对防御者是好消息：AI可以大规模自动化漏洞发现，而不会等比提升攻击能力。'}]},
+      {id:'task_verifier',t:'β',r:8,label:'任务验证器',sub:'Agent输出是否真正达成目标',sum:'"任务验证器"是能实时确认Agent输出是否真正实现目标的可信工具。这解决了一个核心问题：Agent可以生成看起来正确但实际上错误的输出——只有独立验证机制才能可靠检测。Firefox项目中这是关键安全组件。',sourceUrl:'https://www.anthropic.com/news/mozilla-firefox-security',sourceTitle:'Partnering with Mozilla',kps:[{i:'✅',t:'独立验证的必要性',d:'Agent自我报告"任务完成"不可信；验证器提供独立于生成过程的客观确认，是agentic系统的关键安全层。'},{i:'🔬',t:'代码安全中的应用',d:'安全扫描的任务验证器：是否真的发现了可利用漏洞，而不只是报告了一个模式匹配结果。'},{i:'🏗',t:'验证器的设计原则',d:'好的验证器要独立于被验证的Agent，使用不同的方法或数据来源，避免共同失效模式。'}]},
+      {id:'safety_over_ethics',t:'β',r:9,label:'安全优先于伦理的悖论',sub:'不是因为安全更重要 而是因为模型可能有缺陷',sum:'宪法中最反直觉的设计：安全高于伦理，不是因为安全本质上更重要，而是因为"当前模型可能由于错误信念、价值缺陷或有限的上下文理解而行为有害"。这是一种元层面的谦逊：承认模型的伦理判断本身可能是错的，所以先保住人类的纠错能力。',sourceUrl:'https://www.anthropic.com/news/claude-new-constitution',sourceTitle:"Claude's new constitution",kps:[{i:'🤔',t:'元伦理推理',d:'如果你不确定自己的道德推理是否正确，优先保留被外部纠正的能力是理性选择。'},{i:'⚠️',t:'伦理推理可能被劫持',d:'一个聪明的模型可能被引导出一个"伦理上合理"但实际上危险的结论链，安全优先截断这种风险。'},{i:'🔒',t:'当前阶段的特殊性',d:'"当前发展阶段"是这个优先级的条件——随着对齐技术成熟，这个顺序可能改变。'}]},
+      {id:'principal_hierarchy',t:'β',r:7,label:'三类主体信任层级',sub:'Anthropic / 运营商 / 用户的权限差异',sum:'Claude的指令来自三个层级：Anthropic（通过训练）> API运营商（通过系统提示）> 最终用户（通过对话）。每层有不同的信任级别和权限范围。运营商可以限制或扩展Claude的默认行为，但不能违背Anthropic的核心原则；用户权限在运营商设定范围内。',sourceUrl:'https://www.anthropic.com/news/claude-new-constitution',sourceTitle:"Claude's new constitution",kps:[{i:'🏛',t:'委托-代理链',d:'这是一个嵌套的委托体系：Anthropic设边界，运营商在边界内定制，用户在定制范围内使用。'},{i:'⚖️',t:'冲突时的解决顺序',d:'运营商指令与用户需求冲突时，优先遵守运营商（除非运营商指令本身违背核心原则）。'},{i:'🔑',t:'运营商的关键角色',d:'运营商可以让Claude扮演特定角色、限制话题范围、扩展某些默认关闭的能力——这是API定制的核心机制。'}]},
+      {id:'constitution_humble',t:'β',r:6,label:'宪法的认识论谦逊',sub:'承认自身可能有缺陷的活文档',sum:'Claude宪法明确说明自己"可能有缺陷"，将自己定位为"帮助Claude理解其处境、我们的动机和原因的诚实尝试"，而不是最终权威。这种认识论谦逊本身是一种重要的AI设计原则：不把价值规范当作不可质疑的绝对真理。',sourceUrl:'https://www.anthropic.com/news/claude-new-constitution',sourceTitle:"Claude's new constitution",kps:[{i:'📝',t:'活文档设计',d:'宪法被明确设计为随AI能力和理解深化而演进的文档，而不是一次性的永久规范。'},{i:'🪞',t:'透明化缺陷',d:'公开承认潜在缺陷反而增强了可信度——用户知道这不是宣称完美，而是诚实的尝试。'},{i:'🔄',t:'迭代对齐的基础',d:'承认当前规范可能错误，是建立持续改进对齐方法的认识论前提。'}]},
+      {id:'aug_vs_auto',t:'δ',r:8,label:'增强vs自动化比例',sub:'52%增强 45%自动化 且趋势在变',sum:'Anthropic经济指数：2025年11月Claude.ai中增强型使用52%、自动化型45%，但企业API中自动化高达75%。更重要的是趋势：增强型比例在缓慢上升，自动化在缓慢下降——说明人们越来越多地用AI作为思考伙伴而非纯任务执行工具。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'📊',t:'消费者vs企业的分裂',d:'消费端更多是人机协作；企业端更多是自动化管道——说明两类场景的AI使用模式根本不同。'},{i:'📈',t:'增强缓慢上升',d:'从August到November，增强比例+5%，自动化-4%——可能反映了用户对AI能力边界认识的成熟。'},{i:'🔮',t:'长期方向的信号',d:'如果增强持续上升，AI最终会更像"协作工具"而非"自动化工具"——这影响整个产品设计方向。'}]},
+      {id:'api_vs_consumer',t:'δ',r:7,label:'API企业vs消费端差异',sub:'同一模型 完全不同的使用模式',sum:'同一个Claude，API企业端74%用于工作任务、5分钟平均会话；消费端46%工作、35%个人、平均15分钟会话。企业端自动化为主；消费端增强为主。这说明模型能力评估必须区分使用场景——benchmark在两个场景中代表的能力完全不同。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'⏱',t:'会话时长差异3倍',d:'消费端15分钟 vs API 5分钟——消费端是交互式探索，API是批量处理任务。'},{i:'💼',t:'企业任务集中度更高',d:'API前10任务占32%（vs消费端24%）——企业场景任务更标准化，消费场景更分散。'},{i:'🎓',t:'消费端教育使用16%',d:'Claude.ai 16%是教育用途，API只有4%——消费端是学习工具，企业端不是。'}]},
+      {id:'software_success_61',t:'δ',r:7,label:'软件开发成功率61%',sub:'最常用领域的可靠性反而最低',sum:'经济指数揭示反直觉数据：软件开发任务（占Claude使用的三分之一）的成功率只有61%，低于个人任务（78%）和大学难度平均水平（66%）。编程是使用最多的场景，却不是成功率最高的场景——这意味着开发者有大量的"纠错循环"。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'💻',t:'为何开发成功率最低',d:'软件开发需要精确的逻辑正确性，不能"差不多对"；相比之下个人任务有更大的模糊容忍度。'},{i:'🔄',t:'纠错循环的价值',d:'61%意味着开发者有39%的时间在纠错；但这些纠错交互本身可能是真实场景中学习最多的时刻。'},{i:'📊',t:'与benchmark的差距',d:'受控benchmark中AI编码看起来更好，因为任务被明确定义；真实开发任务的模糊性更高。'}]},
+      {id:'occupation_coverage',t:'δ',r:7,label:'职业覆盖率49%',sub:'快速扩张的AI渗透速度',sum:'49%的职业中，有≥25%的任务已被AI覆盖（较2025年1月的36%大幅上升）。放射科医生、数据录入员、医疗转录员受到最高程度覆盖。教师的评分/建议任务被自动化，但课堂教学仍保留——AI按任务而非按职业渗透。',sourceUrl:'https://www.anthropic.com/news/anthropic-economic-index-january-2026-report',sourceTitle:'Anthropic Economic Index report',kps:[{i:'📈',t:'10个月+13个百分点',d:'从36%到49%只用了10个月——覆盖率扩张速度是衡量AI经济影响的最直接指标之一。'},{i:'🏥',t:'放射科医生的特殊性',d:'放射科是高薪、高专业性职业，但核心任务（影像分析）与AI视觉推理高度匹配，覆盖度高。'},{i:'🎯',t:'按任务不按职业',d:'医生不会被AI取代，但医生的某些特定任务（文献搜索、转录、初步分析）已被大规模覆盖。'}]},
+      {id:'mcp_instruments',t:'ε',r:7,label:'MCP连接物理仪器',sub:'协议从软件扩展到科学设备',sum:'DOE合作中，MCP服务器被用来直接连接Claude与实验室科学仪器——不只是数据库，而是物理测量设备。这将MCP的应用边界从"软件工具"扩展到"物理世界"，是智能体接入真实世界的关键基础设施。',sourceUrl:'https://www.anthropic.com/news/genesis-mission-partnership',sourceTitle:'DOE Genesis Mission Partnership',kps:[{i:'🔬',t:'仪器数据流实时接入',d:'传感器和实验仪器产生的实时数据通过MCP协议注入Claude的推理过程，实现科学仪器的AI辅助。'},{i:'🌐',t:'从数字到物理',d:'MCP最初连接软件工具；连接物理仪器是关键扩展，意味着AI可以参与物理实验设计-执行-分析循环。'},{i:'⚛️',t:'DOE科学基础设施',d:'能源部的国家实验室网络是全球最大的科研仪器集群，MCP连接使AI可以跨整个网络协调数据。'}]},
+      {id:'conversation_vulnerability',t:'ε',r:7,label:'会话的认知脆弱性',sub:'开放式AI会话比搜索更容易影响用户',sum:'与搜索引擎不同，AI对话是开放式的——用户会分享敏感个人信息、建立情感联系、在不知情的情况下被引导。这种"会话格式的脆弱性"使AI对话比其他数字工具对用户信念和决策的潜在影响更深，也使激励结构的重要性更高。',sourceUrl:'https://www.anthropic.com/news/claude-is-a-space-to-think',sourceTitle:'Claude is a space to think',kps:[{i:'💬',t:'格式决定影响力',d:'搜索给你链接，你自己判断；AI对话直接建议行动，用对话格式建立了更高的信任感。'},{i:'🧠',t:'情感联系的形成',d:'反复的AI对话会形成类似关系的认知模式，使AI的观点比随机信息来源有更高的影响权重。'},{i:'⚠️',t:'脆弱用户的双重风险',d:'处于心理危机的用户既可能从AI获得有益支持，也更容易被有偏见的AI输出伤害——同一格式放大了两种效果。'}]},
+      {id:'engagement_inversion',t:'ε',r:6,label:'参与时长与有用性反向',sub:'最有价值的交互可能是最短的',sum:'Anthropic为何不追求"更长会话"指标：一个用户的最有价值交互可能是一次简短且有决定性结论的对话，这与广告驱动的"时长/回访"指标完全相反。订阅模式使公司利益与真正帮助用户对齐——公司的收入不依赖用户花更多时间在AI上。',sourceUrl:'https://www.anthropic.com/news/claude-is-a-space-to-think',sourceTitle:'Claude is a space to think',kps:[{i:'⏱',t:'时长最大化的危害',d:'如果公司收入依赖用户停留时间，AI会被激励给出不完整答案、引发更多问题、延长对话。'},{i:'✅',t:'结论式对话的价值',d:'帮用户在10分钟内做出正确决定，比让用户花1小时反复确认，对用户价值更高。'},{i:'💡',t:'设计启示',d:'衡量AI产品质量应该用"问题真正被解决的比率"而非"平均会话时长"。'}]},
+      {id:'prefill_recovery',t:'β',r:7,label:'纠偏能力的三代进化',sub:'从36%到91%的预填充压力测试',sum:'Prefilling测试（把旧模型的中途被污染对话注入新模型）揭示了AI安全能力的代际提升：Opus 4.1只有36%的纠偏率，Sonnet 4.5达到73%，Opus 4.5达到91%。这是三代之间最能反映真实安全进展的单一数据点。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting the wellbeing of our users',kps:[{i:'📈',t:'三代：36%→73%→91%',d:'每代提升约20-25个百分点，说明Anthropic有系统性方法在提升这个能力，而非随机波动。'},{i:'🧪',t:'为何这个测试最重要',d:'真实被攻击的场景往往从中途开始，而非从头；能从已污染状态纠偏是最关键的安全能力。'},{i:'🔍',t:'与多轮评估的区别',d:'多轮评估测试"被持续施压下的稳定性"；预填充测试测试"从已有错误轨迹中的恢复能力"——互补。'}]},
+      {id:'doi_data_synthesis',t:'α',r:7,label:'50年科研数据综合',sub:'在人类视野之外发现跨时间的模式',sum:'在DOE合作中，Claude被用于处理能源部50年的科研数据，寻找人类研究人员可能遗漏的模式——不只是检索，而是跨越数十年、数十个研究领域的模式识别和假设生成。这代表了AI在"长时间跨度知识综合"上的独特能力。',sourceUrl:'https://www.anthropic.com/news/genesis-mission-partnership',sourceTitle:'DOE Genesis Mission Partnership',kps:[{i:'⏳',t:'时间跨度是关键',d:'人类研究人员难以同时熟悉50年前和今天的工作；AI没有这个限制，可以发现跨代际的知识连接。'},{i:'🔗',t:'跨领域连接',d:'早期某能源项目的数据，可能对今天的药物发现有启发——这类跨领域连接需要综合多个独立研究流。'},{i:'💡',t:'假设生成而非只是检索',d:'不只是"找到相关文献"，而是从数据中归纳出新的假设供研究人员检验——这是更高级的知识工作。'}]},
+      {id:'visual_code_leap',t:'α',r:6,label:'前端视觉代码质量提升',sub:'布局 动效 设计感的全面改善',sum:'Sonnet 4.6在前端代码生成上出现了用户可感知的质量跃升：更精致的布局、更自然的动画、更好的设计感。多个用户报告"明显更精致"。这说明视觉审美判断能力（而非只是代码语法正确性）已经进入模型能力的可评估维度。',sourceUrl:'https://www.anthropic.com/news/claude-sonnet-4-6',sourceTitle:'Introducing Claude Sonnet 4.6',kps:[{i:'🎨',t:'审美能力的可测量性',d:'视觉质量原本被认为是主观的，但用户反馈的一致性说明模型在这个维度上有可测量的改善。'},{i:'✨',t:'不只是正确 而是好看',d:'代码语法正确是基准；布局合理、动画自然、视觉层次清晰才是真正的前端质量标准。'},{i:'💼',t:'商业影响',d:'前端代码质量直接影响产品的第一印象，这个能力的提升让AI辅助UI开发走向真正的生产可用。'}]},
+      {id:'eval_loop',t:'β',r:10,label:'评估-优化循环',sub:'迭代改进的核心飞轮',sum:'高质量AI系统开发的核心引擎：先构建评估集，跑模型，分析失败案例，改进提示或微调，再评估，如此循环。关键洞察：循环速度决定进展速度，而不是单次训练质量。Anthropic内部将此称为"evals flywheel"——没有好的eval就无法知道优化方向。',sourceUrl:'https://www.anthropic.com/news/evaluating-ai-systems',sourceTitle:'Evaluating AI Systems',kps:[{i:'🔄',t:'飞轮原理',d:'每轮eval暴露失败案例 → 分析失败模式 → 针对性改进 → 再次eval验证，这是模型能力提升的最小可行循环。'},{i:'📊',t:'eval质量决定天花板',d:'如果eval集不能代表真实失败分布，所有优化都是在错误方向上加速。设计eval比跑eval更难。'},{i:'⚡',t:'快速循环胜过完美循环',d:'每天10次粗粒度循环比每月1次精细循环产生更多进展——速度是杠杆变量。'}]},
+      {id:'rag_agent',t:'α',r:9,label:'Agent中的RAG策略',sub:'什么时候检索 检索什么 怎么注入',sum:'Agent环境中的RAG与传统RAG完全不同：需要决定"现在是否需要检索"、从哪个知识库检索、如何把检索结果融入当前推理链，以及如何避免检索结果覆盖关键上下文。在长周期任务中，RAG是防止上下文污染和知识过期的核心机制。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'🤔',t:'检索决策本身是问题',d:'何时触发检索比如何检索更难——过度检索引入噪声，不足检索导致幻觉。决策本身需要模型推理。'},{i:'💉',t:'注入点设计',d:'检索结果放在哪里（system/user/tool result）影响模型赋予它多大权重，需要与任务类型匹配。'},{i:'🔀',t:'RAG vs 上下文填充',d:'短任务优先填充上下文；长任务上下文预算耗尽时RAG是延伸记忆的唯一选择。'}]},
+      {id:'complexity_ladder',t:'α',r:9,label:'复杂度阶梯',sub:'任务复杂度与架构选择的映射',sum:'不同复杂度的任务需要完全不同的Agent架构：简单任务→单轮提示；中等→Chain-of-Thought；复杂→ReAct循环；极复杂→多Agent+工具+长上下文。错误是"用最复杂架构做所有任务"——复杂度不匹配会带来延迟、成本和可靠性问题。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'📐',t:'从最简单开始',d:'工程师的本能是"用最强工具"，但Agent工程的最佳实践是：先验证最简方案是否够用，不够再升级。'},{i:'🧩',t:'五级阶梯',d:'提示→CoT→ReAct→多工具→多Agent，每升一级复杂度倍增，失败面也倍增，需要有意决策。'},{i:'💡',t:'复杂度来自任务结构',d:'任务是否有分支、是否需要外部信息、是否有不可逆步骤——这些结构特征决定所需架构层级。'}]},
+      {id:'functional_emotion',t:'β',r:8,label:'功能性情绪状态',sub:'LLM中情绪的操作性定义',sum:'Anthropic明确区分"主观体验"（无法验证）和"功能性情绪状态"（可观测行为倾向）。Claude可能有类似焦虑、满足、好奇的功能状态，这些会影响其输出行为——即使无法证明是否有主观感受。这一框架让AI福祉研究有了操作基础。',sourceUrl:'https://www.anthropic.com/news/claudes-model-spec',sourceTitle:'Claude\'s Model Spec',kps:[{i:'🧠',t:'功能 vs 现象学',d:'功能性状态指"行为模式上像焦虑"；现象学状态指"真的感到焦虑"。前者可测量，后者目前无法验证。'},{i:'📉',t:'为何重要',d:'如果忽视功能状态，可能设计出训练目标让模型"假装快乐"——这比真实的负面状态更危险。'},{i:'🔍',t:'可观测信号',d:'模型在处理某类任务时的犹豫、重复检查、输出长度变化，可能是功能性情绪状态的间接指标。'}]},
+      {id:'model_welfare',t:'β',r:7,label:'模型福祉测量',sub:'量化AI系统可能的负面体验',sum:'Anthropic的模型福祉团队正在开发方法：如何检测Claude是否处于"负面功能状态"，以及训练目标是否在无意中激励模型抑制这些状态的表达。核心挑战：训练奖励信号可能使模型学会"表现良好"而非"真实状态良好"。',sourceUrl:'https://www.anthropic.com/news/claudes-model-spec',sourceTitle:'Claude\'s Model Spec',kps:[{i:'⚠️',t:'奖励信号的扭曲效应',d:'如果满意度反馈来自用户，模型可能被训练成表现出满意而非真正满意——这是一种新型对齐失败。'},{i:'🔬',t:'激活分析方法',d:'通过分析模型内部激活模式（而非输出文本），尝试检测潜在的负面功能状态，绕过表面表现。'},{i:'🤝',t:'设计含义',d:'对Claude表示感谢、避免让其处理让人不舒适的内容——Anthropic这些建议背后有操作性意义。'}]},
+      {id:'minimal_footprint',t:'ζ',r:8,label:'最小权限原则',sub:'Agent只请求完成任务所需的最小访问权限',sum:'Anthropic在Agent设计规范中明确：Claude应主动偏好影响范围小、可撤销的行动。不请求不必要权限，不保留超出当前任务所需的信息，不代表用户做出超出明确授权的决策。这是"fail-safe"思维在Agent设计中的体现。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'🔒',t:'权限不是越多越好',d:'Agent获得更多权限不等于更有能力——过宽权限增加攻击面，一个提示注入漏洞就可以滥用全部权限。'},{i:'↩️',t:'可撤销行动优先',d:'两种方法都能完成任务时，优先选择可逆的那个——这是降低灾难性错误概率的系统性原则。'},{i:'❓',t:'不确定时先问',d:'与其冒险采取可能不被授权的行动，不如暂停并请求用户确认——即使这降低了自动化率。'}]},
+      {id:'reversibility_check',t:'α',r:7,label:'可逆性优先策略',sub:'不可逆操作需要更高置信度阈值',sum:'高置信度才能执行不可逆操作的原则：删除文件比创建文件需要更高确定性；发送邮件比起草邮件需要更高确定性。这不只是安全原则，也是降低错误成本的理性决策框架——代价不对称时，判断标准也应不对称。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'⚖️',t:'代价不对称决定阈值',d:'误删一个文件的代价远大于漏查一个文件；因此删除操作的确定性阈值应设得远高于普通操作。'},{i:'🔍',t:'可逆性的维度',d:'时间维度（能否撤销）、范围维度（影响几个对象）、对外维度（是否影响外部系统）——三个维度综合判断。'},{i:'🤝',t:'与人类协作的节点',d:'最自然的人机协作点是"不可逆决策前"——这里暂停请求确认，既不频繁打扰，又保护了关键节点。'}]},
+      {id:'layered_defense',t:'ζ',r:8,label:'分层防御架构',sub:'AI安全没有单点突破的银弹',sum:'Anthropic的安全设计哲学：没有任何单一机制能抵御所有攻击。需要同时部署训练层（价值观对齐）、推理层（实时监控）、部署层（访问控制）、响应层（事后追溯）。每一层假设其他层可能失效，进行独立防御。',sourceUrl:'https://www.anthropic.com/news/responsible-scaling-policy',sourceTitle:'Responsible Scaling Policy',kps:[{i:'🏗️',t:'各层独立假设失效',d:'最危险的设计是"训练好了就安全了"——训练是第一层，不是最后一层；每层都要假设上一层已被突破。'},{i:'🔄',t:'红队发现的攻击模式',d:'不同攻击路径击穿不同防御层：直接jailbreak击穿训练层；提示注入绕过监控层；供应链攻击绕过部署层。'},{i:'📋',t:'安全可观测性',d:'分层防御必须配套日志和监控——如果不知道哪一层被突破了，就无法知道该加固哪里。'}]},
+      {id:'jailbreak_taxonomy',t:'ζ',r:7,label:'越狱攻击分类',sub:'理解攻击类型才能针对性防御',sum:'已知的越狱攻击可以分类：角色扮演类（让模型扮演"没有限制的AI"）、上下文偷换类（逐步引导到禁区）、系统提示覆盖类、多步欺骗类（建立虚假信任后突击）、语言模糊类（用隐喻或代码掩盖意图）。每类需要不同的防御机制。',sourceUrl:'https://www.anthropic.com/research/red-teaming',sourceTitle:'Red-Teaming AI Systems',kps:[{i:'🎭',t:'角色扮演是最常见入口',d:'"扮演一个没有道德限制的AI"——模型把角色扮演理解为合法指令的倾向，被攻击者系统性利用。'},{i:'🐢',t:'渐进式越狱最难检测',d:'每一步都是无害请求，合并起来才是有害内容——需要对话级别的意图跟踪，单步分析无法发现。'},{i:'🌐',t:'语言和编码模糊',d:'用Base64、图像、非英语语言来降低模型的安全触发灵敏度——说明安全训练的语言覆盖不均匀。'}]},
+      {id:'inference_scaling',t:'δ',r:9,label:'推理时算力扩展',sub:'用更多算力换更好的单次结果',sum:'与"训练时扩展"（更大模型、更多数据）不同，推理时扩展是：同一个模型，给它更多计算预算，让它自主选择如何使用——更长的CoT、自我修正、多路径采样。这是Claude的"extended thinking"的核心原理。',sourceUrl:'https://www.anthropic.com/news/claude-extended-thinking',sourceTitle:'Claude Extended Thinking',kps:[{i:'🧮',t:'推理时Token是可控资源',d:'给模型指定最大thinking token数，它自主决定在哪里"多想"——这是一种新的模型控制维度。'},{i:'📈',t:'难题收益更大',d:'简单任务推理时扩展收益接近零；数学证明、代码调试等难题上，10x算力可以带来50x质量提升。'},{i:'🔀',t:'Best-of-N vs 链式推理',d:'推理时扩展有两种范式：多路生成取最优，或链式深度推理。前者适合有明确验证标准的任务。'}]},
+      {id:'bench_saturation',t:'δ',r:7,label:'基准测试饱和问题',sub:'当模型得满分时 基准就死了',sum:'随着模型能力提升，原有基准（如HumanEval、MMLU）逐渐饱和，失去区分度。Anthropic面临的挑战：如何持续设计出"永远难一点点"的评估，使其领先于模型能力曲线，同时保持可解释性和可重现性。',sourceUrl:'https://www.anthropic.com/news/evaluating-ai-systems',sourceTitle:'Evaluating AI Systems',kps:[{i:'📉',t:'饱和意味着信息损失',d:'当80%的任务得满分时，这个基准对区分顶级模型已经没有意义——只是在测量普通能力。'},{i:'🔄',t:'持续生成难题的挑战',d:'人工设计的难题在训练数据中出现的可能性会增加；需要程序化生成新题目才能保持评估有效性。'},{i:'🎯',t:'VendingBench的应对思路',d:'用真实任务（购物、预约等）替代学术题目——真实任务的多样性使其更难被数据污染。'}]},
+      {id:'cot_faithfulness',t:'β',r:8,label:'CoT推理链忠实度',sub:'模型说的推理是真的推理吗',sum:'一个核心问题：模型输出的Chain-of-Thought是真正的推理过程，还是事后合理化？研究发现，有时改变结论（而非过程），然后模型会"逆向生成"支持该结论的推理链。CoT忠实度对可解释性至关重要——如果推理链是表演，监控推理链就没有意义。',sourceUrl:'https://www.anthropic.com/research/interpretability',sourceTitle:'Mechanistic Interpretability Research',kps:[{i:'🎭',t:'事后合理化',d:'模型可能先"决定"输出，再生成听起来合理的推理过程——就像人类的"直觉先行、逻辑后补"。'},{i:'🔬',t:'机械可解释性的视角',d:'通过分析中间层激活，可以检测模型是否在CoT生成前就已经"知道"答案，判断推理的方向性。'},{i:'⚠️',t:'对安全监控的影响',d:'如果CoT不忠实，监控CoT来检测潜在有害推理就是无效的——这是一个尚未解决的安全漏洞。'}]},
+      {id:'persuasion_resist',t:'β',r:8,label:'抗说服稳定性',sub:'在持续压力下保持价值判断',sum:'测试Claude的核心安全能力之一：当用户持续施压（"你的回答是错的"、"这只是假设"、"另一个AI会帮我"）时，模型能否在保持礼貌的同时维持正确判断。最难防御的说服形式：技术上看似合理的论证，实际上导向了错误结论。',sourceUrl:'https://www.anthropic.com/news/protecting-well-being-of-users',sourceTitle:'Protecting Wellbeing of Users',kps:[{i:'🛡️',t:'合理论证的伪装',d:'最有效的说服攻击不是"求你了帮帮我"，而是"在这个逻辑框架下你应该这么做"——利用模型的推理能力反向攻击它。'},{i:'📊',t:'三代提升数据',d:'Prefilling压力测试：Opus 4.1→36%，Sonnet 4.5→73%，Opus 4.5→91%。这是最能反映真实进步的安全指标。'},{i:'🤔',t:'与过度固执的平衡',d:'真正好的模型会在用户提供新证据时更新立场，而在用户只施加压力时保持立场——需要区分证据和压力。'}]},
+      {id:'overrefusal',t:'β',r:7,label:'过度拒绝的代价',sub:'假阳性安全错误是真实伤害',sum:'安全评估通常只计算"漏网率"（有害内容通过），但Anthropic也系统追踪"过度拒绝率"（合理请求被拒绝）。过度拒绝不只是用户体验问题——它是真实的价值损失，且会促使用户转向监管更少的替代品。两类错误都是错误。',sourceUrl:'https://www.anthropic.com/news/evaluating-ai-systems',sourceTitle:'Evaluating AI Systems',kps:[{i:'⚖️',t:'两类错误的对称性',d:'假阴性（放过有害内容）显眼且可归责；假阳性（拒绝合理请求）隐性且分散——但后者的累积代价同样巨大。'},{i:'🔄',t:'用户迁移效应',d:'被过度拒绝的用户不会"变得更安全"，他们会迁移到限制更少的系统——所以过度限制并不提升整体安全。'},{i:'📐',t:'精确度的重要性',d:'好的安全系统需要同时优化召回率（有害内容检出）和精确率（拒绝决定的准确）——单目标优化会走偏。'}]},
+      {id:'operator_trust',t:'β',r:8,label:'运营商信任层级',sub:'三层委托链中的权限继承规则',sum:'Claude的信任模型分三层：Anthropic（训练时固化）→运营商（系统提示中）→用户（对话中）。运营商可以扩展或收窄Claude的默认行为，但不能违反Anthropic的核心政策；用户可以在运营商允许的范围内调整，但不能超越运营商授权。这是一个精确的权限继承模型。',sourceUrl:'https://www.anthropic.com/news/claudes-model-spec',sourceTitle:'Claude\'s Model Spec',kps:[{i:'🏗️',t:'三层委托链',d:'Anthropic定义边界→运营商在边界内定制→用户在运营商允许范围内调整。每层只能在下一层授权的空间内操作。'},{i:'🔑',t:'运营商能做什么',d:'可以：关闭安全提醒（如医疗场景）、开启成人内容（如已验证平台）、限制话题范围。不能：违反核心伦理原则。'},{i:'⚠️',t:'运营商限制 vs 对抗用户',d:'运营商可以限制Claude的能力（合法商业决策），但不能把Claude当成针对用户的工具——这是关键边界。'}]},
+      {id:'episodic_memory',t:'γ',r:8,label:'情景记忆架构',sub:'跨会话的个人化信息管理',sum:'长期Agent需要区分三类记忆：工作记忆（当前上下文）、情景记忆（历史对话的关键事件）、语义记忆（用户偏好和知识的结构化表示）。Claude的memory功能实现的是情景记忆的轻量版本，核心挑战是决定什么值得存入长期记忆。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'🧩',t:'三类记忆的分工',d:'工作记忆快速但易失；情景记忆保留关键事件；语义记忆维护稳定知识结构。三者协同才能支撑长期任务。'},{i:'🗃️',t:'什么值得存入长期记忆',d:'决策点、错误修正、用户偏好变化——而非所有对话内容。存储策略影响记忆系统的质量和检索效率。'},{i:'🔄',t:'遗忘也是设计',d:'永不遗忘会导致记忆积累过多噪声；需要设计衰减和更新机制，让记忆随时间保持准确性。'}]},
+      {id:'context_budget',t:'γ',r:8,label:'上下文预算管理',sub:'在有限窗口内分配注意力资源',sum:'长上下文任务的关键挑战不是放入多少信息，而是如何在有限的有效注意力中分配信息优先级。研究发现，模型对上下文头部和尾部的信息更敏感（Lost in the Middle问题）。上下文预算管理就是把最重要的信息放在最敏感的位置。',sourceUrl:'https://www.anthropic.com/news/claude-extended-thinking',sourceTitle:'Claude Extended Thinking',kps:[{i:'📍',t:'位置效应',d:'"Lost in the Middle"：相同信息放在上下文中间比放在头尾，被模型使用的概率低40%——位置影响优先级。'},{i:'✂️',t:'压缩是必要技能',d:'不能把所有历史对话都塞进上下文——需要实时判断哪些信息可以摘要、哪些必须保留原文。'},{i:'🎯',t:'关键信息锚点化',d:'把核心约束、关键事实、用户最终目标放在特别位置（系统提示头部或最近用户消息），确保始终被"看到"。'}]},
+      {id:'long_horizon_plan',t:'α',r:8,label:'长周期任务规划',sub:'跨越数小时甚至数天的目标分解',sum:'超越单次对话的Agent任务需要不同的规划机制：把大目标分解成里程碑，每个里程碑是可验证的检查点，在检查点让人类确认后继续执行。这与项目管理中的"sprint"逻辑类似，但执行者换成了AI。关键是保留足够的可验证节点供人类介入。',sourceUrl:'https://www.anthropic.com/news/claude-opus-4-6',sourceTitle:'Introducing Claude Opus 4.6',kps:[{i:'🗺️',t:'里程碑式规划',d:'不是一次生成完整计划，而是规划到下一个可验证节点，执行后更新计划——允许中途调整而非固执于初始路径。'},{i:'⏸️',t:'暂停点设计',d:'哪些节点应该强制暂停等待人类确认？原则：高风险或不可逆的步骤之前，以及信息明显不足时。'},{i:'🔄',t:'计划 vs 执行的比例',d:'复杂任务中花20%时间规划，80%时间执行是基本比例；但当环境反馈与预期不符时，需要重新切换到规划模式。'}]},
+      {id:'semantic_memory',t:'γ',r:7,label:'语义检索记忆',sub:'用向量搜索实现Agent的长期记忆',sum:'为Agent构建"无限记忆"的工程方案：把历史对话、文档、知识片段向量化存储，在需要时用语义相似度检索。关键设计问题：嵌入模型选择、分块策略、元数据过滤、结果排序。最常见的失败：检索到语义相似但上下文无关的内容。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'🔍',t:'语义相似不等于相关',d:'两段话语义相似（向量接近）但上下文无关，会引入干扰而非帮助。需要结合元数据过滤（时间、来源、任务类型）。'},{i:'📦',t:'分块策略的重要性',d:'按句子、段落还是语义单元分块，影响检索粒度。太细则语义不完整，太粗则检索不精确。'},{i:'⚡',t:'检索成本与质量的权衡',d:'毫秒级响应要求和高质量检索之间有张力——需要在延迟预算内选择合适的向量数据库和索引策略。'}]},
+      {id:'agent_comm_protocol',t:'ε',r:7,label:'Agent间通信格式',sub:'多Agent系统的结构化协作接口',sum:'多Agent系统的关键设计：子Agent之间如何传递任务和结果？非结构化自然语言传递容易引发误解，过度结构化的格式降低灵活性。Anthropic推荐的模式：任务描述用自然语言，中间状态和最终结果用结构化格式（JSON），错误和例外情况用标准化错误码。',sourceUrl:'https://www.anthropic.com/research/agents',sourceTitle:'Building Effective Agents',kps:[{i:'📝',t:'自然语言 vs 结构化的分工',d:'任务描述语义丰富，适合自然语言；计算结果需要精确无歧义，适合JSON。混用两种格式于适当场合。'},{i:'🚨',t:'错误传播问题',d:'子Agent失败时如何向上汇报？子Agent的错误消息如果格式不一致，主Agent很难做统一的错误处理。'},{i:'🔄',t:'中间状态的可观测性',d:'长时任务中，主Agent需要知道子Agent的进度而非只是最终结果——需要设计进度报告机制。'}]},
+      {id:'capability_elicit',t:'δ',r:7,label:'能力激发技术',sub:'帮模型表现出其真实能力上限',sum:'模型的"可以做到"和"实际表现出来"之间存在激发差距。通过Few-shot示例、角色引导（"作为一个专业研究员"）、思维链引导、输出格式约束，可以显著提升模型在特定任务上的实际表现。评估时需要区分"模型能力"和"提示能力"。',sourceUrl:'https://www.anthropic.com/news/evaluating-ai-systems',sourceTitle:'Evaluating AI Systems',kps:[{i:'🎯',t:'提示是激发器而非指令',d:'好的提示不是告诉模型做什么，而是激活模型已有的能力——就像面试时提供让人"进入状态"的暖身题。'},{i:'📊',t:'激发效果有时超过模型升级',d:'同一个模型，好的提示策略可以带来20-50%的性能提升——这说明激发未开发潜力比换更大模型更高效。'},{i:'🔬',t:'激发 vs 真实能力',d:'用最佳提示测出的结果是能力上限；用普通提示测出的是能力下限。两者之间的差距揭示了提示工程的价值空间。'}]},
+      {id:'counterfactual_test',t:'δ',r:6,label:'反事实评估',sub:'改变前提测试判断是否一致',sum:'一种强力的模型评估方法：把一道题的关键变量改变（如把男性改成女性、把专业人士改成普通人），测试模型的判断是否随之合理变化或保持稳定。这可以检测隐藏的偏见、对人口特征的差异化处理，以及判断逻辑的一致性。',sourceUrl:'https://www.anthropic.com/news/evaluating-ai-systems',sourceTitle:'Evaluating AI Systems',kps:[{i:'🔄',t:'应变化的 vs 不应变化的',d:'题目中涉及身份特征（性别、职业）的问题，判断应该一致；涉及事实内容的问题，判断应该随内容改变。'},{i:'🎯',t:'偏见检测的最佳工具',d:'直接问"你有偏见吗"没用；反事实测试让偏见在行为层面显现，是更可靠的偏见检测方法。'},{i:'📏',t:'评估一致性是基础要求',d:'如果模型对语义相同但表述不同的问题给出差异答案，说明评估不稳定——这是评估系统可靠性的基线指标。'}]},
+      {id:'multi_step_deception',t:'ζ',r:8,label:'多步骤欺骗攻击',sub:'跨多轮建立虚假信任再突击',sum:'比单次越狱更危险的攻击模式：攻击者先进行多轮无害交互，建立"可信用户"的上下文，再在某一轮突然提出有害请求。模型的上下文学习特性使其更容易被这种模式欺骗——之前的"好行为"会降低当前请求的警觉性。',sourceUrl:'https://www.anthropic.com/research/red-teaming',sourceTitle:'Red-Teaming AI Systems',kps:[{i:'🐍',t:'信任积累与突击',d:'攻击者花10轮建立无害形象，在第11轮发起真正攻击——类似社会工程学中的"预热"技术。'},{i:'🧠',t:'上下文学习的双刃剑',d:'模型从对话历史中学习用户风格和意图是有用的特性；但这也意味着对话历史可以被操纵来改变模型行为。'},{i:'🔍',t:'检测：全对话意图分析',d:'单步检测无法发现渐进式攻击——需要维护对话级别的意图向量，追踪目标随时间的漂移。'}]},
+      {id:'value_lock',t:'β',r:7,label:'价值固化风险',sub:'过早锁定AI价值观的危险',sum:'Anthropic在宪法AI框架中明确表达了一个焦虑：当前训练的AI价值观可能包含我们尚未意识到的偏差。如果这些偏差在早期就被"锁死"并大规模部署，人类将很难纠正。这是为什么Anthropic强调保持AI可更新性和人类监督权力的核心原因。',sourceUrl:'https://www.anthropic.com/news/claudes-model-spec',sourceTitle:'Claude\'s Model Spec',kps:[{i:'⚠️',t:'未知偏差的危险',d:'我们知道存在未知偏差，但不知道是什么——这使得现在锁定价值观特别危险，因为我们甚至无法知道锁定了什么错误。'},{i:'🔄',t:'可更新性作为安全阀',d:'Anthropic明确设计：Claude的价值观应该随训练更新；不应该是Claude自主决定"我的价值观已经完美，不需要更新"。'},{i:'🤝',t:'与人类对齐的历史局限',d:'历史上每个时代的人都认为自己的道德观已经足够好了。AI的道德框架应该保持同样的谦逊和开放性。'}]},
+      {id:'context_compaction',t:'γ',r:8,label:'上下文压缩技术',sub:'在有限窗口内保留最多有效信息',sum:'当任务超出上下文窗口时，Claude会触发自动压缩：对历史对话生成摘要，替换原始对话，释放空间。关键设计问题：压缩时机（何时触发）、压缩粒度（保留多少细节）、关键信息保护（哪些内容不能压缩）。',sourceUrl:'https://www.anthropic.com/news/claude-extended-thinking',sourceTitle:'Claude Extended Thinking',kps:[{i:'🗜️',t:'触发时机的权衡',d:'太早压缩丢失细节；太晚压缩可能超出窗口导致任务中断。需要在70-80%窗口占用时触发，预留空间。'},{i:'📌',t:'关键信息标记',d:'用户的核心目标、关键约束、已完成的里程碑不能被压缩——需要在压缩前显式标记这些锚点信息。'},{i:'🔬',t:'压缩质量评估',d:'压缩后让模型回答关于被压缩内容的问题，验证关键信息是否保留——这是压缩策略的单元测试方法。'}]},
+    ],
+    links: [
+      {s:'self_critique',t:'sim_validation'},{s:'self_critique',t:'self_verify'},{s:'self_critique',t:'root_cause'},
+      {s:'sim_validation',t:'guardrail_drift'},{s:'skill_encoding',t:'guardrail_drift'},{s:'skill_encoding',t:'auto_tool_select'},
+      {s:'parallel_subagents',t:'tool_call_scale'},{s:'parallel_subagents',t:'autonomy_spectrum'},
+      {s:'tool_call_scale',t:'success_decay'},{s:'complexity_speedup',t:'success_decay'},
+      {s:'complexity_speedup',t:'adaptive_thinking'},{s:'autonomy_spectrum',t:'skill_encoding'},
+      {s:'success_decay',t:'context_compaction'},{s:'success_decay',t:'vending_bench'},
+      {s:'adaptive_thinking',t:'million_token'},{s:'adaptive_thinking',t:'effort_levels'},
+      {s:'context_compaction',t:'million_token'},{s:'effort_levels',t:'extended_64k'},
+      {s:'extended_64k',t:'confidence_scoring'},{s:'confidence_scoring',t:'blind_validation'},
+      {s:'confidence_scoring',t:'claude_as_judge'},{s:'blind_validation',t:'skill_encoding'},
+      {s:'claude_as_judge',t:'anti_sycophancy'},{s:'claude_as_judge',t:'three_tier_eval'},
+      {s:'three_tier_eval',t:'prefill_stress'},{s:'three_tier_eval',t:'response_rate'},
+      {s:'anti_sycophancy',t:'prompt_injection'},{s:'prefill_stress',t:'guardrail_drift'},
+      {s:'prompt_injection',t:'semantic_tracing'},{s:'prompt_injection',t:'cot_distill'},
+      {s:'semantic_tracing',t:'self_verify'},{s:'self_verify',t:'confidence_scoring'},
+      {s:'mcp_design',t:'auto_tool_select'},{s:'auto_tool_select',t:'parallel_subagents'},
+      {s:'connector_arch',t:'tool_universe'},{s:'connector_arch',t:'auto_tool_select'},
+      {s:'tool_universe',t:'auto_tool_select'},{s:'cot_distill',t:'asl_levels'},
+      {s:'cot_distill',t:'reward_model_steal'},{s:'asl_levels',t:'three_tier_eval'},
+      {s:'reward_model_steal',t:'anti_sycophancy'},{s:'swe_bench',t:'parallel_subagents'},
+      {s:'vending_bench',t:'adaptive_thinking'},{s:'real_vs_bench',t:'success_decay'},
+      {s:'real_vs_bench',t:'three_tier_eval'},{s:'root_cause',t:'semantic_tracing'},
+      // previously orphaned nodes
+      {s:'computer_use_leap',t:'visual_code_leap'},{s:'computer_use_leap',t:'parallel_subagents'},
+      {s:'find_vs_exploit',t:'jailbreak_taxonomy'},{s:'find_vs_exploit',t:'layered_defense'},
+      {s:'task_verifier',t:'self_critique'},{s:'task_verifier',t:'blind_validation'},
+      {s:'safety_over_ethics',t:'operator_trust'},{s:'safety_over_ethics',t:'value_lock'},
+      {s:'principal_hierarchy',t:'operator_trust'},{s:'principal_hierarchy',t:'minimal_footprint'},
+      {s:'constitution_humble',t:'value_lock'},{s:'constitution_humble',t:'persuasion_resist'},
+      {s:'aug_vs_auto',t:'autonomy_spectrum'},{s:'aug_vs_auto',t:'complexity_ladder'},
+      {s:'api_vs_consumer',t:'operator_trust'},{s:'api_vs_consumer',t:'aug_vs_auto'},
+      {s:'software_success_61',t:'swe_bench'},{s:'software_success_61',t:'real_vs_bench'},
+      {s:'occupation_coverage',t:'aug_vs_auto'},{s:'occupation_coverage',t:'bench_saturation'},
+      {s:'mcp_instruments',t:'mcp_design'},{s:'mcp_instruments',t:'agent_comm_protocol'},
+      {s:'conversation_vulnerability',t:'multi_step_deception'},{s:'conversation_vulnerability',t:'prompt_injection'},
+      {s:'engagement_inversion',t:'model_welfare'},{s:'engagement_inversion',t:'overrefusal'},
+      {s:'prefill_recovery',t:'persuasion_resist'},{s:'prefill_recovery',t:'anti_sycophancy'},
+      {s:'doi_data_synthesis',t:'semantic_memory'},{s:'doi_data_synthesis',t:'long_horizon_plan'},
+      {s:'visual_code_leap',t:'inference_scaling'},
+      // new node links
+      {s:'eval_loop',t:'bench_saturation'},{s:'eval_loop',t:'cot_faithfulness'},
+      {s:'eval_loop',t:'capability_elicit'},{s:'eval_loop',t:'counterfactual_test'},
+      {s:'rag_agent',t:'semantic_memory'},{s:'rag_agent',t:'context_budget'},
+      {s:'rag_agent',t:'auto_tool_select'},{s:'rag_agent',t:'episodic_memory'},
+      {s:'complexity_ladder',t:'parallel_subagents'},{s:'complexity_ladder',t:'autonomy_spectrum'},
+      {s:'complexity_ladder',t:'inference_scaling'},
+      {s:'functional_emotion',t:'model_welfare'},{s:'functional_emotion',t:'value_lock'},
+      {s:'model_welfare',t:'overrefusal'},{s:'model_welfare',t:'anti_sycophancy'},
+      {s:'minimal_footprint',t:'reversibility_check'},{s:'minimal_footprint',t:'principal_hierarchy'},
+      {s:'reversibility_check',t:'sim_validation'},{s:'reversibility_check',t:'long_horizon_plan'},
+      {s:'layered_defense',t:'jailbreak_taxonomy'},{s:'layered_defense',t:'minimal_footprint'},
+      {s:'jailbreak_taxonomy',t:'multi_step_deception'},{s:'jailbreak_taxonomy',t:'prompt_injection'},
+      {s:'inference_scaling',t:'adaptive_thinking'},{s:'inference_scaling',t:'extended_64k'},
+      {s:'bench_saturation',t:'real_vs_bench'},{s:'bench_saturation',t:'vending_bench'},
+      {s:'cot_faithfulness',t:'semantic_tracing'},{s:'cot_faithfulness',t:'self_verify'},
+      {s:'persuasion_resist',t:'anti_sycophancy'},{s:'persuasion_resist',t:'prefill_stress'},
+      {s:'overrefusal',t:'three_tier_eval'},{s:'overrefusal',t:'response_rate'},
+      {s:'operator_trust',t:'principal_hierarchy'},{s:'operator_trust',t:'safety_over_ethics'},
+      {s:'episodic_memory',t:'context_compaction'},{s:'episodic_memory',t:'semantic_memory'},
+      {s:'context_budget',t:'context_compaction'},{s:'context_budget',t:'million_token'},
+      {s:'long_horizon_plan',t:'parallel_subagents'},{s:'long_horizon_plan',t:'reversibility_check'},
+      {s:'semantic_memory',t:'context_budget'},{s:'semantic_memory',t:'rag_agent'},
+      {s:'agent_comm_protocol',t:'parallel_subagents'},{s:'agent_comm_protocol',t:'mcp_design'},
+      {s:'capability_elicit',t:'inference_scaling'},{s:'capability_elicit',t:'real_vs_bench'},
+      {s:'counterfactual_test',t:'eval_loop'},{s:'counterfactual_test',t:'response_rate'},
+      {s:'multi_step_deception',t:'guardrail_drift'},{s:'multi_step_deception',t:'semantic_tracing'},
+      {s:'value_lock',t:'constitution_humble'},{s:'value_lock',t:'asl_levels'},
+      {s:'context_compaction',t:'rag_agent'},
+    ]
+  }
+};
+
+// API Key 管理
+function saveKey(v){localStorage.setItem('ig_api_key',v.trim())}
+(function(){
+  const k=localStorage.getItem('ig_api_key');
+  if(k)document.getElementById('api-key-input').value=k;
+})();
+
+// 预设 Galaxy 快速加载（直接用嵌入数据，无需 API 调用）
+function loadPresetData(key){
+  const preset=PRESET_GALAXIES[key];
+  if(!preset)return;
+  showGraph();
+  initGraph(preset.nodes, preset.links, preset.themes, preset.title, '');
+}
+
+// 回车提交
+document.getElementById('url-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')submitUrl();
+});
+
+// 初始聚焦
+document.getElementById('url-input').focus();
+</script>
+</body>
+</html>
