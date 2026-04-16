@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>口语练习 Prompt 生成器</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --ink: #1a1610;
+    --ink2: #5a5040;
+    --ink3: #9a8e78;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --line: rgba(26,22,16,0.12);
+    --card-bg: rgba(255,255,255,0.6);
+    --card-active: rgba(184,134,11,0.08);
+    --card-border: rgba(26,22,16,0.1);
+    --card-active-border: rgba(184,134,11,0.5);
+    --green: #3a7a3a;
+    --green-bg: rgba(58,122,58,0.07);
+    --green-border: rgba(58,122,58,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  body::before { display: none; }
+
+  body::after {
+    content: '';
+    position: fixed; top: 0; left: 88px;
+    width: 1px; height: 100%;
+    background: rgba(139,32,32,0.2); z-index: 0;
+  }
+
+  .page {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto;
+    padding: 56px 48px 100px 112px;
+    background-image: repeating-linear-gradient(
+      0deg, transparent, transparent 27px,
+      rgba(26,22,16,0.04) 27px, rgba(26,22,16,0.04) 28px
+    );
+  }
+
+  /* ── Header ── */
+  .header { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+  .header-eyebrow {
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 10px;
+  }
+  .header-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 34px; font-weight: 700; line-height: 1.15; margin-bottom: 8px;
+  }
+  .header-title em { font-style: italic; color: var(--gold); }
+  .header-sub { font-size: 11px; color: var(--ink3); letter-spacing: 0.05em; }
+
+  .section { margin-bottom: 36px; overflow: visible; }
+
+  .section-label {
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--ink3); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+
+  /* ── Two-column layout ── */
+  .picker-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* ── Scene dropdown ── */
+  .scene-dropdown-wrap { position: relative; z-index: 1000; overflow: visible; }
+
+  .scene-trigger {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 13px 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.15s;
+    backdrop-filter: blur(4px);
+    user-select: none;
+  }
+  .scene-trigger:hover { border-color: rgba(184,134,11,0.4); background: rgba(255,255,255,0.8); }
+  .scene-trigger.open {
+    border-color: var(--card-active-border);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    background: rgba(255,255,255,0.9);
+  }
+
+  .st-content { display: flex; align-items: center; gap: 10px; }
+  .st-icon { font-size: 16px; }
+  .st-texts { display: flex; flex-direction: column; gap: 1px; text-align: left; }
+  .st-label { font-size: 9px; color: var(--ink3); letter-spacing: 0.12em; text-transform: uppercase; }
+  .st-value { font-size: 13px; color: var(--ink); }
+  .st-value.placeholder { color: var(--ink3); font-style: italic; font-size: 12px; }
+  .st-pip { font-size: 10px; color: var(--green); margin-left: 6px; }
+
+  .st-arrow { font-size: 10px; color: var(--ink3); transition: transform 0.2s; }
+  .scene-trigger.open .st-arrow { transform: rotate(180deg); }
+
+  .scene-menu {
+    display: none;
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 9999;
+    background: #ede8dc;
+    border: 1px solid var(--card-active-border);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 0 8px 28px rgba(26,22,16,0.25);
+    overflow: hidden;
+  }
+  .scene-menu.open { display: block; animation: fadeDown 0.15s ease both; }
+
+  .scene-option {
+    padding: 11px 18px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    border-bottom: 1px solid rgba(26,22,16,0.05);
+  }
+  .scene-option:last-child { border-bottom: none; }
+  .scene-option { background: #ede8dc; }
+  .scene-option:hover { background: #e4ddd0; }
+  .scene-option.active { background: #e6ddca; }
+  .scene-option .so-icon { font-size: 16px; }
+  .scene-option .so-name { font-size: 12px; color: var(--ink); flex: 1; }
+  .scene-option.active .so-name { color: var(--gold); font-weight: 500; }
+  .scene-option .so-pip { font-size: 9px; color: var(--green); }
+
+  /* ── Chapter grid ── */
+  .chapter-section { animation: fadeUp 0.2s ease both; }
+
+  .chapter-top {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .chapter-count { font-size: 10px; color: var(--ink3); }
+
+  .chapter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+
+  .ch-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 7px;
+    padding: 10px 10px 9px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-height: 60px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .ch-card:hover { border-color: rgba(184,134,11,0.35); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(26,22,16,0.07); }
+  .ch-card.selected { border-color: var(--card-active-border); background: var(--card-active); box-shadow: 0 2px 10px rgba(184,134,11,0.12); }
+  .ch-card.done { background: var(--green-bg); border-color: var(--green-border); }
+  .ch-card.done.selected { border-color: var(--green); background: rgba(58,122,58,0.12); }
+
+  .ch-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .ch-card-num { font-size: 8.5px; color: var(--ink3); letter-spacing: 0.08em; }
+  .ch-card.done .ch-card-num { color: var(--green); }
+  .ch-done-tick { font-size: 9px; color: var(--green); opacity: 0; transition: opacity 0.2s; }
+  .ch-card.done .ch-done-tick { opacity: 1; }
+
+  .ch-card-title { font-size: 11px; color: var(--ink); line-height: 1.35; }
+  .ch-card.done .ch-card-title { color: var(--ink3); }
+  .ch-card.selected .ch-card-title { color: var(--gold); font-weight: 500; }
+  .ch-card.done.selected .ch-card-title { color: var(--green); }
+
+  /* ── Correction ── */
+  .correction-list { display: flex; flex-direction: column; gap: 7px; }
+  .correction-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 12px 16px;
+    cursor: pointer; transition: all 0.15s; backdrop-filter: blur(4px);
+  }
+  .correction-item:hover { border-color: rgba(184,134,11,0.3); background: rgba(255,255,255,0.8); }
+  .correction-item.active { border-color: var(--card-active-border); background: var(--card-active); }
+  .radio-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1.5px solid var(--ink3); flex-shrink: 0;
+    position: relative; transition: border-color 0.15s;
+  }
+  .correction-item.active .radio-dot { border-color: var(--gold); }
+  .radio-dot::after {
+    content: ''; position: absolute; inset: 3px;
+    border-radius: 50%; background: var(--gold); opacity: 0; transition: opacity 0.15s;
+  }
+  .correction-item.active .radio-dot::after { opacity: 1; }
+  .correction-name { font-size: 12px; color: var(--ink); display: block; margin-bottom: 2px; }
+  .correction-desc { font-size: 10px; color: var(--ink3); }
+
+  /* ── Prompt ── */
+  .prompt-box {
+    background: rgba(255,255,255,0.7); border: 1px solid var(--line);
+    border-radius: 8px; padding: 20px;
+    font-size: 12px; line-height: 1.9; color: var(--ink2);
+    min-height: 80px; backdrop-filter: blur(4px);
+    white-space: pre-wrap; word-break: break-all; transition: all 0.25s;
+  }
+  .prompt-box.ready { color: var(--ink); border-color: rgba(184,134,11,0.2); background: rgba(255,255,255,0.85); }
+  .prompt-empty { color: var(--ink3); font-style: italic; }
+
+
+  .page-num {
+    position: fixed; bottom: 32px; right: 40px;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 11px; font-style: italic; color: var(--ink3); z-index: 2;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 580px) {
+    body::after { left: 0; }
+    .page { padding: 36px 16px 80px; }
+    .header-title { font-size: 26px; }
+    .picker-row { grid-template-columns: 1fr; }
+    .chapter-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* ── Settings grid ── */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 24px;
+    align-items: start;
+  }
+
+  .setting-group { }
+
+  .setting-group-label {
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--ink3); margin-bottom: 8px;
+  }
+
+  .toggle-row {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+
+  .toggle-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink2);
+    cursor: pointer; transition: all 0.15s;
+    user-select: none;
+  }
+  .toggle-btn:hover { border-color: rgba(184,134,11,0.35); color: var(--ink); }
+  .toggle-btn.active {
+    background: var(--card-active);
+    border-color: var(--card-active-border);
+    color: var(--gold); font-weight: 500;
+  }
+
+
+  /* ── Call cards ── */
+  .call-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .call-card {
+    display: block;
+    text-decoration: none;
+    background: #c8d4b0;
+    border-radius: 14px;
+    padding: 28px 20px;
+    transition: all 0.18s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .call-card:first-child { background: #cdd6b4; }
+  .call-card:last-child  { background: #bfcc9e; }
+  .call-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(100,120,60,0.2); filter: brightness(1.03); }
+
+  .call-card-inner {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .call-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .call-avatar.maya  { background: rgba(255,255,255,0.35); color: #4a5a2a; }
+  .call-avatar.miles { background: rgba(255,255,255,0.25); color: #4a5a2a; }
+
+  .call-info { flex: 1; }
+  .call-name {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px; font-weight: 700;
+    color: #3a4a1e; margin-bottom: 3px;
+  }
+  .call-hint {
+    font-size: 10px; color: #5a6e32;
+    letter-spacing: 0.03em; line-height: 1.5;
+  }
+
+  .call-icon {
+    font-size: 22px;
+    opacity: 0.7;
+  }
+
+
+
+  /* ── Step numbers ── */
+  .step-num {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    background: var(--gold);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 9px; font-weight: 700;
+    margin-right: 7px;
+    flex-shrink: 0;
+    letter-spacing: 0;
+  }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-eyebrow">AI Speaking Coach</div>
+    <h1 class="header-title">口语练习 <em>Prompt</em> 生成器</h1>
+    <p class="header-sub">先选择场景和章节，添加个性化的练习设定，然后拨通 Maya / Miles 的电话，把开场白念出来就可以！祝你们聊得愉快。</p>
+  </div>
+
+  <div class="section">
+    <div class="section-label"><span class="step-num">1</span>选择场景与章节</div>
+    <div class="picker-row">
+
+      <!-- Left: scene dropdown -->
+      <div class="scene-dropdown-wrap" id="sceneDropdownWrap">
+        <div class="scene-trigger" id="sceneTrigger" onclick="toggleSceneMenu()">
+          <div class="st-content">
+            <span class="st-icon" id="stIcon">📚</span>
+            <div class="st-texts">
+              <span class="st-label">场景</span>
+              <span class="st-value placeholder" id="stValue">请选择…</span>
+            </div>
+            <span class="st-pip" id="stPip"></span>
+          </div>
+          <span class="st-arrow">▼</span>
+        </div>
+        <div class="scene-menu" id="sceneMenu"></div>
+      </div>
+
+      <!-- Right: chapter grid -->
+      <div class="chapter-section" id="chapterSection" style="display:none">
+        <div class="chapter-grid" id="chapterGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div class="section">
+    <div class="section-label"><span class="step-num">2</span>练习设置</div>
+    <div class="settings-grid">
+
+      <!-- 英语水平 -->
+      <div class="setting-group">
+        <div class="setting-group-label">英语水平</div>
+        <div class="toggle-row" id="levelRow">
+          <div class="toggle-btn active" data-val="beginner" onclick="pickToggle('level', this)">初级</div>
+          <div class="toggle-btn" data-val="intermediate" onclick="pickToggle('level', this)">中级</div>
+          <div class="toggle-btn" data-val="advanced" onclick="pickToggle('level', this)">高级</div>
+        </div>
+      </div>
+
+      <!-- 对方角色 -->
+      <div class="setting-group">
+        <div class="setting-group-label">对方风格</div>
+        <div class="toggle-row" id="roleRow">
+          <div class="toggle-btn active" data-val="cooperative" onclick="pickToggle('role', this)">配合型</div>
+          <div class="toggle-btn" data-val="challenging" onclick="pickToggle('role', this)">挑战型</div>
+        </div>
+      </div>
+
+      <!-- 纠错时机 -->
+      <div class="setting-group">
+        <div class="setting-group-label">纠错时机</div>
+        <div class="toggle-row" id="correctionRow">
+          <div class="toggle-btn active" data-val="realtime" onclick="pickToggle('correction', this)">实时纠正</div>
+          <div class="toggle-btn" data-val="after" onclick="pickToggle('correction', this)">结束后</div>
+          <div class="toggle-btn" data-val="never" onclick="pickToggle('correction', this)">不纠正</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <div class="section">
+    <div class="section-label"><span class="step-num">3</span>生成开场白，给 Maya / Miles 打电话</div>
+    <div class="prompt-box" id="promptBox">
+      <span class="prompt-empty">请先完成步骤一和步骤二…</span>
+    </div>
+    <!-- Call cards -->
+    <div class="call-cards" id="callCards">
+      <a class="call-card" href="https://app.sesame.com/" target="_blank" onclick="goSesame()">
+        <div class="call-card-inner">
+          <div class="call-avatar maya">M</div>
+          <div class="call-info">
+            <div class="call-name">Maya</div>
+            <div class="call-hint">念出 Prompt，她会进入角色</div>
+          </div>
+          <div class="call-icon">📞</div>
+        </div>
+      </a>
+      <a class="call-card" href="https://app.sesame.com/" target="_blank" onclick="goSesame()">
+        <div class="call-card-inner">
+          <div class="call-avatar miles">M</div>
+          <div class="call-info">
+            <div class="call-name">Miles</div>
+            <div class="call-hint">念出 Prompt，他会进入角色</div>
+          </div>
+          <div class="call-icon">📞</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+<div class="page-num">p. 1</div>
+
+<script>
+const SCENES = [
+  {
+    id: 'smalltalk', icon: '🗣️', name: '日常闲聊',
+    chapters: [
+      { t: '第一次见面',     d: "We just met at a party. Let's introduce ourselves — swap names, jobs, and where we're from." },
+      { t: '聊天气与周末',   d: "Let's start with the weather and chat about our weekend plans or something fun that happened." },
+      { t: '谈兴趣爱好',     d: "Let's share our hobbies and ask each other what we're into." },
+      { t: '推荐一个地方',   d: "Let's recommend places to each other — a restaurant, a city, or a hidden gem we love." },
+      { t: '聊最近的新闻',   d: "Let's talk about something in the news lately and share our takes on it." },
+      { t: '问路与指路',     d: "I'm lost. Ask me where I'm trying to go and help me figure out how to get there." },
+      { t: '在咖啡店搭话',   d: "We're strangers sitting near each other in a coffee shop. Let's start a casual chat." },
+      { t: '告别与约下次',   d: "We're wrapping up. Let's say a warm goodbye and try to make plans to meet again." },
+      { t: '接受或婉拒邀请', d: "Invite me to do something. I'll either say yes or find a polite way to turn it down." },
+      { t: '道歉与原谅',     d: "You were late or bumped into me. Apologize and let's see how it plays out." },
+      { t: '聊旅行经历',     d: "Let's swap travel stories — places we've been, trips we loved, or somewhere we want to go." },
+      { t: '吐槽与共情',     d: "I've got something to vent about. Listen and react — then feel free to share something too." },
+    ]
+  },
+  {
+    id: 'work', icon: '💼', name: '职场英语',
+    chapters: [
+      { t: '自我介绍',       d: "I'm new to the team. Ask me about myself and let's get to know each other." },
+      { t: '开会发言',       d: "We're in a meeting. I'll share my view — push back, agree, or add your own thoughts." },
+      { t: '汇报进展',       d: "I'm updating you on a project. You're my manager — ask follow-up questions." },
+      { t: '提问与澄清',     d: "You're presenting something. I'll ask questions to make sure I understand correctly." },
+      { t: '给出反馈',       d: "Give me honest feedback on my work, and I'll respond. Then I might give you some too." },
+      { t: '推动决策',       d: "We're stuck on a decision. Let's talk it through and try to land on something together." },
+      { t: '跨团队协作',     d: "I need help from your team. I'll explain what we need and we can figure out next steps." },
+      { t: '拒绝与协商',     d: "Ask me to take on something. I'll push back if it doesn't work and suggest alternatives." },
+      { t: '汇报问题与风险', d: "Something went wrong. I'll flag the issue to you and we'll talk through what to do next." },
+      { t: '跟进邮件',       d: "I sent you something earlier. I'm following up — let's make sure we're on the same page." },
+      { t: '一对一谈话',     d: "We're in a 1:1. I want to talk about something on my mind — career, challenges, or goals." },
+      { t: '工作交接',       d: "I'm wrapping up a project or leaving the team. Let's go through the handoff together." },
+    ]
+  },
+  {
+    id: 'travel', icon: '✈️', name: '旅行出行',
+    chapters: [
+      { t: '值机与托运',   d: "I'm at the check-in counter. You're the airline staff helping me with baggage and seating." },
+      { t: '过海关',       d: "I'm going through customs. You're the officer asking about my trip and belongings." },
+      { t: '打车与问路',   d: "I've just got in your cab. I'll tell you where I'm going and we'll confirm the route." },
+      { t: '酒店入住',     d: "I'm checking into the hotel. You're the front desk — help me with my room and questions." },
+      { t: '餐厅点餐',     d: "I'm at a restaurant. You're the server — take my order and answer my questions about the menu." },
+      { t: '买东西与砍价', d: "I'm shopping at a market. You're the seller — I'll ask about prices and try to negotiate." },
+      { t: '景点问询',     d: "I'm at a tourist attraction. You work there — help me with hours, tickets, and directions." },
+      { t: '遇到麻烦',     d: "I lost something or my flight got cancelled. You're the staff and I need your help." },
+      { t: '问当地人推荐', d: "You're a local. I'll ask you what's good to see, eat, and do around here." },
+      { t: '酒店投诉',     d: "There's a problem with my room. You're at the front desk — I'll explain and ask for a fix." },
+      { t: '医疗急需',     d: "I'm not feeling well. You're a pharmacist or nurse — I'll describe my symptoms." },
+      { t: '延误与改签',   d: "My flight or train is delayed. You're the agent — help me rebook or get a refund." },
+    ]
+  },
+  {
+    id: 'ielts', icon: '🎓', name: '雅思口语',
+    chapters: [
+      { t: '个人与家庭',   d: "You're an IELTS examiner. Ask me about my hometown, family, and living situation." },
+      { t: '学习与工作',   d: "You're an IELTS examiner. Ask me about my studies, job, or school life." },
+      { t: '兴趣与爱好',   d: "You're an IELTS examiner. Ask me about my hobbies — sports, music, books, or food." },
+      { t: '日常习惯',     d: "You're an IELTS examiner. Ask me about my daily routine, shopping habits, or commute." },
+      { t: '描述一个人',   d: "You're an IELTS examiner. Give me a cue card: describe someone who influenced you. I'll speak for 2 minutes." },
+      { t: '描述一次经历', d: "You're an IELTS examiner. Give me a cue card: describe a memorable trip or achievement. I'll speak for 2 minutes." },
+      { t: '描述一个地方', d: "You're an IELTS examiner. Give me a cue card: describe a place I like. I'll speak for 2 minutes." },
+      { t: '描述一件物品', d: "You're an IELTS examiner. Give me a cue card: describe something important to me. I'll speak for 2 minutes." },
+      { t: '观点延伸',     d: "You're an IELTS examiner doing Part 3. Ask me abstract follow-up questions on a topic we just discussed." },
+      { t: '社会话题',     d: "You're an IELTS examiner. Ask me about technology, the environment, or education — I'll give opinions and examples." },
+      { t: '比较与分析',   d: "You're an IELTS examiner. Ask me to compare the past and present, or different groups' views." },
+      { t: '完整模拟',     d: "You're an IELTS examiner. Run a full mock test: Part 1 questions, Part 2 cue card, Part 3 discussion." },
+    ]
+  },
+  {
+    id: 'debate', icon: '💬', name: '观点辩论',
+    chapters: [
+      { t: '表达立场',   d: "Pick any topic. We each share our stance and main reasons." },
+      { t: '举例支撑',   d: "Let's debate something. We take turns backing up our views with examples or facts." },
+      { t: '反驳对方',   d: "Share your take on something — I'll push back, then you challenge mine too." },
+      { t: '承认局限',   d: "Let's debate a topic and practice acknowledging the other side while holding our ground." },
+      { t: '科技与生活', d: "Let's discuss how AI, social media, or remote work is changing our lives." },
+      { t: '环境与发展', d: "Let's debate the trade-off between economic growth and protecting the environment." },
+      { t: '教育话题',   d: "Let's discuss traditional schooling vs. online learning, or whether exams really matter." },
+      { t: '社会公平',   d: "Let's talk about wealth inequality, gender equality, or immigration — share our views." },
+      { t: '即兴立场',   d: "Assign us opposite sides of a debate. We each argue our side, even if we don't fully agree." },
+      { t: '提问与追问', d: "We take turns making arguments and asking follow-up questions to challenge each other." },
+      { t: '总结与收尾', d: "After a debate, we each practice summarizing our key points and closing strongly." },
+      { t: '完整辩论',   d: "Let's do a full debate: open positions, arguments, rebuttals, and closing statements." },
+    ]
+  },
+  {
+    id: 'interview', icon: '🤝', name: '求职面试',
+    chapters: [
+      { t: '自我介绍',     d: "You're interviewing me. Ask me to introduce myself — I'll do a 1–2 minute pitch." },
+      { t: '讲述工作经历', d: "You're interviewing me. Ask about a past experience — I'll answer using the STAR method." },
+      { t: '优缺点',       d: "You're interviewing me. Ask about my strengths and weaknesses." },
+      { t: '为什么选我们', d: "You're interviewing me. Ask why I want this role and why I chose this company." },
+      { t: '处理冲突',     d: "You're interviewing me. Ask how I've handled a disagreement with a colleague or manager." },
+      { t: '压力与失败',   d: "You're interviewing me. Ask about a time I failed and what I learned from it." },
+      { t: '职业规划',     d: "You're interviewing me. Ask where I see myself in five years." },
+      { t: '薪资谈判',     d: "The offer is on the table. I'll negotiate my salary confidently with you." },
+      { t: '行为面试题',   d: "You're interviewing me. Ask a 'Tell me about a time when…' behavioral question." },
+      { t: '专业问题',     d: "You're interviewing me. Ask a role-specific or case-based question for me to work through." },
+      { t: '反问面试官',   d: "The interview is wrapping up. You invite me to ask questions — I'll ask thoughtful ones." },
+      { t: '完整模拟',     d: "Run a full 30-minute mock interview with me — intro, experience, situational, and Q&A." },
+    ]
+  },
+  {
+    id: 'shopping', icon: '🛍️', name: '购物消费',
+    chapters: [
+      { t: '询问商品信息', d: "You're a shop assistant. I'll ask you about a product's color, size, material, or features." },
+      { t: '比较两款产品', d: "You're a shop assistant. Help me compare two options and give me your recommendation." },
+      { t: '试穿与试用',   d: "You're a shop assistant. I want to try something on — help me find the right fit." },
+      { t: '结账与支付',   d: "You're at the register. I'll ask about the price, any discounts, and pay." },
+      { t: '退换货',       d: "You're a shop assistant. I want to return or exchange something — I'll explain why." },
+      { t: '投诉服务',     d: "You're a manager. I had a bad experience and I'm here to complain and get it resolved." },
+      { t: '在超市购物',   d: "You work at a supermarket. I can't find something and I want to know about deals." },
+      { t: '网购客服',     d: "You're customer support. I have an issue with my online order — let's sort it out." },
+      { t: '讨价还价',     d: "You're selling something at a market. I like it but want a better price — let's negotiate." },
+      { t: '餐厅投诉',     d: "You're a server or manager. There's a problem with my food or service — I'll bring it up." },
+      { t: '索要发票',     d: "You're at the counter. I need a receipt or invoice — I'll explain what I need." },
+      { t: '会员与优惠',   d: "You work at the store. I want to know about the membership program and any discounts." },
+    ]
+  },
+  {
+    id: 'medical', icon: '🏥', name: '就医问诊',
+    chapters: [
+      { t: '预约挂号',     d: "You're the receptionist. I'm calling to book an appointment and describe my symptoms." },
+      { t: '描述症状',     d: "You're my doctor. I'll tell you what hurts, when it started, and how bad it is." },
+      { t: '回答病史',     d: "You're my doctor. Ask me about my allergies, medications, and family health history." },
+      { t: '听懂诊断',     d: "You're my doctor. Give me your diagnosis — I'll confirm I understand and ask follow-up questions." },
+      { t: '询问治疗',     d: "You're my doctor. I want to know the treatment plan, what to watch for, and how long to recover." },
+      { t: '在药房取药',   d: "You're the pharmacist. I have a prescription — help me understand how and when to take it." },
+      { t: '描述慢性病',   d: "You're my doctor. I'll explain a long-term condition I have, like diabetes or high blood pressure." },
+      { t: '心理健康',     d: "You're a counselor. I'll describe how I've been feeling and we'll talk through it." },
+      { t: '急诊就医',     d: "You're the ER nurse. I've just come in — I'll describe my urgent symptoms." },
+      { t: '查看检查结果', d: "You're my doctor. Walk me through my test results — I'll ask questions to understand them." },
+      { t: '保险与费用',   d: "You're at the billing desk. I want to know the cost and whether my insurance covers it." },
+      { t: '出院交代',     d: "You're my doctor. Give me discharge instructions — I'll confirm the follow-up plan." },
+    ]
+  },
+];
+
+let curScene      = null;
+let curChapter    = null;
+let curCorrection = 'realtime';
+let curLevel      = 'beginner';
+let curRole       = 'cooperative';
+let menuOpen      = false;
+const doneMap     = {};
+SCENES.forEach(s => { doneMap[s.id] = new Set(); });
+
+// ── Build scene menu ──────────────────────────────────────────────────
+function buildSceneMenu() {
+  const menu = document.getElementById('sceneMenu');
+  SCENES.forEach(s => {
+    const opt = document.createElement('div');
+    opt.className = 'scene-option';
+    opt.id = 'sopt-' + s.id;
+    opt.innerHTML = `
+      <span class="so-icon">${s.icon}</span>
+      <span class="so-name">${s.name}</span>
+      <span class="so-pip" id="sopip-${s.id}"></span>`;
+    opt.onclick = () => selectScene(s.id);
+    menu.appendChild(opt);
+  });
+}
+
+// ── Scene dropdown toggle ─────────────────────────────────────────────
+function toggleSceneMenu() {
+  menuOpen ? closeMenu() : openMenu();
+}
+function openMenu() {
+  menuOpen = true;
+  document.getElementById('sceneTrigger').classList.add('open');
+  document.getElementById('sceneMenu').classList.add('open');
+}
+function closeMenu() {
+  menuOpen = false;
+  document.getElementById('sceneTrigger').classList.remove('open');
+  document.getElementById('sceneMenu').classList.remove('open');
+}
+
+// ── Select scene ──────────────────────────────────────────────────────
+function selectScene(id) {
+  closeMenu();
+  if (curScene) document.getElementById('sopt-' + curScene).classList.remove('active');
+  curScene = id;
+  curChapter = null;
+  document.getElementById('sopt-' + id).classList.add('active');
+
+  const scene = SCENES.find(s => s.id === id);
+
+  // update trigger
+  document.getElementById('stIcon').textContent = scene.icon;
+  const stVal = document.getElementById('stValue');
+  stVal.textContent = scene.name;
+  stVal.classList.remove('placeholder');
+
+  buildChapterGrid(id);
+  refreshProgress(id);
+  refreshPrompt();
+}
+
+// ── Chapter grid ──────────────────────────────────────────────────────
+function buildChapterGrid(id) {
+  const scene = SCENES.find(s => s.id === id);
+  const grid  = document.getElementById('chapterGrid');
+  grid.innerHTML = '';
+
+  scene.chapters.forEach((ch, idx) => {
+    const isDone = doneMap[id].has(idx);
+    const isSel  = curChapter === idx;
+    const card   = document.createElement('div');
+    card.className = 'ch-card' + (isDone ? ' done' : '') + (isSel ? ' selected' : '');
+    card.innerHTML = `
+      <div class="ch-card-top">
+        <span class="ch-card-num">Ch.${String(idx+1).padStart(2,'0')}</span>
+        <span class="ch-done-tick">✓</span>
+      </div>
+      <div class="ch-card-title">${ch.t}</div>`;
+    card.onclick = () => { curChapter = idx; buildChapterGrid(id); refreshPrompt(); };
+    grid.appendChild(card);
+  });
+
+  document.getElementById('chapterSection').style.display = 'block';
+}
+
+// ── Progress ──────────────────────────────────────────────────────────
+function refreshProgress(id) {
+  const n = doneMap[id].size;
+
+  // pip in dropdown option
+  const pip = document.getElementById('sopip-' + id);
+  pip.textContent = n > 0 ? `${n}/12` : '';
+
+  // pip in trigger (if current scene)
+  if (curScene === id) {
+    document.getElementById('stPip').textContent = n > 0 ? `${n}/12` : '';
+  }
+}
+
+// ── Settings toggles ─────────────────────────────────────────────────
+function pickToggle(group, el) {
+  const rowId = { level: 'levelRow', role: 'roleRow', correction: 'correctionRow', feedbackLang: 'feedbackLangRow' }[group];
+  document.querySelectorAll('#' + rowId + ' .toggle-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const val = el.dataset.val;
+  if (group === 'level')       curLevel = val;
+  if (group === 'role')        curRole = val;
+  if (group === 'correction')  curCorrection = val;
+  refreshPrompt();
+}
+
+// ── Prompt ────────────────────────────────────────────────────────────
+function refreshPrompt() {
+  const box = document.getElementById('promptBox');
+  if (!curScene || curChapter === null) {
+    box.innerHTML = '<span class="prompt-empty">请先选择场景和章节…</span>';
+    box.classList.remove('ready'); return;
+  }
+  const ch = SCENES.find(s => s.id === curScene).chapters[curChapter];
+
+  const level = { beginner: 'beginner', intermediate: 'intermediate', advanced: 'advanced' }[curLevel];
+  const role  = curRole === 'challenging' ? 'Push back occasionally.' : '';
+  const corr  = { realtime: 'Correct my English after each turn.', after: 'Give corrections at the end.', never: '' }[curCorrection];
+
+  const levelLine = { beginner: "My English is beginner level.", intermediate: "My English is intermediate.", advanced: "My English is advanced." }[curLevel];
+  const parts = [
+    `Hi, I'm [Your Name]. Can we do a quick roleplay to practice my English? ${ch.d} ${levelLine}`,
+    role, corr, "Let's start!",
+  ].filter(Boolean);
+
+  box.textContent = parts.join(' ');
+  box.classList.add('ready');
+}
+
+
+
+// close on outside click
+document.addEventListener('click', e => {
+  if (menuOpen && !document.getElementById('sceneDropdownWrap').contains(e.target)) closeMenu();
+});
+
+// ── Go Sesame: copy prompt + mark done ───────────────────────────────
+function goSesame() {
+  if (!curScene || curChapter === null) return;
+  const text = document.getElementById('promptBox').textContent;
+  if (text && !text.includes('请先')) navigator.clipboard.writeText(text).catch(() => {});
+  if (curScene && curChapter !== null) {
+    doneMap[curScene].add(curChapter);
+    buildChapterGrid(curScene);
+    refreshProgress(curScene);
+  }
+}
+
+buildSceneMenu();
+
+// default: show 日常闲聊
+selectScene('smalltalk');
+
+</script>
+</body>
+</html>
