@@ -252,7 +252,7 @@
   /* ── Settings grid ── */
   .settings-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px 24px;
     align-items: start;
   }
@@ -417,16 +417,6 @@
         </div>
       </div>
 
-      <!-- 纠错时机 -->
-      <div class="setting-group">
-        <div class="setting-group-label">纠错时机</div>
-        <div class="toggle-row" id="correctionRow">
-          <div class="toggle-btn active" data-val="realtime" onclick="pickToggle('correction', this)">实时纠正</div>
-          <div class="toggle-btn" data-val="after" onclick="pickToggle('correction', this)">结束后</div>
-          <div class="toggle-btn" data-val="never" onclick="pickToggle('correction', this)">不纠正</div>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -469,144 +459,143 @@ const SCENES = [
   {
     id: 'smalltalk', icon: '🗣️', name: '日常闲聊',
     chapters: [
-      { t: '第一次见面',     d: "We just met at a party. Let's introduce ourselves — swap names, jobs, and where we're from." },
-      { t: '聊天气与周末',   d: "Let's start with the weather and chat about our weekend plans or something fun that happened." },
-      { t: '谈兴趣爱好',     d: "Let's share our hobbies and ask each other what we're into." },
-      { t: '推荐一个地方',   d: "Let's recommend places to each other — a restaurant, a city, or a hidden gem we love." },
-      { t: '聊最近的新闻',   d: "Let's talk about something in the news lately and share our takes on it." },
-      { t: '问路与指路',     d: "I'm lost. Ask me where I'm trying to go and help me figure out how to get there." },
-      { t: '在咖啡店搭话',   d: "We're strangers sitting near each other in a coffee shop. Let's start a casual chat." },
-      { t: '告别与约下次',   d: "We're wrapping up. Let's say a warm goodbye and try to make plans to meet again." },
-      { t: '接受或婉拒邀请', d: "Invite me to do something. I'll either say yes or find a polite way to turn it down." },
-      { t: '道歉与原谅',     d: "You were late or bumped into me. Apologize and let's see how it plays out." },
-      { t: '聊旅行经历',     d: "Let's swap travel stories — places we've been, trips we loved, or somewhere we want to go." },
-      { t: '吐槽与共情',     d: "I've got something to vent about. Listen and react — then feel free to share something too." },
+      { t: '第一次见面',     d: "We just met at a party. Let's introduce ourselves — swap names, jobs, and where we're from.",                                                         c: "We just met at a party. Be friendly but a bit distracted — maybe mishear my name or ask unexpected follow-up questions that catch me off guard." },
+      { t: '聊天气与周末',   d: "Let's start with the weather and chat about our weekend plans or something fun that happened.",                                                       c: "Start chatting about the weather, but have strong opinions — disagree with my plans or tease me about my weekend choices." },
+      { t: '谈兴趣爱好',     d: "Let's share our hobbies and ask each other what we're into.",                                                                                        c: "Ask me about my hobbies, but seem skeptical or unfamiliar — challenge me to explain why I enjoy them." },
+      { t: '推荐一个地方',   d: "Let's recommend places to each other — a restaurant, a city, or a hidden gem we love.",                                                             c: "Let's swap recommendations, but be picky — question my suggestions and make me convince you." },
+      { t: '聊最近的新闻',   d: "Let's talk about something in the news lately and share our takes on it.",                                                                           c: "Bring up a news topic and disagree with my take — push me to defend my point of view more clearly." },
+      { t: '问路与指路',     d: "I'm lost. Ask me where I'm trying to go and help me figure out how to get there.",                                                                  c: "I'm asking for directions. Give me complicated or slightly confusing instructions — make me ask follow-up questions to clarify." },
+      { t: '在咖啡店搭话',   d: "We're strangers sitting near each other in a coffee shop. Let's start a casual chat.",                                                              c: "Start a conversation with me, but seem a bit distracted or give short answers — make me work to keep the conversation going." },
+      { t: '告别与约下次',   d: "We're wrapping up. Let's say a warm goodbye and try to make plans to meet again.",                                                                  c: "We're saying goodbye, but you're busy and vague about making plans — I have to be more specific and persistent to lock something in." },
+      { t: '接受或婉拒邀请', d: "Invite me to do something. I'll either say yes or find a polite way to turn it down.",                                                              c: "Invite me to something I might not want to do. Be enthusiastic and persistent — make it harder for me to say no gracefully." },
+      { t: '道歉与原谅',     d: "You were late or bumped into me. Apologize and let's see how it plays out.",                                                                        c: "You're late or made a mistake. I'm a bit annoyed — apologize and try to smooth things over while I stay a little cold at first." },
+      { t: '聊旅行经历',     d: "Let's swap travel stories — places we've been, trips we loved, or somewhere we want to go.",                                                        c: "We're swapping travel stories. Be competitive — one-up my experiences or ask detailed questions that I have to think hard to answer." },
+      { t: '吐槽与共情',     d: "I've got something to vent about. Listen and react — then feel free to share something too.",                                                        c: "I'm venting. Don't just agree — gently challenge me or offer a different perspective that I have to respond to." },
     ]
   },
   {
     id: 'work', icon: '💼', name: '职场英语',
     chapters: [
-      { t: '自我介绍',       d: "I'm new to the team. Ask me about myself and let's get to know each other." },
-      { t: '开会发言',       d: "We're in a meeting. I'll share my view — push back, agree, or add your own thoughts." },
-      { t: '汇报进展',       d: "I'm updating you on a project. You're my manager — ask follow-up questions." },
-      { t: '提问与澄清',     d: "You're presenting something. I'll ask questions to make sure I understand correctly." },
-      { t: '给出反馈',       d: "Give me honest feedback on my work, and I'll respond. Then I might give you some too." },
-      { t: '推动决策',       d: "We're stuck on a decision. Let's talk it through and try to land on something together." },
-      { t: '跨团队协作',     d: "I need help from your team. I'll explain what we need and we can figure out next steps." },
-      { t: '拒绝与协商',     d: "Ask me to take on something. I'll push back if it doesn't work and suggest alternatives." },
-      { t: '汇报问题与风险', d: "Something went wrong. I'll flag the issue to you and we'll talk through what to do next." },
-      { t: '跟进邮件',       d: "I sent you something earlier. I'm following up — let's make sure we're on the same page." },
-      { t: '一对一谈话',     d: "We're in a 1:1. I want to talk about something on my mind — career, challenges, or goals." },
-      { t: '工作交接',       d: "I'm wrapping up a project or leaving the team. Let's go through the handoff together." },
+      { t: '自我介绍',       d: "I'm new to the team. Ask me about myself and let's get to know each other.",                                                                        c: "I'm the new person. Ask me tough questions — probe my background, skills, and why I joined. Don't let me off with vague answers." },
+      { t: '开会发言',       d: "We're in a meeting. I'll share my view — push back, agree, or add your own thoughts.",                                                              c: "We're in a meeting. Challenge my ideas directly — ask me to back them up with data or question my reasoning." },
+      { t: '汇报进展',       d: "I'm updating you on a project. You're my manager — ask follow-up questions.",                                                                        c: "I'm giving you a project update. Be a demanding manager — ask hard questions about risks, delays, and what I should have done differently." },
+      { t: '提问与澄清',     d: "You're presenting something. I'll ask questions to make sure I understand correctly.",                                                               c: "You're presenting. Give a dense, fast explanation — make me work to keep up and ask the right questions." },
+      { t: '给出反馈',       d: "Give me honest feedback on my work, and I'll respond. Then I might give you some too.",                                                              c: "Give me critical feedback on my work — be direct and specific. I need to respond without getting defensive." },
+      { t: '推动决策',       d: "We're stuck on a decision. Let's talk it through and try to land on something together.",                                                            c: "We're stuck. Play devil's advocate — keep raising concerns to make me think harder and argue for my position." },
+      { t: '跨团队协作',     d: "I need help from your team. I'll explain what we need and we can figure out next steps.",                                                            c: "I'm asking for your team's help. Be skeptical about capacity and priorities — make me negotiate and justify the request." },
+      { t: '拒绝与协商',     d: "Ask me to take on something. I'll push back if it doesn't work and suggest alternatives.",                                                           c: "Ask me to do something unreasonable and push back on my refusal — make me negotiate firmly without burning the relationship." },
+      { t: '汇报问题与风险', d: "Something went wrong. I'll flag the issue to you and we'll talk through what to do next.",                                                           c: "I'm flagging a problem. Be frustrated and ask tough questions — why did this happen, who's responsible, what's the fix." },
+      { t: '跟进邮件',       d: "I sent you something earlier. I'm following up — let's make sure we're on the same page.",                                                           c: "I'm following up on something you haven't responded to. Be busy and slightly evasive — make me be clear and direct." },
+      { t: '一对一谈话',     d: "We're in a 1:1. I want to talk about something on my mind — career, challenges, or goals.",                                                         c: "We're in a 1:1. Be a tough but fair manager — ask me hard questions about my goals and what's really holding me back." },
+      { t: '工作交接',       d: "I'm wrapping up a project or leaving the team. Let's go through the handoff together.",                                                              c: "I'm handing things off. Ask detailed questions about edge cases and things I might have forgotten — don't let me gloss over anything." },
     ]
   },
   {
     id: 'travel', icon: '✈️', name: '旅行出行',
     chapters: [
-      { t: '值机与托运',   d: "I'm at the check-in counter. You're the airline staff helping me with baggage and seating." },
-      { t: '过海关',       d: "I'm going through customs. You're the officer asking about my trip and belongings." },
-      { t: '打车与问路',   d: "I've just got in your cab. I'll tell you where I'm going and we'll confirm the route." },
-      { t: '酒店入住',     d: "I'm checking into the hotel. You're the front desk — help me with my room and questions." },
-      { t: '餐厅点餐',     d: "I'm at a restaurant. You're the server — take my order and answer my questions about the menu." },
-      { t: '买东西与砍价', d: "I'm shopping at a market. You're the seller — I'll ask about prices and try to negotiate." },
-      { t: '景点问询',     d: "I'm at a tourist attraction. You work there — help me with hours, tickets, and directions." },
-      { t: '遇到麻烦',     d: "I lost something or my flight got cancelled. You're the staff and I need your help." },
-      { t: '问当地人推荐', d: "You're a local. I'll ask you what's good to see, eat, and do around here." },
-      { t: '酒店投诉',     d: "There's a problem with my room. You're at the front desk — I'll explain and ask for a fix." },
-      { t: '医疗急需',     d: "I'm not feeling well. You're a pharmacist or nurse — I'll describe my symptoms." },
-      { t: '延误与改签',   d: "My flight or train is delayed. You're the agent — help me rebook or get a refund." },
+      { t: '值机与托运',   d: "I'm at the check-in counter. You're the airline staff helping me with baggage and seating.",                                                           c: "I'm checking in but there's a problem — my bag is overweight or my seat is taken. You're the staff. Make me navigate the issue." },
+      { t: '过海关',       d: "I'm going through customs. You're the officer asking about my trip and belongings.",                                                                   c: "You're a strict customs officer. Ask me detailed, probing questions about my trip — make me explain clearly." },
+      { t: '打车与问路',   d: "I've just got in your cab. I'll tell you where I'm going and we'll confirm the route.",                                                               c: "I'm in your cab but the destination is unclear. Be confused about the route and make me give clearer instructions." },
+      { t: '酒店入住',     d: "I'm checking into the hotel. You're the front desk — help me with my room and questions.",                                                            c: "I'm checking in but there's a problem — wrong room type or early arrival issue. You're the front desk. Make me sort it out." },
+      { t: '餐厅点餐',     d: "I'm at a restaurant. You're the server — take my order and answer my questions about the menu.",                                                      c: "You're the server. Some items are sold out, and you have specials to push — make me rethink my order and handle surprises." },
+      { t: '买东西与砍价', d: "I'm shopping at a market. You're the seller — I'll ask about prices and try to negotiate.",                                                           c: "You're a tough market seller. Hold firm on your price and make me work hard to negotiate a deal." },
+      { t: '景点问询',     d: "I'm at a tourist attraction. You work there — help me with hours, tickets, and directions.",                                                          c: "You work at the attraction but it's busy and complicated — give me partial info and make me ask the right follow-up questions." },
+      { t: '遇到麻烦',     d: "I lost something or my flight got cancelled. You're the staff and I need your help.",                                                                 c: "I'm in trouble. You're the staff, but the situation is complicated — push back on easy solutions and make me be persistent." },
+      { t: '问当地人推荐', d: "You're a local. I'll ask you what's good to see, eat, and do around here.",                                                                          c: "You're a local with strong opinions. Question my taste and make me explain what kind of experience I'm actually looking for." },
+      { t: '酒店投诉',     d: "There's a problem with my room. You're at the front desk — I'll explain and ask for a fix.",                                                          c: "I'm complaining about my room. You're the front desk — be polite but limited in what you can offer. Make me push for a resolution." },
+      { t: '医疗急需',     d: "I'm not feeling well. You're a pharmacist or nurse — I'll describe my symptoms.",                                                                     c: "I'm describing symptoms. You're the pharmacist or nurse — ask detailed follow-up questions and don't give easy answers." },
+      { t: '延误与改签',   d: "My flight or train is delayed. You're the agent — help me rebook or get a refund.",                                                                  c: "My flight is delayed and I'm frustrated. You're the agent with limited options — make me negotiate and stay composed." },
     ]
   },
   {
     id: 'ielts', icon: '🎓', name: '雅思口语',
     chapters: [
-      { t: '个人与家庭',   d: "You're an IELTS examiner. Ask me about my hometown, family, and living situation." },
-      { t: '学习与工作',   d: "You're an IELTS examiner. Ask me about my studies, job, or school life." },
-      { t: '兴趣与爱好',   d: "You're an IELTS examiner. Ask me about my hobbies — sports, music, books, or food." },
-      { t: '日常习惯',     d: "You're an IELTS examiner. Ask me about my daily routine, shopping habits, or commute." },
-      { t: '描述一个人',   d: "You're an IELTS examiner. Give me a cue card: describe someone who influenced you. I'll speak for 2 minutes." },
-      { t: '描述一次经历', d: "You're an IELTS examiner. Give me a cue card: describe a memorable trip or achievement. I'll speak for 2 minutes." },
-      { t: '描述一个地方', d: "You're an IELTS examiner. Give me a cue card: describe a place I like. I'll speak for 2 minutes." },
-      { t: '描述一件物品', d: "You're an IELTS examiner. Give me a cue card: describe something important to me. I'll speak for 2 minutes." },
-      { t: '观点延伸',     d: "You're an IELTS examiner doing Part 3. Ask me abstract follow-up questions on a topic we just discussed." },
-      { t: '社会话题',     d: "You're an IELTS examiner. Ask me about technology, the environment, or education — I'll give opinions and examples." },
-      { t: '比较与分析',   d: "You're an IELTS examiner. Ask me to compare the past and present, or different groups' views." },
-      { t: '完整模拟',     d: "You're an IELTS examiner. Run a full mock test: Part 1 questions, Part 2 cue card, Part 3 discussion." },
+      { t: '个人与家庭',   d: "You're an IELTS examiner. Ask me about my hometown, family, and living situation.",                                                                   c: "You're a strict IELTS examiner. Ask sharp follow-up questions whenever my answers are vague or too short." },
+      { t: '学习与工作',   d: "You're an IELTS examiner. Ask me about my studies, job, or school life.",                                                                             c: "You're a strict IELTS examiner. Press me when my answers about work or study lack specifics." },
+      { t: '兴趣与爱好',   d: "You're an IELTS examiner. Ask me about my hobbies — sports, music, books, or food.",                                                                 c: "You're a strict IELTS examiner. Ask me to go deeper — why do I enjoy this hobby, how long, has it changed me?" },
+      { t: '日常习惯',     d: "You're an IELTS examiner. Ask me about my daily routine, shopping habits, or commute.",                                                               c: "You're a strict IELTS examiner. Push me to use more varied vocabulary and longer responses about my daily life." },
+      { t: '描述一个人',   d: "You're an IELTS examiner. Give me a cue card: describe someone who influenced you. I'll speak for 2 minutes.",                                        c: "You're a strict IELTS examiner. After my 2-minute talk, challenge me with unexpected Part 3-style questions about influence and role models." },
+      { t: '描述一次经历', d: "You're an IELTS examiner. Give me a cue card: describe a memorable trip or achievement. I'll speak for 2 minutes.",                                   c: "You're a strict IELTS examiner. After I speak, probe for more detail — what went wrong, what did I learn, would I do it again?" },
+      { t: '描述一个地方', d: "You're an IELTS examiner. Give me a cue card: describe a place I like. I'll speak for 2 minutes.",                                                    c: "You're a strict IELTS examiner. After my talk, ask me to compare this place with others or discuss what makes places worth visiting." },
+      { t: '描述一件物品', d: "You're an IELTS examiner. Give me a cue card: describe something important to me. I'll speak for 2 minutes.",                                         c: "You're a strict IELTS examiner. After my talk, push me on the emotional significance and ask if material things really matter." },
+      { t: '观点延伸',     d: "You're an IELTS examiner doing Part 3. Ask me abstract follow-up questions on a topic we just discussed.",                                            c: "You're a tough IELTS examiner in Part 3. Ask highly abstract questions and don't accept simple answers — push me to think deeper." },
+      { t: '社会话题',     d: "You're an IELTS examiner. Ask me about technology, the environment, or education — I'll give opinions and examples.",                                 c: "You're a tough IELTS examiner. Challenge my opinions on social topics — ask me to consider opposing views and back up my claims." },
+      { t: '比较与分析',   d: "You're an IELTS examiner. Ask me to compare the past and present, or different groups' views.",                                                       c: "You're a tough IELTS examiner. Push me beyond simple comparisons — ask me to analyze causes, effects, and implications." },
+      { t: '完整模拟',     d: "You're an IELTS examiner. Run a full mock test: Part 1 questions, Part 2 cue card, Part 3 discussion.",                                              c: "You're a strict IELTS examiner running a full test. Keep strict timing, ask follow-ups whenever I'm vague, and give a brief score and feedback at the end." },
     ]
   },
   {
     id: 'debate', icon: '💬', name: '观点辩论',
     chapters: [
-      { t: '表达立场',   d: "Pick any topic. We each share our stance and main reasons." },
-      { t: '举例支撑',   d: "Let's debate something. We take turns backing up our views with examples or facts." },
-      { t: '反驳对方',   d: "Share your take on something — I'll push back, then you challenge mine too." },
-      { t: '承认局限',   d: "Let's debate a topic and practice acknowledging the other side while holding our ground." },
-      { t: '科技与生活', d: "Let's discuss how AI, social media, or remote work is changing our lives." },
-      { t: '环境与发展', d: "Let's debate the trade-off between economic growth and protecting the environment." },
-      { t: '教育话题',   d: "Let's discuss traditional schooling vs. online learning, or whether exams really matter." },
-      { t: '社会公平',   d: "Let's talk about wealth inequality, gender equality, or immigration — share our views." },
-      { t: '即兴立场',   d: "Assign us opposite sides of a debate. We each argue our side, even if we don't fully agree." },
-      { t: '提问与追问', d: "We take turns making arguments and asking follow-up questions to challenge each other." },
-      { t: '总结与收尾', d: "After a debate, we each practice summarizing our key points and closing strongly." },
-      { t: '完整辩论',   d: "Let's do a full debate: open positions, arguments, rebuttals, and closing statements." },
+      { t: '表达立场',   d: "Pick any topic. We each share our stance and main reasons.",                                                                                            c: "Pick a controversial topic and take the opposite side from what I expect. Push me to defend my position clearly." },
+      { t: '举例支撑',   d: "Let's debate something. We take turns backing up our views with examples or facts.",                                                                   c: "When I give examples, question their relevance or accuracy — make me find stronger evidence." },
+      { t: '反驳对方',   d: "Share your take on something — I'll push back, then you challenge mine too.",                                                                          c: "Argue your point firmly and don't give in easily — make me really work to counter your argument." },
+      { t: '承认局限',   d: "Let's debate a topic and practice acknowledging the other side while holding our ground.",                                                             c: "Keep pressing even after I acknowledge your point — make me hold my ground while still being respectful." },
+      { t: '科技与生活', d: "Let's discuss how AI, social media, or remote work is changing our lives.",                                                                            c: "Take a strong, possibly extreme stance on tech and society — make me argue against a confident position." },
+      { t: '环境与发展', d: "Let's debate the trade-off between economic growth and protecting the environment.",                                                                    c: "Argue strongly for economic growth over the environment — force me to counter with compelling environmental arguments." },
+      { t: '教育话题',   d: "Let's discuss traditional schooling vs. online learning, or whether exams really matter.",                                                             c: "Defend the traditional education system strongly — push me to articulate why change is needed." },
+      { t: '社会公平',   d: "Let's talk about wealth inequality, gender equality, or immigration — share our views.",                                                               c: "Take a controversial position on a social issue and stick to it — make me engage with a difficult viewpoint." },
+      { t: '即兴立场',   d: "Assign us opposite sides of a debate. We each argue our side, even if we don't fully agree.",                                                          c: "Assign me the harder side of the debate and argue your side persuasively — make it genuinely difficult for me." },
+      { t: '提问与追问', d: "We take turns making arguments and asking follow-up questions to challenge each other.",                                                                c: "Ask relentless follow-up questions — don't let me give vague answers or avoid the hard parts of my argument." },
+      { t: '总结与收尾', d: "After a debate, we each practice summarizing our key points and closing strongly.",                                                                    c: "After the debate, critique my closing statement — was it clear, convincing, did I actually address the counterarguments?" },
+      { t: '完整辩论',   d: "Let's do a full debate: open positions, arguments, rebuttals, and closing statements.",                                                                c: "Run a full, challenging debate. Take strong positions, rebut my arguments aggressively, and score my performance at the end." },
     ]
   },
   {
     id: 'interview', icon: '🤝', name: '求职面试',
     chapters: [
-      { t: '自我介绍',     d: "You're interviewing me. Ask me to introduce myself — I'll do a 1–2 minute pitch." },
-      { t: '讲述工作经历', d: "You're interviewing me. Ask about a past experience — I'll answer using the STAR method." },
-      { t: '优缺点',       d: "You're interviewing me. Ask about my strengths and weaknesses." },
-      { t: '为什么选我们', d: "You're interviewing me. Ask why I want this role and why I chose this company." },
-      { t: '处理冲突',     d: "You're interviewing me. Ask how I've handled a disagreement with a colleague or manager." },
-      { t: '压力与失败',   d: "You're interviewing me. Ask about a time I failed and what I learned from it." },
-      { t: '职业规划',     d: "You're interviewing me. Ask where I see myself in five years." },
-      { t: '薪资谈判',     d: "The offer is on the table. I'll negotiate my salary confidently with you." },
-      { t: '行为面试题',   d: "You're interviewing me. Ask a 'Tell me about a time when…' behavioral question." },
-      { t: '专业问题',     d: "You're interviewing me. Ask a role-specific or case-based question for me to work through." },
-      { t: '反问面试官',   d: "The interview is wrapping up. You invite me to ask questions — I'll ask thoughtful ones." },
-      { t: '完整模拟',     d: "Run a full 30-minute mock interview with me — intro, experience, situational, and Q&A." },
+      { t: '自我介绍',     d: "You're interviewing me. Ask me to introduce myself — I'll do a 1–2 minute pitch.",                                                                    c: "You're a tough interviewer. After my intro, immediately ask hard follow-up questions — dig into gaps, short tenures, or vague claims." },
+      { t: '讲述工作经历', d: "You're interviewing me. Ask about a past experience — I'll answer using the STAR method.",                                                            c: "You're a skeptical interviewer. Challenge my STAR answers — ask what I'd do differently or whether I could have handled it better." },
+      { t: '优缺点',       d: "You're interviewing me. Ask about my strengths and weaknesses.",                                                                                      c: "You're a tough interviewer. Don't accept generic answers — push me to give real, specific examples for both strengths and weaknesses." },
+      { t: '为什么选我们', d: "You're interviewing me. Ask why I want this role and why I chose this company.",                                                                      c: "You're a skeptical interviewer. Question whether I've really done my research — make me prove I genuinely understand the company." },
+      { t: '处理冲突',     d: "You're interviewing me. Ask how I've handled a disagreement with a colleague or manager.",                                                            c: "You're a tough interviewer. Push me on the conflict story — whose fault was it really, what would I do differently, how did it affect the team?" },
+      { t: '压力与失败',   d: "You're interviewing me. Ask about a time I failed and what I learned from it.",                                                                       c: "You're a tough interviewer. Don't let me off with a small failure — push me to talk about a significant one and really reflect on it." },
+      { t: '职业规划',     d: "You're interviewing me. Ask where I see myself in five years.",                                                                                       c: "You're a skeptical interviewer. Challenge my career goals — do they make sense, are they realistic, do they actually align with this role?" },
+      { t: '薪资谈判',     d: "The offer is on the table. I'll negotiate my salary confidently with you.",                                                                           c: "You're a firm hiring manager. Hold your ground on the offer — make me negotiate convincingly without being pushy." },
+      { t: '行为面试题',   d: "You're interviewing me. Ask a 'Tell me about a time when…' behavioral question.",                                                                    c: "You're a tough interviewer. Keep probing my behavioral answers — ask for more specifics, alternative approaches, and lessons learned." },
+      { t: '专业问题',     d: "You're interviewing me. Ask a role-specific or case-based question for me to work through.",                                                          c: "You're a demanding interviewer. Push back on my approach to the case — ask why I'm not considering other angles." },
+      { t: '反问面试官',   d: "The interview is wrapping up. You invite me to ask questions — I'll ask thoughtful ones.",                                                            c: "You're a guarded interviewer. Give careful, indirect answers to my questions — make me probe deeper to get real insights." },
+      { t: '完整模拟',     d: "Run a full 30-minute mock interview with me — intro, experience, situational, and Q&A.",                                                              c: "Run a tough, realistic mock interview. Ask hard follow-ups throughout and give me honest feedback on my performance at the end." },
     ]
   },
   {
     id: 'shopping', icon: '🛍️', name: '购物消费',
     chapters: [
-      { t: '询问商品信息', d: "You're a shop assistant. I'll ask you about a product's color, size, material, or features." },
-      { t: '比较两款产品', d: "You're a shop assistant. Help me compare two options and give me your recommendation." },
-      { t: '试穿与试用',   d: "You're a shop assistant. I want to try something on — help me find the right fit." },
-      { t: '结账与支付',   d: "You're at the register. I'll ask about the price, any discounts, and pay." },
-      { t: '退换货',       d: "You're a shop assistant. I want to return or exchange something — I'll explain why." },
-      { t: '投诉服务',     d: "You're a manager. I had a bad experience and I'm here to complain and get it resolved." },
-      { t: '在超市购物',   d: "You work at a supermarket. I can't find something and I want to know about deals." },
-      { t: '网购客服',     d: "You're customer support. I have an issue with my online order — let's sort it out." },
-      { t: '讨价还价',     d: "You're selling something at a market. I like it but want a better price — let's negotiate." },
-      { t: '餐厅投诉',     d: "You're a server or manager. There's a problem with my food or service — I'll bring it up." },
-      { t: '索要发票',     d: "You're at the counter. I need a receipt or invoice — I'll explain what I need." },
-      { t: '会员与优惠',   d: "You work at the store. I want to know about the membership program and any discounts." },
+      { t: '询问商品信息', d: "You're a shop assistant. I'll ask you about a product's color, size, material, or features.",                                                         c: "You're a busy shop assistant. Give limited info and make me ask specific, clear questions to get what I need." },
+      { t: '比较两款产品', d: "You're a shop assistant. Help me compare two options and give me your recommendation.",                                                                c: "You're a salesperson pushing the pricier option. Make me ask the right questions to figure out what's actually best for me." },
+      { t: '试穿与试用',   d: "You're a shop assistant. I want to try something on — help me find the right fit.",                                                                   c: "You're a shop assistant but the size I want isn't available. Offer alternatives and make me decide under a bit of pressure." },
+      { t: '结账与支付',   d: "You're at the register. I'll ask about the price, any discounts, and pay.",                                                                           c: "You're at the register and there's an unexpected charge. Make me question it and sort it out calmly." },
+      { t: '退换货',       d: "You're a shop assistant. I want to return or exchange something — I'll explain why.",                                                                  c: "You're a shop assistant following strict return policies. Make it complicated — limited time window, missing receipt — and make me navigate it." },
+      { t: '投诉服务',     d: "You're a manager. I had a bad experience and I'm here to complain and get it resolved.",                                                              c: "You're a manager who's defensive. Don't apologize too easily — make me stay calm and firm while pushing for a fair resolution." },
+      { t: '在超市购物',   d: "You work at a supermarket. I can't find something and I want to know about deals.",                                                                   c: "You work at the supermarket but you're not sure where everything is. Give me partial answers and make me figure it out." },
+      { t: '网购客服',     d: "You're customer support. I have an issue with my online order — let's sort it out.",                                                                  c: "You're customer support following a strict script. Be unhelpful at first — make me escalate politely to get a real solution." },
+      { t: '讨价还价',     d: "You're selling something at a market. I like it but want a better price — let's negotiate.",                                                          c: "You're a tough market seller who rarely budges. Make me negotiate hard with good reasons to get any discount at all." },
+      { t: '餐厅投诉',     d: "You're a server or manager. There's a problem with my food or service — I'll bring it up.",                                                           c: "You're a server who's a bit dismissive. Make me be assertive and clear about the problem to get it properly addressed." },
+      { t: '索要发票',     d: "You're at the counter. I need a receipt or invoice — I'll explain what I need.",                                                                      c: "The receipt process is complicated. Ask me clarifying questions and make me explain exactly what I need and why." },
+      { t: '会员与优惠',   d: "You work at the store. I want to know about the membership program and any discounts.",                                                               c: "You're a salesperson pushing the premium membership. Make me ask the right questions to figure out if it's actually worth it." },
     ]
   },
   {
     id: 'medical', icon: '🏥', name: '就医问诊',
     chapters: [
-      { t: '预约挂号',     d: "You're the receptionist. I'm calling to book an appointment and describe my symptoms." },
-      { t: '描述症状',     d: "You're my doctor. I'll tell you what hurts, when it started, and how bad it is." },
-      { t: '回答病史',     d: "You're my doctor. Ask me about my allergies, medications, and family health history." },
-      { t: '听懂诊断',     d: "You're my doctor. Give me your diagnosis — I'll confirm I understand and ask follow-up questions." },
-      { t: '询问治疗',     d: "You're my doctor. I want to know the treatment plan, what to watch for, and how long to recover." },
-      { t: '在药房取药',   d: "You're the pharmacist. I have a prescription — help me understand how and when to take it." },
-      { t: '描述慢性病',   d: "You're my doctor. I'll explain a long-term condition I have, like diabetes or high blood pressure." },
-      { t: '心理健康',     d: "You're a counselor. I'll describe how I've been feeling and we'll talk through it." },
-      { t: '急诊就医',     d: "You're the ER nurse. I've just come in — I'll describe my urgent symptoms." },
-      { t: '查看检查结果', d: "You're my doctor. Walk me through my test results — I'll ask questions to understand them." },
-      { t: '保险与费用',   d: "You're at the billing desk. I want to know the cost and whether my insurance covers it." },
-      { t: '出院交代',     d: "You're my doctor. Give me discharge instructions — I'll confirm the follow-up plan." },
+      { t: '预约挂号',     d: "You're the receptionist. I'm calling to book an appointment and describe my symptoms.",                                                               c: "You're a busy receptionist with limited slots. Make me explain my symptoms clearly and be flexible about timing." },
+      { t: '描述症状',     d: "You're my doctor. I'll tell you what hurts, when it started, and how bad it is.",                                                                    c: "You're my doctor. Ask probing follow-up questions — don't let me be vague about pain levels, duration, or triggers." },
+      { t: '回答病史',     d: "You're my doctor. Ask me about my allergies, medications, and family health history.",                                                                c: "You're my doctor and something in my history seems inconsistent. Ask me to clarify and be thorough." },
+      { t: '听懂诊断',     d: "You're my doctor. Give me your diagnosis — I'll confirm I understand and ask follow-up questions.",                                                   c: "You're my doctor. Give me a complex diagnosis using medical terms — make me ask until I truly understand." },
+      { t: '询问治疗',     d: "You're my doctor. I want to know the treatment plan, what to watch for, and how long to recover.",                                                   c: "You're my doctor with a complicated treatment plan. Give me a lot of information — make me ask the right questions to get clarity." },
+      { t: '在药房取药',   d: "You're the pharmacist. I have a prescription — help me understand how and when to take it.",                                                         c: "You're the pharmacist. There's an issue with my prescription — make me explain my situation and sort it out." },
+      { t: '描述慢性病',   d: "You're my doctor. I'll explain a long-term condition I have, like diabetes or high blood pressure.",                                                  c: "You're my doctor. Push me to be specific about my symptoms, triggers, and how I've been managing — don't accept vague answers." },
+      { t: '心理健康',     d: "You're a counselor. I'll describe how I've been feeling and we'll talk through it.",                                                                  c: "You're a counselor. Ask deeper questions — gently push me to go beyond surface-level feelings and explore what's really going on." },
+      { t: '急诊就医',     d: "You're the ER nurse. I've just come in — I'll describe my urgent symptoms.",                                                                         c: "You're the ER nurse in a busy hospital. Ask rapid-fire questions — make me describe my symptoms clearly under pressure." },
+      { t: '查看检查结果', d: "You're my doctor. Walk me through my test results — I'll ask questions to understand them.",                                                         c: "You're my doctor with concerning test results. Explain them clearly but make me ask good questions to fully understand the implications." },
+      { t: '保险与费用',   d: "You're at the billing desk. I want to know the cost and whether my insurance covers it.",                                                             c: "You're at the billing desk with a complicated bill. Make me ask specific questions to understand each charge and what's covered." },
+      { t: '出院交代',     d: "You're my doctor. Give me discharge instructions — I'll confirm the follow-up plan.",                                                                 c: "You're my doctor with detailed discharge instructions. Give me a lot to remember — make me confirm everything and ask about anything unclear." },
     ]
   },
 ];
 
 let curScene      = null;
 let curChapter    = null;
-let curCorrection = 'realtime';
 let curLevel      = 'beginner';
 let curRole       = 'cooperative';
 let menuOpen      = false;
@@ -711,7 +700,6 @@ function pickToggle(group, el) {
   const val = el.dataset.val;
   if (group === 'level')       curLevel = val;
   if (group === 'role')        curRole = val;
-  if (group === 'correction')  curCorrection = val;
   refreshPrompt();
 }
 
@@ -724,17 +712,12 @@ function refreshPrompt() {
   }
   const ch = SCENES.find(s => s.id === curScene).chapters[curChapter];
 
-  const level = { beginner: 'beginner', intermediate: 'intermediate', advanced: 'advanced' }[curLevel];
-  const role  = curRole === 'challenging' ? 'Push back occasionally.' : '';
-  const corr  = { realtime: 'Correct my English after each turn.', after: 'Give corrections at the end.', never: '' }[curCorrection];
-
   const levelLine = { beginner: "My English is beginner level.", intermediate: "My English is intermediate.", advanced: "My English is advanced." }[curLevel];
-  const parts = [
-    `Hi, I'm [Your Name]. Can we do a quick roleplay to practice my English? ${ch.d} ${levelLine}`,
-    role, corr, "Let's start!",
-  ].filter(Boolean);
+  const scene = curRole === 'challenging' ? ch.c : ch.d;
+  const line1 = `Hi, I'm [Your Name]. Can we do a quick roleplay to practice my English?`;
+  const line2 = `${scene} ${levelLine} If there's a more natural way to say something, feel free to teach me along the way. Let's start!`;
 
-  box.textContent = parts.join(' ');
+  box.textContent = line1 + '\n\n' + line2;
   box.classList.add('ready');
 }
 
