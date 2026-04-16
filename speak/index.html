@@ -715,7 +715,7 @@ function refreshPrompt() {
   const levelLine = { beginner: "My English is beginner level.", intermediate: "My English is intermediate.", advanced: "My English is advanced." }[curLevel];
   const scene = curRole === 'challenging' ? ch.c : ch.d;
   const line1 = `Hi, I'm [Your Name]. Can we do a quick roleplay to practice my English?`;
-  const line2 = `${scene} ${levelLine} If there's a more natural way to say something, feel free to teach me along the way. Let's start!`;
+  const line2 = `${scene} ${levelLine} If I get stuck or say something off, jump in to help and keep going. Let's begin!`;
 
   box.textContent = line1 + '\n\n' + line2;
   box.classList.add('ready');
