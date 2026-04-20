@@ -23,6 +23,13 @@
 > 打造全球化产品 - 在TikTok完整经历了一款产品从数百万到十亿 DAU 的增长过程。理解创作者、内容生态和不同市场的本地化挑战。
 > 行业内的 AI 转型 - 目前在 Nike 负责 AI 产品，探索 AI 在 to C 应用、市场营销、供应链、零售体验、财务、法务等领域的应用。
 
+## 我的产品
+
+> https://imvanessa.li/updowncard - 一个上下滑的记忆卡片网站
+> https://imvanessa.li/speak - 一个生成AI口语对练开场白的网站
+> https://imvanessa.li/infogalaxy - 一个用星系展示知识点的网站
+> https://bit.ly/imvanessaliAI - 我在飞书文档上的零散记录
+
 ## 我的痕迹
 
 > 十字路口 播客 - AI 产品经理指南：我是谁，从哪来，到哪去 | 对谈字节 AI 产品负责人 Vanessa，面试了 100 位 AI 产品经理后的心得总结
