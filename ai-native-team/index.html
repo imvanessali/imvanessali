@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>相同角色，不同协作方式 · AI Native 产研协作流程</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================
+   AI Native 产研协作流程 — Risograph 双色编辑 · 工作流示意
+   墨黑 + 朱砂红 on 暖象牙纸。版式embody论点：单线程 → 并行。
+   =================================================================== */
+
+:root {
+  --paper:    #f3ecdd;
+  --paper-2:  #faf4e7;
+  --paper-3:  #ebe2cf;
+  --ink:      #18140f;
+  --ink-2:    #4b4339;
+  --ink-3:    #8a7e6c;
+  --ink-4:    #b6ab96;
+  --line:     #ddd2bb;
+  --line-2:   #cabd9f;
+
+  --red:      #d83a1e;          /* 朱砂 cinnabar — the live accent */
+  --red-2:    #b62f17;
+  --red-ink:  #7a2412;
+  --red-tint: #f6e0d4;
+  --red-wash: #faece2;
+
+  --mute:     #8a7e6c;          /* 旧流程：去色墨灰 */
+  --mute-bg:  #ece3d0;
+
+  --r: 2px;
+  --maxw: 1180px;
+
+  --display: "Instrument Serif", "Noto Serif SC", Georgia, serif;
+  --serif:   "Noto Serif SC", "Instrument Serif", Georgia, serif;
+  --sans:    "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono:    "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px; line-height: 1.72;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* blueprint grid + paper grain */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 38px 38px; opacity: 0.30;
+  mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+}
+
+.wrap { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 0 40px; }
+::selection { background: var(--red); color: var(--paper-2); }
+
+/* progress */
+.progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
+  background: var(--red); transform: scaleX(0); transform-origin: 0 50%;
+}
+/* corner registration marks (riso print feel) */
+.regmark {
+  position: fixed; z-index: 95; width: 26px; height: 26px; pointer-events: none;
+  border: 0 solid var(--red); opacity: 0.55; mix-blend-mode: multiply;
+}
+.regmark.tl { top: 22px; left: 22px; border-top-width: 1.5px; border-left-width: 1.5px; }
+.regmark.tr { top: 22px; right: 22px; border-top-width: 1.5px; border-right-width: 1.5px; }
+.regmark.bl { bottom: 22px; left: 22px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.regmark.br { bottom: 22px; right: 22px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+@media (max-width: 760px) { .regmark { display: none; } }
+
+/* ===================== HERO ===================== */
+.hero { padding: 150px 0 70px; position: relative; }
+.hero .wrap { position: relative; }
+
+.hero__main { max-width: 100%; }
+.hero__tag {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red-2); margin-bottom: 26px; display: flex; align-items: center; gap: 12px;
+}
+.hero__tag::before { content: ""; width: 34px; height: 2px; background: var(--red); }
+
+.hero h1 {
+  font-family: var(--serif); font-weight: 900; color: var(--ink);
+  font-size: clamp(48px, 9vw, 124px); line-height: 0.98; letter-spacing: -0.02em;
+}
+.hero h1 .l1 { display: block; color: var(--ink-3); font-weight: 700; }
+.hero h1 .l2 { display: block; position: relative; }
+.sweep {
+  background-image: linear-gradient(var(--red), var(--red));
+  background-repeat: no-repeat; background-position: 0 86%; background-size: 0% 0.16em;
+  animation: sweep 0.9s 0.55s cubic-bezier(.65,0,.2,1) forwards; padding-bottom: 0.02em;
+}
+@keyframes sweep { to { background-size: 100% 0.16em; } }
+
+.hero__lead {
+  margin-top: 44px; max-width: 60ch;
+  font-size: clamp(17px, 2vw, 21px); line-height: 1.7; color: var(--ink-2);
+  padding-top: 30px; border-top: 1.5px solid var(--ink);
+}
+.hero__lead b { color: var(--ink); font-weight: 500; }
+.hero__lead .hl { color: var(--red-2); font-weight: 500; }
+
+/* side vertical label */
+.hero__side {
+  position: absolute; right: 0; top: 4px;
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex; align-items: flex-start; gap: 28px;
+}
+.hero__side .yr { color: var(--red-2); }
+@media (max-width: 980px) { .hero__side { display: none; } }
+
+/* legend strip */
+.legend {
+  display: flex; gap: 0; margin-top: 56px; border: 1.5px solid var(--ink);
+}
+.legend__cell { flex: 1; padding: 20px 24px; display: flex; gap: 16px; align-items: center; }
+.legend__cell + .legend__cell { border-left: 1.5px solid var(--ink); }
+.legend__glyph { flex-shrink: 0; display: flex; align-items: flex-end; gap: 4px; height: 30px; }
+.legend__glyph i { display: block; width: 6px; background: var(--mute); }
+.legend--old .legend__glyph i { height: 30px; background: var(--mute); }
+.legend--old .legend__glyph i:nth-child(n+2) { display: none; }
+.legend--new .legend__glyph i { background: var(--red); }
+.legend--new .legend__glyph i:nth-child(1){ height: 22px; }
+.legend--new .legend__glyph i:nth-child(2){ height: 30px; }
+.legend--new .legend__glyph i:nth-child(3){ height: 26px; }
+.legend__txt .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 4px; }
+.legend__txt .v { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--ink); }
+.legend--new .legend__txt .v { color: var(--red-2); }
+@media (max-width: 640px) { .legend { flex-direction: column; } .legend__cell + .legend__cell { border-left: none; border-top: 1.5px solid var(--ink); } }
+
+/* ===================== SECTION INTRO ===================== */
+.intro { padding: 120px 0 0; }
+.intro__top {
+  display: flex; align-items: baseline; gap: 30px; flex-wrap: wrap; border-bottom: 1.5px solid var(--ink); padding-bottom: 18px;
+}
+.intro__no {
+  font-family: var(--display); font-size: clamp(48px, 7vw, 88px); line-height: 0.7;
+  color: var(--red); font-weight: 400; flex-shrink: 0;
+}
+.intro__top h2 { flex: 1 1 auto; min-width: 0; }
+.flow--old .intro__no { color: var(--ink-4); }
+.intro__meta { margin-left: auto; text-align: right; flex-shrink: 0; }
+.intro__kind {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+}
+.intro h2 {
+  font-family: var(--serif); font-weight: 900; font-size: clamp(30px, 4.6vw, 56px);
+  line-height: 1.04; letter-spacing: -0.015em;
+}
+.intro__note { margin-top: 16px; max-width: 52ch; color: var(--ink-2); font-size: 16.5px; }
+
+/* ===================== OLD FLOW — single rigid spine ===================== */
+.spine { max-width: 720px; margin: 50px auto 0; position: relative; }
+.node {
+  position: relative; padding: 0 0 36px 84px; opacity: 0; transform: translateY(22px);
+}
+.node.in { opacity: 1; transform: none; transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+.node::before {   /* the vertical dotted baton line */
+  content: ""; position: absolute; left: 27px; top: 8px; bottom: -8px; width: 2px;
+  background: repeating-linear-gradient(var(--line-2) 0 4px, transparent 4px 10px);
+}
+.node:last-of-type::before { display: none; }
+.node__dot {
+  position: absolute; left: 8px; top: 2px; width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid var(--ink-3); background: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 22px; color: var(--ink-2); z-index: 2;
+}
+.node__role {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 8px;
+}
+.node__title { font-family: var(--serif); font-weight: 700; font-size: 23px; line-height: 1.25; color: var(--ink); margin-bottom: 7px; letter-spacing: -0.01em; }
+.node__desc { color: var(--ink-2); font-size: 15.5px; line-height: 1.65; max-width: 46ch; }
+.node__foot { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 14px; }
+.tagline {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.tagline .lbl { color: var(--ink-4); }
+.tagline.pain { color: var(--red-ink); }
+.tagline.pain .lbl { color: var(--red); }
+.tagline::before { content: ""; width: 5px; height: 5px; background: currentColor; }
+
+/* loop curl */
+.loop {
+  position: relative; margin: 4px auto 0; max-width: 720px; padding: 28px 0 0 84px;
+  opacity: 0; transform: translateY(22px);
+}
+.loop.in { opacity: 1; transform: none; transition: opacity .6s, transform .6s; }
+.loop__curl {
+  position: absolute; left: 0; top: 14px; width: 56px; height: 56px; color: var(--red);
+  animation: spin 6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loop__k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red-2); margin-bottom: 8px; }
+.loop__t { font-size: 16px; color: var(--ink); line-height: 1.6; max-width: 46ch; }
+.loop__t b { color: var(--red-ink); font-weight: 500; }
+
+/* ===================== FOUNDATION BAR (setup) ===================== */
+.foundation {
+  margin: 56px 0 0; position: relative; border: 1.5px solid var(--red);
+  background: var(--red-wash); padding: 30px 34px;
+  display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center;
+  opacity: 0; transform: translateY(22px);
+}
+.foundation.in { opacity: 1; transform: none; transition: opacity .6s, transform .6s; }
+.foundation__no { font-family: var(--display); font-size: 64px; line-height: 0.7; color: var(--red); }
+.foundation__badge {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap;
+  color: var(--red-2); display: inline-flex; align-items: center; gap: 9px; margin-bottom: 10px;
+}
+.foundation__badge .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: pulse 1.8s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{ opacity:.35; transform: scale(.8) } 50%{ opacity:1; transform: scale(1.2) } }
+.foundation__title { font-family: var(--serif); font-weight: 900; font-size: 26px; color: var(--ink); margin-bottom: 6px; letter-spacing: -0.01em; }
+.foundation__desc { font-size: 15px; color: var(--ink-2); line-height: 1.6; max-width: 50ch; }
+.foundation__tasks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.foundation__tasks span {
+  font-family: var(--mono); font-size: 12px; color: var(--red-2); white-space: nowrap;
+  border: 1px solid var(--line-2); border-color: rgba(216,58,30,0.3); padding: 6px 12px; background: rgba(255,255,255,0.4);
+}
+@media (max-width: 640px) { .foundation { grid-template-columns: 1fr; gap: 14px; } .foundation__no { font-size: 48px; } }
+
+/* ===================== NEW FLOW — parallel lanes ===================== */
+.lanes { margin: 40px 0 0; position: relative; }
+.lane {
+  display: grid; grid-template-columns: 56px 1fr; gap: 28px;
+  padding: 0 0 30px; position: relative; opacity: 0; transform: translateY(24px);
+}
+.lane.in { opacity: 1; transform: none; transition: opacity .65s cubic-bezier(.2,.7,.2,1), transform .65s cubic-bezier(.2,.7,.2,1); }
+.lane__rail { position: relative; display: flex; flex-direction: column; align-items: center; }
+.lane__no {
+  width: 56px; height: 56px; flex-shrink: 0; border: 2px solid var(--red); background: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 30px; color: var(--red); z-index: 2;
+}
+.lane__line { width: 2px; flex: 1; min-height: 24px; background: var(--red); transform: scaleY(0); transform-origin: top; margin-top: 4px; }
+.lane.in .lane__line { animation: drawline .7s .2s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes drawline { to { transform: scaleY(1); } }
+.lane:last-child .lane__line { display: none; }
+
+.lane__card { background: var(--paper-2); border: 1.5px solid var(--ink); padding: 24px 26px; }
+.lane__title { font-family: var(--serif); font-weight: 700; font-size: 24px; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 8px; }
+.lane__desc { color: var(--ink-2); font-size: 15.5px; line-height: 1.66; max-width: 54ch; }
+
+/* parallel role tracks — the visual core of "并行" */
+.tracks { display: flex; gap: 6px; margin-bottom: 16px; }
+.track {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; font-weight: 500;
+  padding: 7px 13px; white-space: nowrap; display: flex; align-items: center; gap: 7px;
+}
+.track--human { background: var(--ink); color: var(--paper-2); }
+.track--ai    { background: var(--red); color: var(--paper-2); }
+.track::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+
+.lane__foot { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.out {
+  font-family: var(--mono); font-size: 12.5px; color: var(--ink); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.out .lbl { color: var(--ink-3); }
+.out::before { content: "▸"; color: var(--red); }
+.gain { font-size: 14.5px; color: var(--red-ink); display: inline-flex; align-items: flex-start; gap: 9px; line-height: 1.5; max-width: 50ch; }
+.gain .tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--red); color: var(--paper-2); padding: 3px 7px; margin-top: 1px; flex-shrink: 0; }
+
+@media (max-width: 560px) {
+  .lane { grid-template-columns: 44px 1fr; gap: 16px; }
+  .lane__no { width: 44px; height: 44px; font-size: 22px; }
+  .lane__card { padding: 18px 18px; }
+  .tracks { flex-wrap: wrap; }
+}
+
+/* ===================== DIFF ===================== */
+.diff { padding: 130px 0 30px; }
+.diff-rows { margin-top: 40px; }
+.diff-row {
+  display: grid; grid-template-columns: 240px 1fr; gap: 36px; align-items: center;
+  padding: 40px 0; border-top: 1.5px solid var(--line-2);
+  opacity: 0; transform: translateY(20px);
+}
+.diff-row:last-child { border-bottom: 1.5px solid var(--line-2); }
+.diff-row.in { opacity: 1; transform: none; transition: opacity .65s, transform .65s; }
+.diff-row__no { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: baseline; gap: 12px; }
+.diff-row__no .i { font-family: var(--display); font-size: 30px; color: var(--red); }
+.diff-row__pair { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.diff-old { font-family: var(--serif); font-size: clamp(18px, 2.3vw, 27px); color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; white-space: nowrap; }
+.diff-arrow { font-family: var(--display); font-size: 30px; color: var(--red); }
+.diff-new { font-family: var(--serif); font-size: clamp(22px, 3vw, 38px); font-weight: 900; color: var(--ink); line-height: 1.08; letter-spacing: -0.015em; white-space: nowrap; }
+.diff-new em { font-style: normal; color: var(--red); }
+@media (max-width: 640px) { .diff-row { grid-template-columns: 1fr; gap: 14px; } .diff-old, .diff-new { white-space: normal; } }
+
+/* ===================== FOOTER ===================== */
+.footer { padding: 90px 0 80px; margin-top: 80px; border-top: 1.5px solid var(--ink); }
+.footer .wrap { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.footer__big { font-family: var(--serif); font-weight: 900; font-size: clamp(26px, 4vw, 46px); color: var(--ink); letter-spacing: -0.015em; line-height: 1; }
+.footer__big em { font-style: normal; color: var(--red); }
+.footer__mk { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .wrap { padding: 0 24px; }
+  .hero { padding: 110px 0 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .node, .loop, .lane, .foundation, .diff-row { opacity: 1 !important; transform: none !important; }
+  .lane__line { transform: scaleY(1) !important; }
+  .sweep { background-size: 100% 0.16em !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<span class="regmark tl"></span><span class="regmark tr"></span>
+<span class="regmark bl"></span><span class="regmark br"></span>
+<header class="hero" data-screen-label="Hero">
+  <div class="wrap">
+    <div class="hero__main">
+      <div class="hero__tag">产研协作流程 · The Rewrite</div>
+      <h1>
+        <span class="l1">相同角色</span>
+        <span class="l2"><span class="sweep">不同协作方式</span></span>
+      </h1>
+    </div>
+    <div class="hero__side">
+      <span>AI NATIVE TEAM</span>
+      <span class="yr">SEQUENTIAL → PARALLEL</span>
+    </div>
+    <p class="hero__lead">
+      同样的产品、设计、研发、QA。<b>不同的，是交付被组织的方式</b>——
+      传统流程是一条<span class="hl">单线程的接力</span>，缺陷在末端才被发现；
+      AI Native 把它重写为<span class="hl">并行的协作</span>，发现与修复在闭环内完成。
+    </p>
+    <div class="legend">
+      <div class="legend__cell legend--old">
+        <span class="legend__glyph"><i></i><i></i><i></i></span>
+        <span class="legend__txt"><span class="k">读作</span><span class="v">单线程 · 顺序交付</span></span>
+      </div>
+      <div class="legend__cell legend--new">
+        <span class="legend__glyph"><i></i><i></i><i></i></span>
+        <span class="legend__txt"><span class="k">读作</span><span class="v">多轨道 · 并行迭代</span></span>
+      </div>
+    </div>
+  </div>
+</header>
+<section class="flow flow--old" data-screen-label="传统流程">
+  <div class="wrap">
+    <div class="intro">
+      <div class="intro__top">
+        <span class="intro__no">01</span>
+        <h2>传统协作流程</h2>
+        <div class="intro__meta"><span class="intro__kind">单线程 / 顺序交付</span></div>
+      </div>
+      <p class="intro__note">四个角色按顺序接力，产出层层传递，缺陷在末端被发现——然后卷回开头。</p>
+    </div>
+    <div class="spine" id="oldFlow">
+  <article class="node">
+    <div class="node__dot">01</div>
+    <div class="node__role">产品 · Product</div>
+    <h3 class="node__title">撰写 PRD 文档</h3>
+    <p class="node__desc">用文字描述功能需求、业务逻辑、验收标准</p>
+    <div class="node__foot">
+      <span class="tagline"><span class="lbl">产出</span> PRD 文档</span>
+      <span class="tagline pain"><span class="lbl">痛点</span> 文字描述 ≠ 最终界面，理解偏差高</span>
+    </div>
+  </article>
+  <article class="node">
+    <div class="node__dot">02</div>
+    <div class="node__role">设计 · Design</div>
+    <h3 class="node__title">Figma 出稿</h3>
+    <p class="node__desc">根据 PRD 独立设计，多轮评审修改</p>
+    <div class="node__foot">
+      <span class="tagline"><span class="lbl">产出</span> Figma 稿件</span>
+      <span class="tagline pain"><span class="lbl">痛点</span> 设计稿与代码实现存在还原度落差</span>
+    </div>
+  </article>
+  <article class="node">
+    <div class="node__dot">03</div>
+    <div class="node__role">研发 · Engineering</div>
+    <h3 class="node__title">阅读需求 + 还原设计</h3>
+    <p class="node__desc">自行理解 PRD，对照 Figma 手写代码</p>
+    <div class="node__foot">
+      <span class="tagline"><span class="lbl">产出</span> 功能代码</span>
+      <span class="tagline pain"><span class="lbl">痛点</span> 理解成本高，返工率高</span>
+    </div>
+  </article>
+  <article class="node">
+    <div class="node__dot">04</div>
+    <div class="node__role">测试 · QA</div>
+    <h3 class="node__title">手动测试</h3>
+    <p class="node__desc">对照 PRD 和设计稿逐条验收，发现问题记录</p>
+    <div class="node__foot">
+      <span class="tagline"><span class="lbl">产出</span> Bug 工单</span>
+      <span class="tagline pain"><span class="lbl">痛点</span> 人工测试覆盖率有限，遗漏率高</span>
+    </div>
+  </article>
+  <div class="loop">
+    <svg class="loop__curl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/></svg>
+    <div>
+      <div class="loop__k">反复循环 · The Loop</div>
+      <p class="loop__t">缺陷打回研发修复 → 研发改完重新提测 → QA 再次验收。<b>跨角色沟通成本贯穿全程，每轮循环消耗数天。</b></p>
+    </div>
+  </div></div>
+  </div>
+</section>
+<section class="flow flow--new" data-screen-label="AI Native 流程">
+  <div class="wrap">
+    <div class="intro">
+      <div class="intro__top">
+        <span class="intro__no">02</span>
+        <h2>AI Native 新流程</h2>
+        <div class="intro__meta"><span class="intro__kind">多轨道 / 并行迭代</span></div>
+      </div>
+      <p class="intro__note">角色并行协作，AI 调用设计系统直接生成。一切建立在同一块地基之上：</p>
+    </div>
+    <div class="foundation">
+      <span class="foundation__no">00</span>
+      <div>
+        <div class="foundation__badge"><span class="pulse"></span>一次性筹备 · One-time Setup</div>
+        <div class="foundation__title">设计系统代码化</div>
+        <p class="foundation__desc">将现有设计规范迁移为 AI 可调用的代码资产，完成后长期复用——这是从顺序交付切换到并行迭代的前提。</p>
+        <div class="foundation__tasks">
+          <span>Token 语义命名</span>
+          <span>组件 Props 规范化</span>
+          <span>组合规则文档化</span>
+        </div>
+      </div>
+    </div>
+    <div class="lanes" id="newFlow">
+  <div class="lane">
+    <div class="lane__rail">
+      <div class="lane__no">01</div>
+      <div class="lane__line"></div>
+    </div>
+    <div class="lane__card">
+      <div class="tracks"><span class="track track--human">产品</span><span class="track track--human">设计</span></div>
+      <h3 class="lane__title">共同准备</h3>
+      <p class="lane__desc">一起讨论 Idea，明确用户目标与业务逻辑</p>
+      <div class="lane__foot">
+        
+        <span class="gain"><span class="tag">收益</span><span>无需等待 PRD 完整才能启动</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="lane">
+    <div class="lane__rail">
+      <div class="lane__no">02</div>
+      <div class="lane__line"></div>
+    </div>
+    <div class="lane__card">
+      <div class="tracks"><span class="track track--human">产品</span><span class="track track--human">设计</span><span class="track track--ai">AI</span></div>
+      <h3 class="lane__title">自然语言驱动设计</h3>
+      <p class="lane__desc">Prompt 描述目标，AI 调用设计系统生成页面，设计师即时审核</p>
+      <div class="lane__foot">
+        <span class="out"><span class="lbl">产出</span> Demo 代码 + AI PRD</span>
+        <span class="gain"><span class="tag">收益</span><span>所见即所得，对齐成本接近零</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="lane">
+    <div class="lane__rail">
+      <div class="lane__no">03</div>
+      <div class="lane__line"></div>
+    </div>
+    <div class="lane__card">
+      <div class="tracks"><span class="track track--human">研发</span><span class="track track--ai">AI</span></div>
+      <h3 class="lane__title">基于 Demo 生产代码</h3>
+      <p class="lane__desc">人类研发主导架构，AI 辅助补全重构，Demo 即参考实现</p>
+      <div class="lane__foot">
+        <span class="out"><span class="lbl">产出</span> 标准生产代码</span>
+        <span class="gain"><span class="tag">收益</span><span>理解成本低，返工率显著下降</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="lane">
+    <div class="lane__rail">
+      <div class="lane__no">04</div>
+      
+    </div>
+    <div class="lane__card">
+      <div class="tracks"><span class="track track--ai">AI 为主</span><span class="track track--human">人工兜底</span></div>
+      <h3 class="lane__title">AI 发现问题，AI 即时修复</h3>
+      <p class="lane__desc">AI 自动生成用例并执行测试，发现缺陷后直接驱动代码修复，人工负责最终确认与边界判断</p>
+      <div class="lane__foot">
+        <span class="out"><span class="lbl">产出</span> 验收报告</span>
+        <span class="gain"><span class="tag">收益</span><span>发现 → 修复闭环在 AI 内完成，人工只看结果</span></span>
+      </div>
+    </div>
+  </div></div>
+  </div>
+</section>
+<section class="diff" data-screen-label="本质差异">
+  <div class="wrap">
+    <div class="intro" style="padding-top:0">
+      <div class="intro__top">
+        <span class="intro__no">03</span>
+        <h2>变的不是角色</h2>
+        <div class="intro__meta"><span class="intro__kind">What Really Changed</span></div>
+      </div>
+      <p class="intro__note">三处位移，定义了整个流程的重写。</p>
+    </div>
+    <div class="diff-rows" id="diffRows">
+  <div class="diff-row">
+    <div class="diff-row__no"><span class="i">01</span> 交付物形态</div>
+    <div class="diff-row__pair">
+      <span class="diff-old">Figma 稿 + 文字 PRD</span>
+      <span class="diff-arrow">→</span>
+      <span class="diff-new">Demo 代码 <em>+ AI PRD</em></span>
+    </div>
+  </div>
+  <div class="diff-row">
+    <div class="diff-row__no"><span class="i">02</span> 缺陷处理方式</div>
+    <div class="diff-row__pair">
+      <span class="diff-old">人工打回多轮循环</span>
+      <span class="diff-arrow">→</span>
+      <span class="diff-new">AI 发现 <em>即修复</em></span>
+    </div>
+  </div>
+  <div class="diff-row">
+    <div class="diff-row__no"><span class="i">03</span> 研发起点</div>
+    <div class="diff-row__pair">
+      <span class="diff-old">从零理解需求</span>
+      <span class="diff-arrow">→</span>
+      <span class="diff-new">基于 Demo <em>重构</em></span>
+    </div>
+  </div></div>
+  </div>
+</section>
+<footer class="footer" data-screen-label="Footer">
+  <div class="wrap">
+    <div class="footer__big">同样的人，<em>更快的闭环。</em></div>
+    <div class="footer__mk">AI Native Team<br>产研协作流程</div>
+  </div>
+</footer>
+<script>
+(function () {
+  var reveals = document.querySelectorAll(".node, .loop, .lane, .foundation, .diff-row");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.14, rootMargin: "0px 0px -10% 0px" });
+    reveals.forEach(function (el) { io.observe(el); });
+  } else { reveals.forEach(function (el) { el.classList.add("in"); }); }
+  setTimeout(function () { reveals.forEach(function (el) { el.classList.add("in"); }); }, 2800);
+  var bar = document.getElementById("progress");
+  function up() { var h = document.documentElement; var max = h.scrollHeight - h.clientHeight; bar.style.transform = "scaleX(" + (max > 0 ? h.scrollTop / max : 0) + ")"; }
+  window.addEventListener("scroll", up, { passive: true });
+  up();
+})();
+</script>
+</body>
+</html>
