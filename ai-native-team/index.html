@@ -14,24 +14,26 @@
    =================================================================== */
 
 :root {
-  --paper:    #f3ecdd;
-  --paper-2:  #faf4e7;
-  --paper-3:  #ebe2cf;
-  --ink:      #18140f;
-  --ink-2:    #4b4339;
-  --ink-3:    #8a7e6c;
-  --ink-4:    #b6ab96;
-  --line:     #ddd2bb;
-  --line-2:   #cabd9f;
+  --paper:    #ffffff;
+  --paper-2:  #fafaf8;
+  --paper-3:  #f0f1ee;
+  --ink:      #4a5056;
+  --ink-2:    #646a71;
+  --ink-3:    #989ea5;
+  --ink-4:    #c5c9ce;
+  --line:     #e5e7e5;
+  --line-2:   #ced2d1;
 
-  --red:      #d83a1e;          /* 朱砂 cinnabar — the live accent */
-  --red-2:    #b62f17;
-  --red-ink:  #7a2412;
-  --red-tint: #f6e0d4;
-  --red-wash: #faece2;
+  --red:      #ca2a5f;          /* 树莓红 raspberry — the live accent */
+  --red-2:    #a81f4e;
+  --red-ink:  #7d1739;
+  --red-tint: #f9dce8;
+  --red-wash: #fcedf3;
 
-  --mute:     #8a7e6c;          /* 旧流程：去色墨灰 */
-  --mute-bg:  #ece3d0;
+  --lime:     #d4dc3a;          /* 青柠 chartreuse — secondary pop */
+
+  --mute:     #989ea5;          /* 旧流程：去色灰 */
+  --mute-bg:  #eceeec;
 
   --r: 2px;
   --maxw: 1180px;
@@ -108,7 +110,7 @@ body::after {
 .hero h1 .l1 { display: block; color: var(--ink-3); font-weight: 700; }
 .hero h1 .l2 { display: block; position: relative; }
 .sweep {
-  background-image: linear-gradient(var(--red), var(--red));
+  background-image: linear-gradient(var(--lime), var(--lime));
   background-repeat: no-repeat; background-position: 0 86%; background-size: 0% 0.16em;
   animation: sweep 0.9s 0.55s cubic-bezier(.65,0,.2,1) forwards; padding-bottom: 0.02em;
 }
@@ -274,7 +276,7 @@ body::after {
   padding: 7px 13px; white-space: nowrap; display: flex; align-items: center; gap: 7px;
 }
 .track--human { background: var(--ink); color: var(--paper-2); }
-.track--ai    { background: var(--red); color: var(--paper-2); }
+.track--ai    { background: var(--lime); color: var(--ink); }
 .track::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.7; }
 
 .lane__foot { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
