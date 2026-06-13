@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML Slides Editor</title>
+  <meta name="description" content="HTML Slides Editor:在渲染好的页面里直接改字、换图、裁剪。本页已开启编辑器,不自动保存,刷新即还原。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #211D1D;
+      color: #F4F0E6;
+      font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .manifesto {
+      position: relative;
+      overflow: clip;
+      min-height: 160vh;
+    }
+
+    .manifesto-sticky {
+      position: sticky;
+      top: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+    }
+
+    .manifesto-canvas {
+      position: absolute;
+      inset: 0;
+      width: min(640px, 86%);
+      margin: 0 auto;
+      pointer-events: none;
+    }
+
+    .manifesto-canvas .float-img {
+      position: absolute;
+      pointer-events: auto;
+      will-change: transform;
+    }
+
+    /* While the editor is cropping a frame it adds .__hpe_crop_active. Lift that
+       frame above its overlapping siblings so its resize handle stays on top and
+       actually receives the pointer (otherwise a sibling image intercepts it and
+       the editor deactivates the crop). */
+    .manifesto-canvas .float-img.__hpe_crop_active {
+      z-index: 5;
+    }
+
+    .manifesto-canvas .float-img img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .manifesto-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      text-align: center;
+      /* Let the empty gaps of the text column pass pointer events through to the
+         image frames behind it, so the editor's crop/resize handles stay grabbable.
+         Actual text and the button re-enable pointer events below. */
+      pointer-events: none;
+    }
+
+    .manifesto-copy h2,
+    .manifesto-copy .edit-hint,
+    .manifesto-copy .manifesto-sub,
+    .manifesto-copy .manifesto-cta {
+      pointer-events: auto;
+    }
+
+    .manifesto-sub {
+      margin: -14px 0 0;
+      color: rgba(244, 240, 230, 0.7);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    .manifesto-sub .sub-line {
+      margin: 6px 0 0;
+    }
+
+    .manifesto-sub .sub-line:first-child {
+      margin-top: 0;
+    }
+
+    .check {
+      color: #20ba6f;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .heading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .caret {
+      display: inline-block;
+      width: 5px;
+      height: 0.92em;
+      margin-left: 8px;
+      vertical-align: -0.06em;
+      background: #F4F0E6;
+      animation: caret-blink 1.05s steps(1) infinite;
+    }
+
+    @keyframes caret-blink {
+      0%, 48% { opacity: 1; }
+      49%, 100% { opacity: 0; }
+    }
+
+    .edit-hint {
+      align-self: flex-end;
+      margin-right: 8px;
+      font-family: "Caveat", cursive;
+      font-size: 23px;
+      font-weight: 600;
+      background: linear-gradient(90deg, #20ba6f 0%, #1fc6db 30%, #4d8af0 62%, #f54988 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      transform: rotate(-2.5deg);
+    }
+
+    .hint-arrow {
+      display: inline-block;
+      width: 24px;
+      height: 28px;
+      margin-left: 4px;
+      vertical-align: -4px;
+    }
+
+    .img-note {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 6px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .caret { animation: none; }
+    }
+
+    .manifesto-sub .gradient-text {
+      font-weight: 500;
+    }
+
+    .manifesto-copy .manifesto-cta { margin-top: 22px; }
+
+    .manifesto-copy { margin-top: 24vh; }
+
+    .manifesto-copy h2 {
+      margin: 0;
+      font-size: clamp(30px, 4.2vw, 60px);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .manifesto-copy h2 { white-space: normal; }
+    }
+
+    .manifesto-cta {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: #F4F0E6;
+      color: #211D1D;
+      font-size: 16px;
+      font-weight: 650;
+      transition: transform .18s ease;
+    }
+
+    .manifesto-cta:hover { transform: scale(1.04); }
+
+    .footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      padding: 18px 24px 22px;
+      text-align: center;
+      color: rgba(244, 240, 230, 0.55);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    @media (max-width: 920px) {
+      .manifesto-canvas { transform: scale(0.72); }
+    }
+  </style>
+</head>
+<body>
+  <section class="manifesto">
+    <div class="manifesto-canvas" aria-hidden="true">
+      <div class="float-img frame-img" data-speed="0.85" style="width: 290px; aspect-ratio: 3/4; top: 46%; left: 110%;">
+        <img src="./assets/manifesto-1.jpg" alt="" decoding="async" draggable="false">
+      </div>
+      <div class="float-img frame-img" data-speed="0.55" style="width: 400px; aspect-ratio: 4/3; top: 58%; left: -56%;">
+        <img src="./assets/manifesto-2.jpg" alt="" decoding="async" draggable="false">
+      </div>
+      <div class="float-img frame-img" data-speed="0.4" style="width: 320px; aspect-ratio: 4/3; top: 5%; left: 98%;">
+        <img src="./assets/manifesto-4.jpg" alt="" decoding="async" draggable="false">
+      </div>
+      <div class="float-img frame-img" data-speed="0.7" style="width: 280px; aspect-ratio: 3/4; top: 4%; left: -33%;">
+        <img src="./assets/manifesto-3.jpg" alt="" decoding="async" draggable="false">
+      </div>
+      <div class="float-img frame-img" data-speed="0.3" style="width: 240px; aspect-ratio: 4/3; top: 46%; left: -24%;">
+        <img src="./assets/manifesto-5.jpg" alt="" decoding="async" draggable="false">
+      </div>
+      <div class="float-img frame-img" data-speed="0.5" style="width: 250px; aspect-ratio: 4/3; top: 9%; left: 50%;">
+        <img src="./assets/manifesto-6.jpg" alt="" decoding="async" draggable="false" style="object-position: left;">
+        <span class="img-note">Drop a new image here</span>
+      </div>
+    </div>
+    <div class="manifesto-sticky">
+      <div class="manifesto-copy">
+        <div class="heading-wrap">
+          <h2>Editing HTML Slides Just Got Eaiser<span class="caret" aria-hidden="true"></span></h2>
+          <span class="edit-hint">Fix the typo<svg class="hint-arrow" viewBox="0 0 38 44" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hintGrad" x1="6" y1="39" x2="32" y2="6" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#20ba6f"/><stop offset="0.3" stop-color="#1fc6db"/><stop offset="0.62" stop-color="#4d8af0"/><stop offset="1" stop-color="#f54988"/></linearGradient></defs><path d="M6 38 C 32 37, 34 18, 30 8" stroke="url(#hintGrad)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M24 9 L 30 4 L 35 12" stroke="url(#hintGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+        </div>
+        <div class="manifesto-sub">
+          <p class="sub-line"><span class="gradient-text">Use this website as an example</span></p>
+          <p class="sub-line"><span class="check">✓</span>Change the text right on the page</p>
+          <p class="sub-line"><span class="check">✓</span>Drag and drop to replace any image</p>
+          <p class="sub-line"><span class="check">✓</span>Undo and redo anything you change</p>
+        </div>
+        <a class="manifesto-cta" href="https://github.com/imvanessali/HTML-Slides-Editor">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">HTML Slides Editor © 2026</footer>
+
+  <script>
+    // Keep the GitHub button clickable while the editor is in Editing mode.
+    // Registered before the editor runtime so this capture listener runs first,
+    // ahead of the runtime's click blockers; designMode also suppresses native
+    // link navigation, so navigate manually.
+    window.addEventListener("click", (event) => {
+      const cta = event.target.closest && event.target.closest(".manifesto-cta");
+      if (!cta) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.open(cta.href, "_blank", "noopener");
+    }, true);
+
+    (() => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const section = document.querySelector(".manifesto");
+      const items = [...document.querySelectorAll(".manifesto-canvas .float-img")].map((el) => ({
+        el,
+        speed: parseFloat(el.dataset.speed) || 0.5,
+        y: 0,
+        vy: 0
+      }));
+      let target = 0;
+
+      // Spring constants: lower stiffness + lower damping = bouncier, more elastic
+      // settle. The images chase the scroll-driven goal, overshoot, then spring back.
+      const STIFFNESS = 0.085;
+      const DAMPING = 0.74;
+
+      const apply = (item) => {
+        item.el.style.transform = `translate3d(0, ${item.y.toFixed(2)}px, 0)`;
+      };
+
+      const update = () => {
+        const rect = section.getBoundingClientRect();
+        // 0 at the section top, increasingly negative as it scrolls past
+        target = rect.top / window.innerHeight;
+        if (document.hidden) {
+          for (const item of items) {
+            item.y = target * item.speed * 360;
+            item.vy = 0;
+            apply(item);
+          }
+        }
+      };
+
+      const tick = () => {
+        for (const item of items) {
+          const goal = target * item.speed * 360;
+          item.vy = (item.vy + (goal - item.y) * STIFFNESS) * DAMPING;
+          item.y += item.vy;
+          apply(item);
+        }
+        requestAnimationFrame(tick);
+      };
+
+      window.addEventListener("scroll", update, { passive: true });
+      window.addEventListener("resize", update);
+      update();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+  <script src="./assets/html-slides-editor-runtime.js"></script>
+</body>
+</html>
