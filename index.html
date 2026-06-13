@@ -6,14 +6,6 @@
   <title>imvanessali</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
-    @font-face {
-      font-family: 'Luminaire Script';
-      src: url('fonts/Luminaire-Script-Regular.otf') format('opentype');
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
     * {
       margin: 0;
       padding: 0;
@@ -23,30 +15,183 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #0a0a0a;
-      color: #fff;
-      height: 100vh;
+      color: #f0f0f0;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      flex-direction: column;
     }
 
-    a.name {
-      font-family: 'Luminaire Script', cursive;
-      font-size: clamp(2rem, 5vw, 3.5rem);
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid #222;
+    }
+
+    .header .brand {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
       font-weight: 400;
-      letter-spacing: 0.02em;
+      color: #999;
+    }
+
+    .header .copy-btn {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #22c55e;
       color: #fff;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 0;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .header .copy-btn:hover {
+      background: #16a34a;
+    }
+
+    .header .copy-btn.copied {
+      background: #333;
+      color: #fff;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .content pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #f0f0f0;
+    }
+
+    .content pre a,
+    .content pre .copy-id {
+      color: inherit;
       text-decoration: none;
       transition: opacity 0.2s ease;
     }
 
-    a.name:hover {
-      opacity: 0.4;
+    .content pre .copy-id {
+      cursor: pointer;
+    }
+
+    .content pre a:hover,
+    .content pre .copy-id:hover {
+      opacity: 0.6;
+    }
+
+    .content pre::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+      color: #22c55e;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 1rem;
+      }
+      .content {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <a class="name" href="context.html">imvanessali</a>
+
+  <div class="header">
+    <span class="brand">imvanessali</span>
+    <button class="copy-btn" id="copyBtn">Copy This for Your AI</button>
+  </div>
+  <div class="content">
+    <pre id="markdownContent"></pre>
+  </div>
+
+  <script>
+    const copyBtn = document.getElementById('copyBtn');
+    const markdownContent = document.getElementById('markdownContent');
+    const btnLabel = 'Copy This for Your AI';
+
+    let mdText = '';
+    let promptText = '';
+
+    Promise.all([
+      fetch('content.md').then(r => r.text()),
+      fetch('prompt.md').then(r => r.text())
+    ]).then(([content, prompt]) => {
+      mdText = content;
+      promptText = prompt.replace('{{CONTEXT}}', content);
+      markdownContent.innerHTML = linkify(content);
+    });
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function linkify(text) {
+      let html = escapeHtml(text);
+      html = html.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>'
+      );
+      html = html.replace(
+        /(?<!["=])(https?:\/\/[^\s<]+)/g,
+        '<a href="$1" target="_blank" rel="noopener">$1</a>'
+      );
+      html = html.replace(
+        /(微信：|小红书：|抖音：)([^\s<]+)/g,
+        '$1<span class="copy-id" data-copy="$2">$2</span>'
+      );
+      return html;
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    }
+
+    markdownContent.addEventListener('click', async (e) => {
+      const el = e.target.closest('.copy-id');
+      if (!el) return;
+      await copyToClipboard(el.dataset.copy);
+      const original = el.textContent;
+      el.textContent = '已复制';
+      setTimeout(() => { el.textContent = original; }, 1200);
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      await copyToClipboard(promptText);
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = btnLabel;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  </script>
+
 </body>
 </html>
