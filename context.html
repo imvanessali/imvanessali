@@ -148,10 +148,16 @@
     }
 
     function linkify(text) {
-      return escapeHtml(text).replace(
-        /(https?:\/\/[^\s]+)/g,
+      let html = escapeHtml(text);
+      html = html.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>'
+      );
+      html = html.replace(
+        /(?<!["=])(https?:\/\/[^\s<]+)/g,
         '<a href="$1" target="_blank" rel="noopener">$1</a>'
       );
+      return html;
     }
 
     async function copyToClipboard(text) {

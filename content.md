@@ -37,9 +37,9 @@
 
 ## 我的痕迹
 
-> 乱翻书 播客 - Musical.ly 如何成为 TikTok？PM 眼中的字节产品文化和全球化之路
-> 十字路口 播客 - AI 产品经理指南：我是谁，从哪来，到哪去 | 对谈字节 AI 产品负责人 Vanessa，面试了 100 位 AI 产品经理后的心得总结
-> Onboard! 播客 - 对话 AI 陪伴产品深度用户：打破刻板印象，TA 不只是纸片人伴侣
+> [乱翻书 播客](https://www.xiaoyuzhoufm.com/episode/69e9cc161d989496e752d932) - Musical.ly 如何成为 TikTok？PM 眼中的字节产品文化和全球化之路
+> [十字路口 播客](https://www.xiaoyuzhoufm.com/episode/66778d74d3fc5dd62759ba5f) - AI 产品经理指南：我是谁，从哪来，到哪去 | 对谈字节 AI 产品负责人 Vanessa，面试了 100 位 AI 产品经理后的心得总结
+> [Onboard! 播客](https://www.xiaoyuzhoufm.com/episode/65e0dcdd4525864db9d10a74) - 对话 AI 陪伴产品深度用户：打破刻板印象，TA 不只是纸片人伴侣
 
 ## Fun Facts
 
