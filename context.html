@@ -86,13 +86,19 @@
       color: #f0f0f0;
     }
 
-    .content pre a {
+    .content pre a,
+    .content pre .copy-id {
       color: inherit;
       text-decoration: none;
       transition: opacity 0.2s ease;
     }
 
-    .content pre a:hover {
+    .content pre .copy-id {
+      cursor: pointer;
+    }
+
+    .content pre a:hover,
+    .content pre .copy-id:hover {
       opacity: 0.6;
     }
 
@@ -157,6 +163,10 @@
         /(?<!["=])(https?:\/\/[^\s<]+)/g,
         '<a href="$1" target="_blank" rel="noopener">$1</a>'
       );
+      html = html.replace(
+        /(微信：|小红书：|抖音：)([^\s<]+)/g,
+        '$1<span class="copy-id" data-copy="$2">$2</span>'
+      );
       return html;
     }
 
@@ -172,6 +182,15 @@
         document.body.removeChild(ta);
       }
     }
+
+    markdownContent.addEventListener('click', async (e) => {
+      const el = e.target.closest('.copy-id');
+      if (!el) return;
+      await copyToClipboard(el.dataset.copy);
+      const original = el.textContent;
+      el.textContent = '已复制';
+      setTimeout(() => { el.textContent = original; }, 1200);
+    });
 
     copyBtn.addEventListener('click', async () => {
       await copyToClipboard(promptText);

@@ -9,7 +9,7 @@
 > 微信：imvanessali
 > 小红书：imvanessali
 > 抖音：imvanessali
-> 即刻：郦橙锦妖Vanessa
+> 即刻：[郦橙锦妖Vanessa](https://web.okjike.com/u/5FBABAFC-CBC3-4A19-8847-1AFED3CF4AF3)
 
 ## 我关心什么
 
