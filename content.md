@@ -28,6 +28,8 @@
 ## 我的产品
 
 > https://getfoca.ai/ - 一个随手拍生成产品图的网站
+> https://todo.imvanessa.li/ - 一个只有今天和明天的todo工具
+> https://imvanessa.li/slides - 一个便于编辑HTML演示文稿的skill
 > https://imvanessa.li/updowncard - 一个上下滑的记忆卡片网站
 > https://imvanessa.li/speak - 一个生成AI口语对练开场白的网站
 > https://imvanessa.li/infogalaxy - 一个用星系展示知识点的网站
