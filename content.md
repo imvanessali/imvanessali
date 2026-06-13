@@ -7,8 +7,8 @@
 ## 联系方式
 
 > 微信：imvanessali
-> 小红书：imvanessali
-> 抖音：imvanessali
+> 小红书：[imvanessali](https://www.xiaohongshu.com/user/profile/5a07efb4e8ac2b66342ffe09)
+> 抖音：[imvanessali](https://www.douyin.com/user/MS4wLjABAAAA-OHCy2GKOUlAsHr2wQwBWMaI-kUP4z-exo8BuICFY9g)
 > 即刻：[郦橙锦妖Vanessa](https://web.okjike.com/u/5FBABAFC-CBC3-4A19-8847-1AFED3CF4AF3)
 
 ## 我关心什么
