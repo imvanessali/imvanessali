@@ -387,28 +387,46 @@ document.fonts.ready.then(()=>{
     stack.appendChild(pg);
   }
   const fits=el=>el.scrollHeight<=BUDGET;
-  function splitTable(tbl){          // move trailing rows into continuation tables until each page fits
-    let cur=tbl, guard=0;
+  // TABLE and UL/OL are both "splittable": long Sources lists and key-people/timeline
+  // bullets are exactly as likely to overflow a page as a table is. Treating only tables
+  // as splittable left a large flat <ul> (e.g. a 20-item Sources list) as one indivisible
+  // block — when it didn't fit in whatever space remained, the WHOLE heading+list pair got
+  // shoved to a fresh page, stranding the page before it half-empty even though there was
+  // no structural reason it couldn't have taken a few more list items first.
+  const bodyOf=el=>el.tagName==='TABLE'?el.tBodies[0]:el;
+  const splittable=b=>b.tagName==='TABLE'?(b.tBodies[0]&&b.tBodies[0].children.length>2)
+                      :((b.tagName==='UL'||b.tagName==='OL')&&b.children.length>2);
+  function makeCont(el){
+    if(el.tagName==='TABLE'){
+      const cont=el.cloneNode(false); cont.classList.add('cont');
+      if(el.tHead)cont.appendChild(el.tHead.cloneNode(true));
+      cont.appendChild(document.createElement('tbody'));
+      return cont;
+    }
+    const cont=document.createElement(el.tagName); cont.className=el.className;
+    return cont;
+  }
+  function splitBlock(el){           // move trailing rows/items into continuation blocks until each page fits
+    let cur=el, guard=0;
     while(guard++<400){
       const host=cur.closest('.pinner');
       if(fits(host))break;
-      const tb=cur.tBodies[0];
-      if(!tb||tb.rows.length<=1)break;
+      const body=bodyOf(cur);
+      if(!body||body.children.length<=1)break;
       newPage(false);
-      const cont=cur.cloneNode(false); cont.classList.add('cont');
-      cont._orig=tbl; conts.push(cont);
-      if(cur.tHead)cont.appendChild(cur.tHead.cloneNode(true));
-      cont.appendChild(document.createElement('tbody'));
+      const cont=makeCont(el);
+      cont._orig=el; conts.push(cont);
       inner.appendChild(cont);
-      while(host.scrollHeight>BUDGET&&tb.rows.length>1)
-        cont.tBodies[0].insertBefore(tb.rows[tb.rows.length-1],cont.tBodies[0].firstChild);
+      const cb=bodyOf(cont);
+      while(host.scrollHeight>BUDGET&&body.children.length>1)
+        cb.insertBefore(body.children[body.children.length-1],cb.firstChild);
       cur=cont;                      // the continuation may itself overflow -> loop again
     }
   }
   function paginate(){
-    for(const c of conts){           // fold continuation rows back into their source tables
-      const o=c._orig.tBodies[0];
-      while(c.tBodies[0].rows.length)o.appendChild(c.tBodies[0].rows[0]);
+    for(const c of conts){           // fold continuation rows/items back into their source block
+      const o=bodyOf(c._orig), cb=bodyOf(c);
+      while(cb.children.length)o.appendChild(cb.children[0]);
       c.remove();
     }
     conts=[]; stack.textContent='';
@@ -416,24 +434,38 @@ document.fonts.ready.then(()=>{
     for(const b of BLOCKS){
       inner.appendChild(b);
       if(fits(inner))continue;
-      if(b.tagName==='TABLE'&&b.tBodies[0]&&b.tBodies[0].rows.length>2){splitTable(b);continue;}
+      if(splittable(b)){splitBlock(b);continue;}
       if(inner.children.length>1){     // move block (carrying an orphaned heading) to a fresh page
         const prev=b.previousElementSibling;
         const carry=prev&&/^H[234]$/.test(prev.tagName)?prev:null;
         newPage(false);
         if(carry)inner.appendChild(carry);
         inner.appendChild(b);
-        if(!fits(inner)&&b.tagName==='TABLE'&&b.tBodies[0]&&b.tBodies[0].rows.length>2)splitTable(b);
+        if(!fits(inner)&&splittable(b))splitBlock(b);
       }                                 // else: single oversize block — let that page grow
     }
     const pages=stack.querySelectorAll('.page');
     pages.forEach((p,i)=>{p.querySelector('.pgfoot').innerHTML=
       '<span>DOSSIER · compiled 2026-07-15</span><span>'+(i+1)+' / '+pages.length+'</span>';});
   }
-  paginate();
-  // re-paginate when lazily-loaded font subsets (CJK) land or the window is resized —
-  // both reflow the text and would otherwise leave pages half-empty or overflowing
-  let t=null; const re=()=>{clearTimeout(t);t=setTimeout(paginate,350);};
+  // CJK subsets stream in from Google Fonts as new glyphs are discovered during layout —
+  // 'loadingdone' can fire many times over several seconds for a large Chinese document.
+  // A single fixed-delay re-paginate can fire mid-stream and freeze on a half-updated
+  // layout (some pages left short, content shifted onto later pages). Instead, repaginate
+  // in a loop and keep going until two consecutive passes produce an identical page-height
+  // signature — i.e. converge on font metrics actually settling, not a guessed timeout.
+  function stabilize(maxTries){
+    let lastSig=null, tries=0;
+    (function tick(){
+      paginate();
+      const pages=[...stack.querySelectorAll('.page')];
+      const sig=pages.length+':'+pages.map(p=>p.scrollHeight).join(',');
+      tries++;
+      if(sig!==lastSig && tries<maxTries){lastSig=sig; setTimeout(tick,300);}
+    })();
+  }
+  stabilize(12);
+  let t=null; const re=()=>{clearTimeout(t);t=setTimeout(()=>stabilize(12),300);};
   document.fonts.addEventListener('loadingdone',re);
   window.addEventListener('resize',re);
   // mouse-following light source (rAF-throttled)
