@@ -401,6 +401,11 @@ document.fonts.ready.then(()=>{
     }
   }
   function paginate(){
+    // paginate() destroys and rebuilds every .page node, so the browser has nothing to
+    // scroll-anchor to — without this, any repagination that runs while the reader has
+    // already scrolled (e.g. the convergence loop below, still settling on load) snaps
+    // them back to the top. Saving/restoring scrollY makes a rebuild invisible to them.
+    const scrollY=window.scrollY;
     for(const c of conts){           // fold continuation rows/items back into their source block
       const o=bodyOf(c._orig), cb=bodyOf(c);
       while(cb.children.length)o.appendChild(cb.children[0]);
@@ -424,6 +429,7 @@ document.fonts.ready.then(()=>{
     const pages=stack.querySelectorAll('.page');
     pages.forEach((p,i)=>{p.querySelector('.pgfoot').innerHTML=
       '<span>DOSSIER · compiled 2026-07-15</span><span>'+(i+1)+' / '+pages.length+'</span>';});
+    if(scrollY)window.scrollTo(0,scrollY);
   }
   // CJK subsets stream in from Google Fonts as new glyphs are discovered during layout —
   // 'loadingdone' can fire many times over several seconds for a large Chinese document.
@@ -444,7 +450,16 @@ document.fonts.ready.then(()=>{
   stabilize(12);
   let t=null; const re=()=>{clearTimeout(t);t=setTimeout(()=>stabilize(12),300);};
   document.fonts.addEventListener('loadingdone',re);
-  window.addEventListener('resize',re);
+  // Only re-paginate on a WIDTH change. Mobile browsers fire 'resize' on pure height
+  // changes too — the address bar collapsing/expanding as the page is scrolled — and a
+  // pagination rebuild wipes and recreates every .page node, which the browser can't
+  // preserve scroll position across, so scrolling would otherwise snap back to the top.
+  // Pagination only depends on content width (line wrapping), never on viewport height.
+  let lastW=window.innerWidth;
+  window.addEventListener('resize',()=>{
+    if(window.innerWidth===lastW)return;
+    lastW=window.innerWidth; re();
+  });
   // mouse-following light source (rAF-throttled)
   let raf=0;
   window.addEventListener('mousemove',e=>{
