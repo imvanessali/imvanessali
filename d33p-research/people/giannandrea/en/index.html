@@ -10,7 +10,8 @@
 :root{--ink:#524c42;--paper:#fcfbf7;--rule:#454039;--soft:#7d766a;
   --g:#c9ecc0;--r:#f8ccc4;--b:#c9e0f5;}
 *{box-sizing:border-box}
-body{margin:0;background:#c6c2b7;font-family:'Noto Serif SC','Songti SC',Georgia,serif;color:var(--ink);line-height:1.7;}
+body{margin:0;background:#c6c2b7;font-family:'Noto Serif SC','Songti SC',Georgia,serif;color:var(--ink);line-height:1.7;cursor:none;}
+@media (hover:none){body{cursor:auto}}  /* touch devices have no hover cursor to hide — don't break tapping */
 .stage{position:relative;max-width:1160px;margin:0 auto;padding:46px 34px 90px;}
 #src{display:none}
   color:#565045;padding:26px 18px;opacity:.85;filter:blur(.25px);}
