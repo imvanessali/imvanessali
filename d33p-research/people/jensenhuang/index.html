@@ -94,12 +94,18 @@ hr{border:none;border-top:1px dashed rgba(28,26,23,.5);margin:30px 12%;}
 #glow{position:fixed;inset:0;pointer-events:none;z-index:6;mix-blend-mode:soft-light;
   background:radial-gradient(220px circle at var(--mx,50vw) var(--my,38vh),
     rgba(255,246,220,.9), rgba(255,246,220,0) 70%);}
-/* small bright pinpoint at the beam's own center — cursor:none removes the OS arrow so
-   without this the reader has no way to tell exactly where the pointer is; a dot at the
-   flashlight's true center reads as "the light itself is the cursor" rather than losing it */
-#dot{position:fixed;top:var(--my,38vh);left:var(--mx,50vw);width:6px;height:6px;margin:-3px 0 0 -3px;
-  border-radius:50%;pointer-events:none;z-index:7;background:#fffaf0;
-  box-shadow:0 0 4px 1px rgba(255,250,240,.95),0 0 10px 3px rgba(255,246,220,.55);}
+/* crosshair reticle at the beam's own center — cursor:none removes the OS arrow so
+   without this the reader has no way to tell exactly where the pointer is; a dual-tone
+   crosshair reads as a precision pointer instead of blending into the warm flashlight glow */
+#dot{position:fixed;top:var(--my,38vh);left:var(--mx,50vw);width:0;height:0;pointer-events:none;z-index:7;}
+#dot i{position:absolute;background:#fffaf0;border-radius:1px;
+  box-shadow:0 0 0 1px rgba(20,16,10,.6),0 0 3px 1px rgba(255,246,220,.65);}
+#dot i:nth-child(1),#dot i:nth-child(2){width:1.5px;height:5px;margin-left:-.75px;}
+#dot i:nth-child(1){margin-top:-8px;}
+#dot i:nth-child(2){margin-top:3px;}
+#dot i:nth-child(3),#dot i:nth-child(4){width:5px;height:1.5px;margin-top:-.75px;}
+#dot i:nth-child(3){margin-left:-8px;}
+#dot i:nth-child(4){margin-left:3px;}
 @media print{#boost,#dim,#glow,#dot{display:none}body{background:none}.scrap{display:none}.page{filter:none;clip-path:none;margin:0;min-height:auto;page-break-after:always;transform:none}}
 @media (max-width:1150px){.scrap{display:none}.page{margin:0 10px 30px;padding:48px 44px 70px}}
 @media (max-width:720px){.page{padding:40px 30px 64px;min-height:auto}.masthead h1{font-size:32px}.headline{font-size:26px}.pgfoot{left:30px;right:30px}}
@@ -355,7 +361,7 @@ hr{border:none;border-top:1px dashed rgba(28,26,23,.5);margin:30px 12%;}
     <div class="legend">sources &amp; confidence tags preserved · <mark class="g">verified</mark> <mark class="b">official-only / claimed</mark> <mark class="r">unverified / alleged</mark> · <strong class="hl">key point</strong><br><span style="opacity:.7">本页内容由 AI 自动收集整理，仅供参考，不构成事实认定 · 如需移除本页内容，请通过 <a href="https://imvanessa.li" style="color:inherit">imvanessa.li</a> 联系我 · This page was compiled by AI from public sources and may contain errors · To request removal, contact me via <a href="https://imvanessa.li" style="color:inherit">imvanessa.li</a></span></div>
   </div>
 </div>
-<div id="boost"></div><div id="dim"></div><div id="glow"></div><div id="dot"></div>
+<div id="boost"></div><div id="dim"></div><div id="glow"></div><div id="dot"><i></i><i></i><i></i><i></i></div>
 <script>
 document.fonts.ready.then(()=>{
   const src=document.getElementById('src'), stack=document.getElementById('stack');
