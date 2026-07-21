@@ -307,27 +307,11 @@
     .fact:hover { border-color: rgba(74, 222, 128, 0.4); }
     .fact::before { content: '✳ '; color: var(--accent); font-family: var(--mono); }
 
-    /* ---------- footer ---------- */
-    footer {
-      margin-top: 7rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--muted);
-    }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--accent); }
-
     @media (max-width: 600px) {
       nav { padding: 0.9rem 1.2rem; }
       .hero { margin-top: 4rem; }
       section { margin-top: 4rem; }
       .product-grid, .facts { grid-template-columns: 1fr; }
-      footer { flex-direction: column; gap: 0.5rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -507,10 +491,6 @@
       </div>
     </section>
 
-    <footer>
-      <span>© 2025 郦橙 Vanessa Li</span>
-      <a href="https://github.com/imvanessali" target="_blank" rel="noopener">github.com/imvanessali ↗</a>
-    </footer>
   </main>
 
   <script>
