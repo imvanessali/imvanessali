@@ -314,6 +314,27 @@
     .fact:hover { border-color: rgba(74, 222, 128, 0.4); }
     .fact::before { content: '✳ '; color: var(--accent); font-family: var(--mono); }
 
+    /* ---------- AI CTA panel ---------- */
+    .ai-cta-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.9rem;
+      padding: 2rem 2.2rem;
+      background: var(--bg-soft);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      border-radius: 12px;
+    }
+    .ai-cta-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+    }
+    .ai-cta-title { font-size: 1.2rem; font-weight: 600; }
+    .ai-cta-desc { font-size: 0.9rem; color: var(--muted); max-width: 56ch; }
+    .ai-cta-inner .copy-ai-btn { margin-top: 0.4rem; font-size: 0.85rem; padding: 0.6rem 1.4rem; }
+
     @media (max-width: 600px) {
       nav { padding: 0.9rem 1.2rem; }
       .hero { margin-top: 4rem; }
@@ -332,7 +353,6 @@
 
   <nav>
     <a class="brand" href="/">imvanessa<span class="dot">.</span>li</a>
-    <button class="copy-ai-btn" id="copyBtn">Copy This for Your AI</button>
   </nav>
 
   <main>
@@ -503,9 +523,17 @@
     }
 
     // ---------- fetch + boot ----------
-    const copyBtn = document.getElementById('copyBtn');
-    const btnLabel = copyBtn.textContent;
     let promptText = '';
+
+    // CTA panel with the copy-for-AI button, inserted right after the contact section
+    const aiCtaHtml = `<section class="reveal ai-cta">
+      <div class="ai-cta-inner">
+        <p class="ai-cta-label">FOR YOUR AI</p>
+        <p class="ai-cta-title">带着你的 AI 来了解我</p>
+        <p class="ai-cta-desc">点击按钮复制一段提示词，粘贴给你的 AI（ChatGPT / Kimi / Claude 都行）。它会先问你的来意，再基于我的公开信息做一轮调研——帮你准备和我搭讪的开场白，或者替你对我的履历深挖提问。</p>
+        <button class="copy-ai-btn" id="copyBtn">Copy This for Your AI</button>
+      </div>
+    </section>`;
 
     Promise.all([
       fetch('content.md').then(r => r.text()),
@@ -516,6 +544,11 @@
       const { intro, sections } = parseMd(content);
       renderRoles(intro);
       document.getElementById('sections').innerHTML = sections.map(renderSection).join('');
+
+      // place the AI CTA right after the contact section (fallback: after the first section)
+      const allSections = [...document.querySelectorAll('#sections section')];
+      const contactSec = allSections.find(s => /联系/.test(s.querySelector('.section-title')?.textContent || '')) || allSections[0];
+      if (contactSec) contactSec.insertAdjacentHTML('afterend', aiCtaHtml);
 
       // reveal on scroll
       const io = new IntersectionObserver((entries) => {
@@ -535,6 +568,16 @@
           setTimeout(() => { hint.textContent = original; hint.style.opacity = ''; }, 1200);
         });
       });
+
+      // copy-for-AI button
+      const copyBtn = document.getElementById('copyBtn');
+      const btnLabel = copyBtn.textContent;
+      copyBtn.addEventListener('click', async () => {
+        if (promptText) await copyToClipboard(promptText);
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => { copyBtn.textContent = btnLabel; copyBtn.classList.remove('copied'); }, 2000);
+      });
     }).catch(() => {});
 
     async function copyToClipboard(text) {
@@ -549,13 +592,6 @@
         document.body.removeChild(ta);
       }
     }
-
-    copyBtn.addEventListener('click', async () => {
-      if (promptText) await copyToClipboard(promptText);
-      copyBtn.textContent = 'Copied!';
-      copyBtn.classList.add('copied');
-      setTimeout(() => { copyBtn.textContent = btnLabel; copyBtn.classList.remove('copied'); }, 2000);
-    });
   </script>
 
 </body>
