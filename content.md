@@ -46,6 +46,6 @@
 ## Fun Facts
 
 > 在 CMU 为 Volvo 设计过挖掘机
-> 出版过一本关于 presentation 的书
+> 出版过一本关于演讲和演示文稿的书
 > 上线了数亿创作者使用的 Green Screen 特效
 > 在 CUHK 的歌唱比赛中拿过奖

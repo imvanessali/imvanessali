@@ -68,17 +68,24 @@
 
     .copy-ai-btn {
       font-family: var(--mono);
-      font-size: 0.78rem;
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid rgba(74, 222, 128, 0.4);
-      padding: 0.45rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: var(--accent);
+      color: #0a0a0b;
+      border: 1px solid var(--accent);
+      padding: 0.5rem 1.15rem;
       border-radius: 999px;
       cursor: pointer;
       transition: all 0.2s;
+      animation: pulse 2.6s ease-out infinite;
     }
-    .copy-ai-btn:hover { background: var(--accent-dim); border-color: var(--accent); }
-    .copy-ai-btn.copied { background: var(--accent); color: #0a0a0b; border-color: var(--accent); }
+    .copy-ai-btn:hover { background: #86efb0; border-color: #86efb0; }
+    .copy-ai-btn.copied { animation: none; opacity: 0.85; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.45); }
+      70% { box-shadow: 0 0 0 12px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
 
     /* ---------- layout ---------- */
     main {
@@ -252,6 +259,7 @@
       transition: border-color 0.2s, transform 0.2s;
     }
     .product-card:hover { border-color: rgba(74, 222, 128, 0.5); transform: translateY(-3px); }
+    .product-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
     .product-card .name {
       font-weight: 500;
       font-size: 0.98rem;
@@ -267,7 +275,6 @@
     }
     .product-card:hover .arrow { transform: translate(2px, -2px); }
     .product-card .desc { font-size: 0.82rem; color: var(--muted); }
-    .product-card.wide { grid-column: 1 / -1; }
 
     /* ---------- traces / podcasts ---------- */
     .trace {
@@ -317,6 +324,7 @@
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1; transform: none; transition: none; }
       .hero .cursor { animation: none; }
+      .copy-ai-btn { animation: none; }
     }
   </style>
 </head>
@@ -328,177 +336,206 @@
   </nav>
 
   <main>
-    <!-- hero -->
     <section class="hero">
       <p class="hello">你好，我是</p>
       <h1>郦橙<span class="en">VANESSA LI · 锦妖<span class="cursor"></span></span></h1>
-      <div class="roles">
-        <p class="role"><strong>Nike 大中华区 AI 产品负责人</strong> — 推动 AI 在企业落地</p>
-        <p class="role"><strong>TikTok 最早的产品经理之一</strong> — From Millions to 1B DAU</p>
-        <p class="role"><strong>字节 8 年产品经验</strong> — Focus on AI &amp; GenAI</p>
-      </div>
+      <div class="roles" id="roles"></div>
     </section>
-
-    <!-- 01 contact -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">01</span>
-        <h2 class="section-title">联系方式</h2>
-      </div>
-      <div class="contact-grid">
-        <div class="contact-item" data-copy="imvanessali">
-          <span class="platform">微信 WeChat</span>
-          <span class="handle">imvanessali</span>
-          <span class="hint">点击复制</span>
-        </div>
-        <a class="contact-item" href="https://www.xiaohongshu.com/user/profile/5a07efb4e8ac2b66342ffe09" target="_blank" rel="noopener">
-          <span class="platform">小红书 RED</span>
-          <span class="handle">imvanessali</span>
-          <span class="hint">前往 ↗</span>
-        </a>
-        <a class="contact-item" href="https://www.douyin.com/user/MS4wLjABAAAA-OHCy2GKOUlAsHr2wQwBWMaI-kUP4z-exo8BuICFY9g" target="_blank" rel="noopener">
-          <span class="platform">抖音 Douyin</span>
-          <span class="handle">imvanessali</span>
-          <span class="hint">前往 ↗</span>
-        </a>
-        <a class="contact-item" href="https://web.okjike.com/u/5FBABAFC-CBC3-4A19-8847-1AFED3CF4AF3" target="_blank" rel="noopener">
-          <span class="platform">即刻 Jike</span>
-          <span class="handle">郦橙锦妖Vanessa</span>
-          <span class="hint">前往 ↗</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 02 cares -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">02</span>
-        <h2 class="section-title">我关心什么</h2>
-      </div>
-      <div class="item-list">
-        <div class="item"><span class="marker">→</span><p class="body">提升个人在 AI 时代的竞争力</p></div>
-        <div class="item"><span class="marker">→</span><p class="body">AI 在企业中如何真实落地</p></div>
-        <div class="item"><span class="marker">→</span><p class="body">前沿的 AI 研究，创新的技术范式</p></div>
-        <div class="item"><span class="marker">→</span><p class="body">以科幻的尺度探讨人与 AI 的关系</p></div>
-      </div>
-    </section>
-
-    <!-- 03 good at -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">03</span>
-        <h2 class="section-title">我擅长什么</h2>
-      </div>
-      <div class="item-list">
-        <div class="item">
-          <span class="marker">→</span>
-          <p class="body"><strong>打造全球化产品</strong><span class="sub">在 TikTok 完整经历了一款产品从数百万到十亿 DAU 的增长过程。理解创作者、内容生态和全球化挑战。</span></p>
-        </div>
-        <div class="item">
-          <span class="marker">→</span>
-          <p class="body"><strong>行业内的 AI 转型</strong><span class="sub">目前在 Nike 负责 AI 产品，探索 AI 在零售体验、市场营销、供应链、财务等领域的应用。</span></p>
-        </div>
-        <div class="item">
-          <span class="marker">→</span>
-          <p class="body"><strong>产品设计研发全栈</strong><span class="sub">曾是 UI、UX、用研、用户侧 PM、策略 PM、AI PM，现在还有个身份是 AI 加持下的非常初级的研发。</span></p>
-        </div>
-        <div class="item">
-          <span class="marker">→</span>
-          <p class="body"><strong>探索 AI OPC 之路</strong><span class="sub">一边创造，一边思考，一边踩坑，一边成长，是努力跟上 AI 节奏的超级个体。</span></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 04 products -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">04</span>
-        <h2 class="section-title">我的产品</h2>
-      </div>
-      <div class="product-grid">
-        <a class="product-card" href="https://getfoca.ai/" target="_blank" rel="noopener">
-          <span class="name">Foca <span class="arrow">↗</span></span>
-          <span class="desc">随手拍生成产品图</span>
-        </a>
-        <a class="product-card" href="https://folderis.app/" target="_blank" rel="noopener">
-          <span class="name">Folderis <span class="arrow">↗</span></span>
-          <span class="desc">文件即应用，内置 70+ 办公 skills</span>
-        </a>
-        <a class="product-card" href="https://imvanessa.li/d33p-research/people" target="_blank" rel="noopener">
-          <span class="name">D33p Research <span class="arrow">↗</span></span>
-          <span class="desc">基于自研 AI research skill 做的任务档案</span>
-        </a>
-        <a class="product-card" href="https://todo.imvanessa.li/" target="_blank" rel="noopener">
-          <span class="name">Todo <span class="arrow">↗</span></span>
-          <span class="desc">只有今天和明天的 todo 工具</span>
-        </a>
-        <a class="product-card" href="https://imvanessa.li/slides" target="_blank" rel="noopener">
-          <span class="name">Slides <span class="arrow">↗</span></span>
-          <span class="desc">便于编辑 HTML 演示文稿的 skill</span>
-        </a>
-        <a class="product-card" href="https://imvanessa.li/updowncard" target="_blank" rel="noopener">
-          <span class="name">UpDownCard <span class="arrow">↗</span></span>
-          <span class="desc">上下滑的记忆卡片</span>
-        </a>
-        <a class="product-card" href="https://imvanessa.li/speak" target="_blank" rel="noopener">
-          <span class="name">Speak <span class="arrow">↗</span></span>
-          <span class="desc">生成 AI 口语对练开场白</span>
-        </a>
-        <a class="product-card" href="https://imvanessa.li/infogalaxy" target="_blank" rel="noopener">
-          <span class="name">InfoGalaxy <span class="arrow">↗</span></span>
-          <span class="desc">用星系展示知识点</span>
-        </a>
-        <a class="product-card wide" href="https://bit.ly/imvanessaliAI" target="_blank" rel="noopener">
-          <span class="name">AI 实践记录 <span class="arrow">↗</span></span>
-          <span class="desc">我在飞书文档上的零散记录</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 05 traces -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">05</span>
-        <h2 class="section-title">我的痕迹</h2>
-      </div>
-      <div>
-        <a class="trace" href="https://www.xiaoyuzhoufm.com/episode/69e9cc161d989496e752d932" target="_blank" rel="noopener">
-          <span class="show">🎙 乱翻书</span>
-          <span class="title">Musical.ly 如何成为 TikTok？PM 眼中的字节产品文化和全球化之路</span>
-        </a>
-        <a class="trace" href="https://www.xiaoyuzhoufm.com/episode/66778d74d3fc5dd62759ba5f" target="_blank" rel="noopener">
-          <span class="show">🎙 十字路口</span>
-          <span class="title">AI 产品经理指南：我是谁，从哪来，到哪去 — 面试了 100 位 AI 产品经理后的心得总结</span>
-        </a>
-        <a class="trace" href="https://www.xiaoyuzhoufm.com/episode/65e0dcdd4525864db9d10a74" target="_blank" rel="noopener">
-          <span class="show">🎙 Onboard!</span>
-          <span class="title">对话 AI 陪伴产品深度用户：打破刻板印象，TA 不只是纸片人伴侣</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- 06 fun facts -->
-    <section class="reveal">
-      <div class="section-head">
-        <span class="section-num">06</span>
-        <h2 class="section-title">Fun Facts</h2>
-      </div>
-      <div class="facts">
-        <div class="fact">在 CMU 为 Volvo 设计过挖掘机</div>
-        <div class="fact">出版过一本关于演讲和演示文稿的书</div>
-        <div class="fact">上线了数亿创作者使用的 Green Screen 特效</div>
-        <div class="fact">在 CUHK 的歌唱比赛中拿过奖</div>
-      </div>
-    </section>
-
+    <div id="sections"></div>
   </main>
 
   <script>
-    // reveal on scroll
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-    }, { threshold: 0.08 });
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    // ---------- single source of truth: content.md ----------
+    // Page sections are rendered from content.md at load time.
+    // Edit content.md and the page updates automatically.
+
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    // display names for known product URLs; unknown ones fall back to the hostname
+    const productNames = {
+      'getfoca.ai': 'Foca',
+      'folderis.app': 'Folderis',
+      'imvanessa.li/d33p-research': 'D33p Research',
+      'todo.imvanessa.li': 'Todo',
+      'imvanessa.li/slides': 'Slides',
+      'imvanessa.li/updowncard': 'UpDownCard',
+      'imvanessa.li/speak': 'Speak',
+      'imvanessa.li/infogalaxy': 'InfoGalaxy',
+      'bit.ly/imvanessaliAI': 'AI 实践记录',
+    };
+
+    const platformLabels = {
+      '微信': '微信 WeChat',
+      '小红书': '小红书 RED',
+      '抖音': '抖音 Douyin',
+      '即刻': '即刻 Jike',
+    };
+
+    function parseMd(md) {
+      const intro = [];
+      const sections = [];
+      let cur = null;
+      for (const raw of md.split('\n')) {
+        if (/^#\s/.test(raw)) continue; // skip the top-level title
+        const h = raw.match(/^##\s+(.+)/);
+        if (h) {
+          cur = { name: h[1].trim(), items: [] };
+          sections.push(cur);
+          continue;
+        }
+        const line = raw.replace(/^>\s?/, '').trim();
+        if (!line) continue;
+        if (cur) cur.items.push(line); else intro.push(line);
+      }
+      return { intro, sections };
+    }
+
+    function parseLink(text) {
+      const m = text.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+      return m ? { label: m[1], url: m[2] } : null;
+    }
+
+    function productName(url) {
+      try {
+        const u = new URL(url);
+        const path = u.pathname.replace(/\/+$/, '');
+        const seg = path.split('/')[1] || '';
+        return productNames[u.host + (seg ? '/' + seg : '')] || productNames[u.host] || u.host;
+      } catch {
+        return url;
+      }
+    }
+
+    function renderContact(items) {
+      const cards = items.map(item => {
+        const m = item.match(/^(.+?)：(.+)$/);
+        if (!m) return '';
+        const [, platform, value] = m;
+        const label = platformLabels[platform] || platform;
+        const link = parseLink(value.trim());
+        if (link) {
+          return `<a class="contact-item" href="${esc(link.url)}" target="_blank" rel="noopener">
+            <span class="platform">${esc(label)}</span>
+            <span class="handle">${esc(link.label)}</span>
+            <span class="hint">前往 ↗</span>
+          </a>`;
+        }
+        return `<div class="contact-item" data-copy="${esc(value.trim())}">
+          <span class="platform">${esc(label)}</span>
+          <span class="handle">${esc(value.trim())}</span>
+          <span class="hint">点击复制</span>
+        </div>`;
+      }).join('');
+      return `<div class="contact-grid">${cards}</div>`;
+    }
+
+    function renderItemList(items, withSub) {
+      const rows = items.map(item => {
+        let body;
+        const parts = withSub ? item.split(/\s+-\s+/) : null;
+        if (withSub && parts.length > 1) {
+          body = `<strong>${esc(parts[0])}</strong><span class="sub">${esc(parts.slice(1).join(' - '))}</span>`;
+        } else {
+          body = esc(item);
+        }
+        return `<div class="item"><span class="marker">→</span><p class="body">${body}</p></div>`;
+      }).join('');
+      return `<div class="item-list">${rows}</div>`;
+    }
+
+    function renderProducts(items) {
+      const cards = items.map(item => {
+        const m = item.match(/^(https?:\/\/\S+)\s*-\s*(.+)$/);
+        if (!m) return '';
+        const [, url, desc] = m;
+        return `<a class="product-card" href="${esc(url)}" target="_blank" rel="noopener">
+          <span class="name">${esc(productName(url))} <span class="arrow">↗</span></span>
+          <span class="desc">${esc(desc)}</span>
+        </a>`;
+      }).join('');
+      return `<div class="product-grid">${cards}</div>`;
+    }
+
+    function renderTraces(items) {
+      const rows = items.map(item => {
+        const link = parseLink(item);
+        if (!link) return '';
+        const parts = link.label.split(/\s+-\s+/);
+        const show = parts[0].replace(/\s*播客$/, '');
+        const title = parts.slice(1).join(' - ') || link.label;
+        return `<a class="trace" href="${esc(link.url)}" target="_blank" rel="noopener">
+          <span class="show">🎙 ${esc(show)}</span>
+          <span class="title">${esc(title)}</span>
+        </a>`;
+      }).join('');
+      return `<div>${rows}</div>`;
+    }
+
+    function renderFacts(items) {
+      return `<div class="facts">${items.map(i => `<div class="fact">${esc(i)}</div>`).join('')}</div>`;
+    }
+
+    function renderSection(sec, index) {
+      let body;
+      if (/联系/.test(sec.name)) body = renderContact(sec.items);
+      else if (/擅长/.test(sec.name)) body = renderItemList(sec.items, true);
+      else if (/产品/.test(sec.name)) body = renderProducts(sec.items);
+      else if (/痕迹/.test(sec.name)) body = renderTraces(sec.items);
+      else if (/fun/i.test(sec.name)) body = renderFacts(sec.items);
+      else body = renderItemList(sec.items, false);
+
+      return `<section class="reveal">
+        <div class="section-head">
+          <span class="section-num">${String(index + 1).padStart(2, '0')}</span>
+          <h2 class="section-title">${esc(sec.name)}</h2>
+        </div>
+        ${body}
+      </section>`;
+    }
+
+    function renderRoles(intro) {
+      document.getElementById('roles').innerHTML = intro.map(line => {
+        const parts = line.split(/\s*\|\s*/);
+        const main = esc(parts[0]);
+        const rest = parts.slice(1).join(' | ');
+        return `<p class="role"><strong>${main}</strong>${rest ? ' — ' + esc(rest) : ''}</p>`;
+      }).join('');
+    }
+
+    // ---------- fetch + boot ----------
+    const copyBtn = document.getElementById('copyBtn');
+    const btnLabel = copyBtn.textContent;
+    let promptText = '';
+
+    Promise.all([
+      fetch('content.md').then(r => r.text()),
+      fetch('prompt.md').then(r => r.text())
+    ]).then(([content, prompt]) => {
+      promptText = prompt.replace('{{CONTEXT}}', content);
+
+      const { intro, sections } = parseMd(content);
+      renderRoles(intro);
+      document.getElementById('sections').innerHTML = sections.map(renderSection).join('');
+
+      // reveal on scroll
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+      }, { threshold: 0.08 });
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+      // click-to-copy contact cards
+      document.querySelectorAll('[data-copy]').forEach(el => {
+        el.addEventListener('click', async () => {
+          await copyToClipboard(el.dataset.copy);
+          const hint = el.querySelector('.hint');
+          if (!hint) return;
+          const original = hint.textContent;
+          hint.textContent = '已复制 ✓';
+          hint.style.opacity = 1;
+          setTimeout(() => { hint.textContent = original; hint.style.opacity = ''; }, 1200);
+        });
+      });
+    }).catch(() => {});
 
     async function copyToClipboard(text) {
       try {
@@ -512,31 +549,6 @@
         document.body.removeChild(ta);
       }
     }
-
-    // click-to-copy contact cards
-    document.querySelectorAll('[data-copy]').forEach(el => {
-      el.addEventListener('click', async () => {
-        await copyToClipboard(el.dataset.copy);
-        const hint = el.querySelector('.hint');
-        if (!hint) return;
-        const original = hint.textContent;
-        hint.textContent = '已复制 ✓';
-        hint.style.opacity = 1;
-        setTimeout(() => { hint.textContent = original; hint.style.opacity = ''; }, 1200);
-      });
-    });
-
-    // copy-for-AI: fetches content.md + prompt.md and copies the combined prompt
-    const copyBtn = document.getElementById('copyBtn');
-    const btnLabel = copyBtn.textContent;
-    let promptText = '';
-
-    Promise.all([
-      fetch('content.md').then(r => r.text()),
-      fetch('prompt.md').then(r => r.text())
-    ]).then(([content, prompt]) => {
-      promptText = prompt.replace('{{CONTEXT}}', content);
-    }).catch(() => {});
 
     copyBtn.addEventListener('click', async () => {
       if (promptText) await copyToClipboard(promptText);
