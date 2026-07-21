@@ -14,45 +14,47 @@
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     body {
       font-family: 'Crimson Pro', Georgia, serif;
       background: #0a0a0b;
       overflow-x: hidden;
     }
-    
+
     .display-font {
       font-family: 'Space Grotesk', sans-serif;
     }
-    
+
     .bg-lime-brand { background-color: #B9FF66; }
     .text-lime-brand { color: #B9FF66; }
     .border-lime-brand { border-color: #B9FF66; }
-    
+
     .card-container { perspective: 1200px; }
-    
+
     .swipe-card {
       transform-style: preserve-3d;
       will-change: transform, opacity;
     }
-    
+
     .card-shadow {
-      box-shadow: 
+      box-shadow:
         0 8px 0 0 rgba(185, 255, 102, 0.15),
         0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
-    
+
     .card-inner {
       background: linear-gradient(145deg, #1a1a1d 0%, #111113 100%);
       border: 1px solid rgba(185, 255, 102, 0.2);
       scrollbar-width: thin;
       scrollbar-color: rgba(185, 255, 102, 0.3) transparent;
+      max-height: 62vh;
+      overflow-y: auto;
     }
-    
+
     .card-inner::-webkit-scrollbar { width: 4px; }
     .card-inner::-webkit-scrollbar-track { background: transparent; }
     .card-inner::-webkit-scrollbar-thumb { background: rgba(185, 255, 102, 0.3); border-radius: 2px; }
-    
+
     .grain-overlay {
       position: fixed;
       inset: 0;
@@ -60,26 +62,26 @@
       opacity: 0.03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
-    
+
     .card-content {
       font-size: 1.1rem;
       line-height: 1.7;
       letter-spacing: 0.01em;
     }
-    
+
     @media (max-width: 640px) {
       .card-content { font-size: 1rem; line-height: 1.6; }
     }
-    
+
     .about-modal-content {
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
-    
+
     .blur-content { transition: filter 0.4s ease-out; }
     .blur-content.blurred { filter: blur(8px); user-select: none; }
-    
+
     .progress-ring { transform: rotate(-90deg); }
-    
+
     .deck-card {
       background: linear-gradient(145deg, #1a1a1d 0%, #111113 100%);
       border: 1.5px solid rgba(185, 255, 102, 0.3);
@@ -89,7 +91,7 @@
       border-color: rgba(185, 255, 102, 0.6);
       transform: translateY(-2px);
     }
-    
+
     .add-card {
       border: 1.5px dashed rgba(185, 255, 102, 0.3);
       background: transparent;
@@ -98,6 +100,63 @@
     .add-card:hover {
       border-color: rgba(185, 255, 102, 0.6);
       background: rgba(185, 255, 102, 0.03);
+    }
+
+    .due-badge {
+      background: rgba(185, 255, 102, 0.12);
+      color: #B9FF66;
+    }
+
+    /* Rating buttons */
+    .rating-btn {
+      flex: 1;
+      padding: 0.65rem 0.5rem;
+      border-radius: 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s, background 0.2s, border-color 0.2s;
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      color: #a1a1aa;
+    }
+    .rating-btn:hover { transform: translateY(-1px); }
+    .rating-btn .sub { display: block; font-size: 0.65rem; font-weight: 400; opacity: 0.7; margin-top: 2px; }
+    .rating-again:hover { border-color: #f87171; color: #f87171; }
+    .rating-hard:hover { border-color: #fbbf24; color: #fbbf24; }
+    .rating-good:hover { border-color: #B9FF66; color: #B9FF66; }
+
+    /* Field config segmented control */
+    .field-mode-btn {
+      padding: 0.25rem 0.55rem;
+      border-radius: 0.5rem;
+      font-size: 0.7rem;
+      border: 1px solid #3f3f46;
+      color: #71717a;
+      transition: all 0.15s;
+    }
+    .field-mode-btn.active {
+      border-color: #B9FF66;
+      color: #B9FF66;
+      background: rgba(185, 255, 102, 0.08);
+    }
+
+    /* Dashboard */
+    .stat-bar-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #27272a;
+      overflow: hidden;
+      display: flex;
+    }
+    .stat-bar-mastered { background: #B9FF66; }
+    .stat-bar-learning { background: #fbbf24; }
+
+    .copy-prompt-box {
+      max-height: 40vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     /* View transitions */
@@ -121,9 +180,17 @@
           </div>
           <span class="text-lg font-semibold tracking-tight display-font text-white">UpDownCard</span>
         </div>
-        <button id="aboutLinkLib" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
-          Why I built this?
-        </button>
+        <div class="flex items-center gap-5">
+          <button id="dashboardLink" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+            Progress
+          </button>
+          <button id="promptLink" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+            Make a deck with AI
+          </button>
+          <button id="aboutLinkLib" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+            Why I built this?
+          </button>
+        </div>
       </div>
     </header>
 
@@ -145,6 +212,29 @@
     </footer>
   </div>
 
+  <!-- ==================== DASHBOARD VIEW ==================== -->
+  <div id="dashboardView" class="view">
+    <header class="px-6 pt-8 pb-4">
+      <div class="max-w-2xl mx-auto flex items-center justify-between">
+        <button id="dashboardBackBtn" class="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>Decks</span>
+        </button>
+        <span class="text-lg font-semibold tracking-tight display-font text-white">Progress</span>
+        <div class="w-16"></div>
+      </div>
+    </header>
+
+    <main class="px-6 pb-20">
+      <div class="max-w-2xl mx-auto">
+        <div id="dashboardSummary" class="mb-6"></div>
+        <div id="dashboardList" class="flex flex-col gap-4">
+          <!-- Per-deck stats rendered by JS -->
+        </div>
+      </div>
+    </main>
+  </div>
+
   <!-- ==================== STUDY VIEW ==================== -->
   <div id="studyView" class="view">
     <header class="fixed top-0 left-0 right-0 z-50 px-6 py-5">
@@ -153,18 +243,21 @@
           <i data-lucide="arrow-left" class="w-4 h-4"></i>
           <span>Decks</span>
         </button>
-        <span id="deckTitle" class="text-sm text-zinc-500 display-font truncate max-w-[50%]"></span>
-        <div class="w-16"></div>
+        <span id="deckTitle" class="text-sm text-zinc-500 display-font truncate max-w-[40%]"></span>
+        <button id="fieldSettingsBtn" class="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          <span>Fields</span>
+        </button>
       </div>
     </header>
 
-    <main class="min-h-screen flex items-center justify-center px-4 pt-20 pb-16">
+    <main class="min-h-screen flex items-center justify-center px-4 pt-20 pb-32">
       <div class="card-container w-full max-w-2xl">
         <div id="swipeCard" class="swipe-card">
           <div class="flex items-center justify-center gap-2 mb-2.5">
             <svg class="progress-ring w-5 h-5" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" stroke-width="4"/>
-              <circle id="progressCircle" cx="18" cy="18" r="14" fill="none" stroke="#B9FF66" stroke-width="4" 
+              <circle id="progressCircle" cx="18" cy="18" r="14" fill="none" stroke="#B9FF66" stroke-width="4"
                       stroke-dasharray="88" stroke-dashoffset="70.4" stroke-linecap="round"/>
             </svg>
             <span class="text-sm text-zinc-500 display-font whitespace-nowrap">
@@ -179,7 +272,7 @@
                   <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
                     <i data-lucide="chevron-up" class="w-4 h-4 text-lime-brand"></i>
                   </div>
-                  <span>Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> for next card</span>
+                  <span>Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> to reveal, then rate your memory</span>
                 </div>
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
@@ -191,15 +284,44 @@
             </div>
           </div>
         </div>
+
+        <!-- Session complete -->
+        <div id="sessionDone" class="hidden text-center">
+          <div class="card-inner rounded-[32px] p-8 sm:p-10 card-shadow">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-lime-brand/10 flex items-center justify-center">
+              <i data-lucide="check-circle-2" class="w-7 h-7 text-lime-brand"></i>
+            </div>
+            <h2 class="text-2xl font-semibold display-font text-white mb-2">Session complete!</h2>
+            <p id="sessionDoneStats" class="text-zinc-400 display-font text-sm mb-6"></p>
+            <div class="flex justify-center gap-3">
+              <button id="sessionDoneBack" class="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm display-font transition-colors">Back to decks</button>
+              <button id="sessionDoneAgain" class="px-5 py-2.5 rounded-xl bg-lime-brand text-black text-sm font-semibold display-font hover:opacity-90 transition-opacity">Study again</button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
     <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4">
-      <div class="max-w-2xl mx-auto flex justify-center gap-6">
-        <button id="shareBtn" class="flex items-center gap-2 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
-          <i data-lucide="share" class="w-4 h-4"></i>
-          <span>Share</span>
-        </button>
+      <div class="max-w-2xl mx-auto">
+        <!-- Rating bar (shown after reveal) -->
+        <div id="ratingBar" class="hidden flex gap-3 mb-3 display-font">
+          <button class="rating-btn rating-again" data-rating="0">
+            Again
+            <span class="sub">&lt; 10 min · key 1</span>
+          </button>
+          <button class="rating-btn rating-hard" data-rating="1">
+            Hard
+            <span class="sub">key 2</span>
+          </button>
+          <button class="rating-btn rating-good" data-rating="2">
+            Good
+            <span class="sub">key 3</span>
+          </button>
+        </div>
+        <div id="revealHint" class="flex justify-center">
+          <span class="text-sm text-zinc-600 display-font">Reveal the card, then rate how well you knew it</span>
+        </div>
       </div>
     </footer>
   </div>
@@ -223,7 +345,7 @@
             "Why not learn authentic English expressions while mastering top-tier product thinking at the same time?" That is why I built this website.
           </p>
           <p class="text-zinc-300 leading-relaxed">
-            Swipe up for the next card, and swipe down to reveal hidden content. It's like flashcards, but more TikTok-y.
+            Swipe to reveal a card, then rate how well you knew it. The app schedules your next review with spaced repetition. It's like flashcards, but more TikTok-y.
           </p>
           <div class="pt-4 border-t border-zinc-800">
             <a href="https://x.com/imvanessali" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-lime-brand hover:underline display-font">
@@ -250,8 +372,6 @@
             <p class="text-zinc-300 leading-relaxed">Upload a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file to create your own flashcard deck. Your file should follow this structure:</p>
             <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
               <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">{
-  <span class="text-lime-brand">"_title"</span>: <span class="text-amber-400">"word"</span>,
-  <span class="text-lime-brand">"_blur"</span>: [<span class="text-amber-400">"meaning"</span>, <span class="text-amber-400">"sentence"</span>],
   <span class="text-lime-brand">"cards"</span>: [
     {
       <span class="text-zinc-500">"word"</span>: <span class="text-amber-400">"abandon"</span>,
@@ -263,24 +383,100 @@
 }</code></pre>
             </div>
             <div class="space-y-3">
-              <h3 class="text-lg font-semibold display-font text-white">Three config fields</h3>
+              <h3 class="text-lg font-semibold display-font text-white">Rules</h3>
               <div class="space-y-2">
                 <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">cards</code>
+                  <p class="text-zinc-400 text-sm">Required. A non-empty array of card objects. Each card can have any fields you want (string or number values) — they are rendered automatically.</p>
+                </div>
+                <div class="flex gap-3">
                   <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_title</code>
-                  <p class="text-zinc-400 text-sm">Which field to show as the card heading (always visible). Defaults to the first field if omitted.</p>
+                  <p class="text-zinc-400 text-sm">Optional. Which field is the card heading. Defaults to the first field.</p>
                 </div>
                 <div class="flex gap-3">
                   <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_blur</code>
-                  <p class="text-zinc-400 text-sm">Array of field names to blur-hide initially. Swipe down to reveal. All other fields stay visible.</p>
-                </div>
-                <div class="flex gap-3">
-                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">cards</code>
-                  <p class="text-zinc-400 text-sm">Array of card objects. Each card can have any fields you want — they'll be rendered automatically.</p>
+                  <p class="text-zinc-400 text-sm">Optional. Array of field names to blur-hide initially. Both this and _title are just defaults — you can change field visibility anytime in the study view via <span class="text-zinc-200">Fields</span>.</p>
                 </div>
               </div>
-              <p class="text-zinc-500 text-sm">Only this object-based schema is supported.</p>
+              <p class="text-zinc-500 text-sm">Tip: use <button id="formatToPrompt" class="text-lime-brand hover:underline">Make a deck with AI</button> to generate this JSON from any material.</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Prompt Modal -->
+  <div id="promptModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="promptModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
+        <button id="closePromptModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">Make a deck with AI</h2>
+          <ol class="space-y-2 text-zinc-300 leading-relaxed list-decimal list-inside display-font text-sm">
+            <li>Copy the prompt below.</li>
+            <li>Paste it into <span class="text-white">your own AI</span> (ChatGPT, Claude, Kimi, anything) together with your material — notes, articles, transcripts, any format.</li>
+            <li>Save the AI's JSON output as a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file and upload it here.</li>
+          </ol>
+          <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 copy-prompt-box">
+            <pre id="promptText" class="text-sm font-mono leading-relaxed text-zinc-300"></pre>
+          </div>
+          <button id="copyPromptBtn" class="w-full py-3 rounded-xl bg-lime-brand text-black font-semibold display-font hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>Copy prompt</span>
+          </button>
+          <p class="text-zinc-500 text-sm">The prompt asks the AI to output only JSON in our format. If your file fails validation on upload, we'll tell you exactly what's wrong — paste the error back to the AI to fix it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Errors Modal -->
+  <div id="errorsModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="errorsModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
+        <button id="closeErrorsModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+            </div>
+            <h2 class="text-2xl font-semibold display-font text-white">Deck rejected</h2>
+          </div>
+          <p class="text-zinc-400 text-sm leading-relaxed">Your JSON doesn't match the required format. Fix the issues below (or paste them back to your AI) and upload again:</p>
+          <ul id="errorsList" class="space-y-2 text-sm text-red-300 display-font list-disc list-inside"></ul>
+          <div class="flex gap-3">
+            <button id="errorsCopyBtn" class="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm display-font transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copy errors</span>
+            </button>
+            <button id="errorsFormatBtn" class="flex-1 py-3 rounded-xl bg-lime-brand text-black text-sm font-semibold display-font hover:opacity-90 transition-opacity">
+              View format guide
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Field Settings Modal -->
+  <div id="fieldsModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="fieldsModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
+        <button id="closeFieldsModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">Card fields</h2>
+          <p class="text-zinc-400 text-sm leading-relaxed">Choose which field is the title, and how each other field shows: <span class="text-zinc-200">Visible</span> always, <span class="text-zinc-200">Blurred</span> until reveal, or <span class="text-zinc-200">Hidden</span>. Saved per deck.</p>
+          <div id="fieldsList" class="space-y-3"></div>
         </div>
       </div>
     </div>
@@ -290,385 +486,881 @@
   <input type="file" id="fileInput" accept=".json" class="hidden">
 
   <script>
-    lucide.createIcons();
+    'use strict';
 
-    // ==================== DECK LIBRARY ====================
+    // ============================================================
+    // PURE LOGIC — no DOM access in this section.
+    // Everything here is require()-able in Node for testing.
+    // ============================================================
 
-    let decks = [];
+    const DAY_MS = 86400000;
+    const NEW_CARDS_PER_SESSION = 20;
+    const MASTERY_INTERVAL_DAYS = 21;
+    const RATING = { AGAIN: 0, HARD: 1, GOOD: 2 };
+    const DEFAULT_EASE = 2.5;
+    const MIN_EASE = 1.3;
 
-    function initLibrary() {
-      // Built-in deck
-      decks = [{
-        id: 'builtin-lenny',
-        name: "Lenny's Newsletter",
-        cardCount: null,
-        src: 'vocabulary_learning.json',
-        data: null
-      }];
+    // ---------- Deck validation ----------
 
-      // Restore uploaded decks from sessionStorage
+    // Returns an array of human-readable error strings. Empty array = valid.
+    function validateDeck(data) {
+      const errors = [];
+
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return ['Root must be a JSON object like {"cards": [...]}.'];
+      }
+
+      if (data._title !== undefined && typeof data._title !== 'string') {
+        errors.push('"_title" must be a string naming one of the card fields.');
+      }
+      if (data._blur !== undefined) {
+        if (!Array.isArray(data._blur) || data._blur.some(x => typeof x !== 'string')) {
+          errors.push('"_blur" must be an array of field-name strings.');
+        }
+      }
+
+      if (!Array.isArray(data.cards)) {
+        errors.push('Missing "cards": expected an array of card objects.');
+        return errors;
+      }
+      if (data.cards.length === 0) {
+        errors.push('"cards" is empty — a deck needs at least 1 card.');
+        return errors;
+      }
+
+      let firstKeys = null;
+      data.cards.forEach((card, i) => {
+        const n = i + 1;
+        if (!card || typeof card !== 'object' || Array.isArray(card)) {
+          errors.push('Card #' + n + ': must be an object like {"word": "...", "meaning": "..."}.');
+          return;
+        }
+        const keys = Object.keys(card).filter(k => !k.startsWith('_'));
+        if (keys.length === 0) {
+          errors.push('Card #' + n + ': has no fields. Give it at least one, e.g. {"word": "..."}.');
+          return;
+        }
+        keys.forEach(k => {
+          const v = card[k];
+          if (typeof v !== 'string' && typeof v !== 'number') {
+            errors.push('Card #' + n + ', field "' + k + '": value must be a string or number, got ' + (Array.isArray(v) ? 'array' : typeof v) + '.');
+          }
+        });
+        if (firstKeys === null) firstKeys = keys;
+      });
+
+      if (typeof data._title === 'string' && firstKeys && !firstKeys.includes(data._title)) {
+        errors.push('"_title" names field "' + data._title + '", but the cards have no such field. Available: ' + firstKeys.join(', ') + '.');
+      }
+      if (Array.isArray(data._blur) && firstKeys) {
+        data._blur.forEach(f => {
+          if (typeof f === 'string' && !firstKeys.includes(f)) {
+            errors.push('"_blur" names field "' + f + '", but the cards have no such field. Available: ' + firstKeys.join(', ') + '.');
+          }
+        });
+      }
+
+      return errors;
+    }
+
+    // ---------- Spaced repetition (SM-2 variant) ----------
+
+    // A card with no state object is "new". State shape:
+    // { reps, interval (days), ease, due (ms timestamp), lapses, lastReview }
+    function reviewCard(state, rating, now) {
+      now = now === undefined ? Date.now() : now;
+      const s = state
+        ? { reps: state.reps, interval: state.interval, ease: state.ease, lapses: state.lapses || 0 }
+        : { reps: 0, interval: 0, ease: DEFAULT_EASE, lapses: 0 };
+
+      if (rating === RATING.AGAIN) {
+        s.reps = 0;
+        s.interval = 0;
+        s.lapses += 1;
+        s.due = now; // resurfaces within this session
+      } else if (rating === RATING.HARD) {
+        s.reps += 1;
+        s.ease = Math.max(MIN_EASE, s.ease - 0.15);
+        s.interval = s.reps === 1 ? 1 : Math.max(1, Math.round(s.interval * 1.2));
+        s.due = now + s.interval * DAY_MS;
+      } else { // GOOD
+        s.reps += 1;
+        if (s.reps === 1) s.interval = 1;
+        else if (s.reps === 2) s.interval = 3;
+        else s.interval = Math.round(s.interval * s.ease);
+        s.due = now + s.interval * DAY_MS;
+      }
+      s.lastReview = now;
+      return s;
+    }
+
+    function isDue(state, now) {
+      return !!state && state.due <= now;
+    }
+
+    function classifyCard(state) {
+      if (!state) return 'new';
+      return state.interval >= MASTERY_INTERVAL_DAYS ? 'mastered' : 'learning';
+    }
+
+    // ---------- Session queue ----------
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr;
+    }
+
+    // progressCards: { [cardIndex]: state }. Returns array of card indices:
+    // due reviews first (shuffled), then new cards (shuffled, capped).
+    function buildSessionQueue(cards, progressCards, now, newLimit) {
+      const due = [], fresh = [];
+      cards.forEach((card, i) => {
+        const st = progressCards[i];
+        if (!st) fresh.push(i);
+        else if (isDue(st, now)) due.push(i);
+      });
+      shuffle(due);
+      shuffle(fresh);
+      return due.concat(fresh.slice(0, newLimit === undefined ? NEW_CARDS_PER_SESSION : newLimit));
+    }
+
+    // ---------- Deck stats (dashboard) ----------
+
+    function deckStats(cards, progressCards, now) {
+      let fresh = 0, learning = 0, mastered = 0, due = 0;
+      cards.forEach((card, i) => {
+        const st = progressCards[i];
+        if (!st) { fresh++; return; }
+        if (classifyCard(st) === 'mastered') mastered++; else learning++;
+        if (isDue(st, now)) due++;
+      });
+      return { total: cards.length, new: fresh, learning: learning, mastered: mastered, due: due };
+    }
+
+    // ---------- Field config ----------
+
+    // Effective display config for a deck: saved user config wins,
+    // otherwise fall back to the deck's _title/_blur hints, then to defaults.
+    function resolveFieldConfig(deckData, saved) {
+      const cards = deckData.cards || [];
+      const fields = cards.length > 0 ? Object.keys(cards[0]).filter(k => !k.startsWith('_')) : [];
+      const modes = {};
+
+      if (saved && typeof saved.titleField === 'string' && fields.includes(saved.titleField) && saved.modes && typeof saved.modes === 'object') {
+        fields.forEach(f => {
+          if (f === saved.titleField) return;
+          modes[f] = ['visible', 'blurred', 'hidden'].includes(saved.modes[f]) ? saved.modes[f] : 'visible';
+        });
+        return { titleField: saved.titleField, modes: modes, fields: fields };
+      }
+
+      const titleField = (typeof deckData._title === 'string' && fields.includes(deckData._title)) ? deckData._title : fields[0];
+      const blurHints = Array.isArray(deckData._blur) ? deckData._blur : null;
+      fields.forEach(f => {
+        if (f === titleField) return;
+        modes[f] = blurHints ? (blurHints.includes(f) ? 'blurred' : 'visible') : 'blurred';
+      });
+      return { titleField: titleField, modes: modes, fields: fields };
+    }
+
+    // ---------- Storage interface ----------
+    // Swap the backend (or this whole object) to plug in Supabase later.
+
+    function createMemoryBackend() {
+      const map = {};
+      return {
+        getItem: k => (k in map ? map[k] : null),
+        setItem: (k, v) => { map[k] = String(v); },
+        removeItem: k => { delete map[k]; }
+      };
+    }
+
+    function createStorage(backend) {
+      const K = { decks: 'udc.decks.v1', progress: 'udc.progress.v1.', fields: 'udc.fields.v1.' };
+
+      function read(key, fallback) {
+        try {
+          const raw = backend.getItem(key);
+          return raw === null || raw === undefined ? fallback : JSON.parse(raw);
+        } catch (e) { return fallback; }
+      }
+      function write(key, val) {
+        try { backend.setItem(key, JSON.stringify(val)); return true; }
+        catch (e) { return false; }
+      }
+
+      return {
+        // Uploaded decks, stored with full card data.
+        loadUploadedDecks() { return read(K.decks, []); },
+        saveUploadedDecks(decks) { return write(K.decks, decks); },
+        // SRS progress per deck: { cards: { [cardIndex]: state } }
+        loadProgress(deckId) { return read(K.progress + deckId, { cards: {} }); },
+        saveProgress(deckId, progress) { return write(K.progress + deckId, progress); },
+        // Per-deck field display config: { titleField, modes: {field: mode} }
+        loadFieldConfig(deckId) { return read(K.fields + deckId, null); },
+        saveFieldConfig(deckId, cfg) { return write(K.fields + deckId, cfg); }
+      };
+    }
+
+    // ---------- AI deck-builder prompt ----------
+
+    const DECK_BUILDER_PROMPT = [
+      'You are a flashcard deck builder for a swipe-based memory app. I will paste study material below in an arbitrary format (notes, article, transcript, table, anything).',
+      '',
+      'Extract the key knowledge and output ONLY a JSON object — no markdown fences, no commentary — matching this exact schema:',
+      '',
+      '{',
+      '  "cards": [',
+      '    { "<field>": "<value>", "<field>": "<value>", ... },',
+      '    ...',
+      '  ],',
+      '  "_title": "<the field to show as the card\'s front/heading>",',
+      '  "_blur": ["<fields to hide until the learner reveals them>"]',
+      '}',
+      '',
+      'Rules:',
+      '1. "cards" is required: a non-empty array of objects. Every value must be a string or a number.',
+      '2. Field names are up to you — pick what fits the material. For vocabulary: word, phonetic, pos, meaning, sentence. For Q&A: question, answer. For concepts: term, definition, example.',
+      '3. One idea per card. Keep each field concise (sentences, not paragraphs).',
+      '4. "_title" and "_blur" are optional display hints: _title names the heading field (default: the first field), _blur lists fields blurred until reveal (default: all non-title fields).',
+      '5. Keep field names consistent across all cards.',
+      '6. Make as many cards as the material supports, up to 100.',
+      '',
+      'Here is my material:',
+      ''
+    ].join('\n');
+
+    // Node export for testing (no-op in the browser).
+    if (typeof module !== 'undefined' && module.exports) {
+      module.exports = {
+        DAY_MS, NEW_CARDS_PER_SESSION, MASTERY_INTERVAL_DAYS, RATING,
+        validateDeck, reviewCard, isDue, classifyCard,
+        shuffle, buildSessionQueue, deckStats, resolveFieldConfig,
+        createMemoryBackend, createStorage, DECK_BUILDER_PROMPT
+      };
+    }
+
+    // ============================================================
+    // DOM / APP — browser only.
+    // ============================================================
+    if (typeof document !== 'undefined') {
+
+      lucide.createIcons();
+
+      const storage = createStorage(typeof localStorage !== 'undefined' ? localStorage : createMemoryBackend());
+
+      // One-time migration: uploaded decks used to live in sessionStorage.
       try {
-        const saved = sessionStorage.getItem('uploadedDecks');
-        if (saved) decks.push(...JSON.parse(saved));
+        const legacy = sessionStorage.getItem('uploadedDecks');
+        if (legacy) {
+          const old = JSON.parse(legacy);
+          if (Array.isArray(old) && old.length > 0) {
+            const cur = storage.loadUploadedDecks();
+            const ids = new Set(cur.map(d => d.id));
+            storage.saveUploadedDecks(cur.concat(old.filter(d => d && d.id && !ids.has(d.id))));
+          }
+          sessionStorage.removeItem('uploadedDecks');
+        }
       } catch (e) {}
 
-      renderDeckGrid();
-    }
+      // ==================== DECK LIBRARY ====================
 
-    function saveUploadedDecks() {
-      const uploaded = decks.filter(d => d.id !== 'builtin-lenny');
-      try { sessionStorage.setItem('uploadedDecks', JSON.stringify(uploaded)); } catch (e) {}
-    }
-
-    function renderDeckGrid() {
-      const grid = document.getElementById('deckGrid');
-      grid.innerHTML = '';
-
-      decks.forEach((deck, i) => {
-        const el = document.createElement('div');
-        el.className = 'deck-card rounded-2xl p-5 cursor-pointer flex flex-col justify-between aspect-[3/4]';
-        el.innerHTML = `
-          <div>
-            <h3 class="display-font font-semibold text-white text-base leading-tight mb-1">${escapeHtml(deck.name)}</h3>
-            <p class="text-zinc-500 display-font text-xs">${deck.cardCount !== null ? deck.cardCount + ' cards' : ''}</p>
-          </div>
-          <div class="mt-3">
-            <span class="inline-block px-2 py-0.5 rounded-full text-xs display-font ${deck.id === 'builtin-lenny' ? 'bg-lime-brand/10 text-lime-brand' : 'bg-zinc-800 text-zinc-400'}">${deck.id === 'builtin-lenny' ? 'Built-in' : 'Uploaded'}</span>
-          </div>
-        `;
-        el.addEventListener('click', () => openDeck(i));
-        grid.appendChild(el);
-      });
-
-      // Add (+) card
-      const addEl = document.createElement('label');
-      addEl.className = 'add-card rounded-2xl cursor-pointer flex flex-col items-center justify-center aspect-[3/4] gap-3';
-      addEl.setAttribute('for', 'fileInput');
-      addEl.innerHTML = `
-        <div class="w-10 h-10 rounded-xl border border-zinc-700 flex items-center justify-center">
-          <i data-lucide="plus" class="w-5 h-5 text-zinc-500"></i>
-        </div>
-        <span class="text-zinc-500 display-font text-xs">Upload JSON</span>
-        <button id="formatHelpInline" class="mt-1 flex items-center gap-1 text-zinc-600 hover:text-lime-brand transition-colors display-font text-xs" onclick="event.preventDefault(); event.stopPropagation(); openModal(formatModal);">
-          <i data-lucide="help-circle" class="w-3 h-3"></i>
-          <span>Format Guide</span>
-        </button>
-      `;
-      grid.appendChild(addEl);
-
-      lucide.createIcons();
-    }
-
-    // ==================== VIEW SWITCHING ====================
-
-    function showView(viewId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-      if (viewId === 'studyView') {
-        document.body.classList.add('study-mode');
-      } else {
-        document.body.classList.remove('study-mode');
-      }
-    }
-
-    function openDeck(index) {
-      const deck = decks[index];
-      document.getElementById('deckTitle').textContent = deck.name;
-
-      if (deck.data) {
-        loadDeck(deck.data);
-        showView('studyView');
-      } else if (deck.src) {
-        fetch(deck.src)
-          .then(r => r.json())
-          .then(data => {
-            deck.data = data;
-            // Update card count
-            const count = Array.isArray(data.cards) ? data.cards.length : 0;
-            deck.cardCount = count;
-            renderDeckGrid();
-            loadDeck(data);
-            showView('studyView');
-          })
-          .catch(err => alert('Failed to load deck: ' + err.message));
-      }
-    }
-
-    document.getElementById('backBtn').addEventListener('click', () => {
-      showView('libraryView');
-    });
-
-    // ==================== STUDY LOGIC ====================
-
-    let cards = [];
-    let blurFields = [];
-    let titleField = '';
-    let allFields = [];
-    let currentIndex = 0;
-    let revealed = false;
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-
-    const swipeCard = document.getElementById('swipeCard');
-    const cardInner = document.getElementById('cardInner');
-    const cardFieldsEl = document.getElementById('cardFields');
-    const currentIndexEl = document.getElementById('currentIndex');
-    const totalCardsEl = document.getElementById('totalCards');
-    const progressCircle = document.getElementById('progressCircle');
-    const instructionsArea = document.getElementById('instructionsArea');
-
-    function loadDeck(data) {
-      if (data && typeof data === 'object' && Array.isArray(data.cards)) {
-        cards = data.cards.sort(() => Math.random() - 0.5).slice(0, 50);
-        allFields = cards.length > 0 ? Object.keys(cards[0]).filter(k => !k.startsWith('_')) : [];
-        titleField = data._title || allFields[0] || '';
-        blurFields = Array.isArray(data._blur) ? data._blur : allFields.filter(k => k !== titleField);
-      } else {
-        alert('Invalid JSON format. Expected an object with _title, _blur, and cards.');
-        return;
-      }
-
-      currentIndex = 0;
-      revealed = false;
-      totalCardsEl.textContent = cards.length;
-      updateCard();
-      updateProgress();
-
-      gsap.fromTo(swipeCard, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' });
-    }
-
-    function renderCard(card) {
-      cardFieldsEl.innerHTML = '';
-
-      if (titleField && card[titleField] !== undefined) {
-        const titleEl = document.createElement('div');
-        titleEl.className = 'mb-3';
-        titleEl.innerHTML = `<h2 class="text-2xl sm:text-3xl font-bold text-white display-font">${escapeHtml(String(card[titleField]))}</h2>`;
-        cardFieldsEl.appendChild(titleEl);
-      }
-
-      const visibleFields = allFields.filter(k => k !== titleField && !blurFields.includes(k));
-      if (visibleFields.length > 0) {
-        const visibleEl = document.createElement('div');
-        visibleEl.className = 'mb-3';
-        visibleEl.innerHTML = visibleFields.map(k =>
-          `<p class="text-zinc-400 display-font text-sm mb-1">
-            <span class="text-zinc-600">${escapeHtml(k)}</span>
-            <span class="text-zinc-500 mx-1.5">·</span>
-            <span class="text-zinc-300">${escapeHtml(String(card[k]))}</span>
-          </p>`
-        ).join('');
-        cardFieldsEl.appendChild(visibleEl);
-      }
-
-      if (blurFields.length > 0) {
-        const blurEl = document.createElement('div');
-        blurEl.id = 'blurredContent';
-        blurEl.className = 'blur-content blurred';
-        blurEl.innerHTML = blurFields.filter(k => k !== titleField && card[k] !== undefined).map(k => {
-          const val = String(card[k]);
-          if (val.length > 60) {
-            return `<div class="mb-3">
-              <span class="text-zinc-600 display-font text-xs uppercase tracking-wider">${escapeHtml(k)}</span>
-              <p class="card-content text-zinc-100 mt-1">${escapeHtml(val)}</p>
-            </div>`;
-          }
-          return `<p class="text-zinc-400 display-font text-sm mb-2">
-            <span class="text-zinc-600">${escapeHtml(k)}</span>
-            <span class="text-zinc-500 mx-1.5">·</span>
-            <span class="text-lime-brand">${escapeHtml(val)}</span>
-          </p>`;
-        }).join('');
-        cardFieldsEl.appendChild(blurEl);
-      }
-    }
-
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    // Swipe & keyboard
-    swipeCard.addEventListener('touchstart', handleTouchStart, { passive: true });
-    swipeCard.addEventListener('touchmove', handleTouchMove, { passive: true });
-    swipeCard.addEventListener('touchend', handleEnd);
-
-    document.addEventListener('keydown', (e) => {
-      if (!document.getElementById('studyView').classList.contains('active')) return;
-      if (e.key === 'ArrowUp') goToNextCard();
-      else if (e.key === 'ArrowDown') revealBlurred();
-    });
-
-    function handleTouchStart(e) {
-      if (!e.touches || !e.touches[0]) return;
-      isDragging = true;
-      startY = e.touches[0].clientY;
-      currentY = startY;
-      swipeCard.style.transition = 'none';
-    }
-
-    function handleTouchMove(e) {
-      if (!isDragging || !e.touches || !e.touches[0]) return;
-      currentY = e.touches[0].clientY;
-      const deltaY = currentY - startY;
-      const limitedDelta = Math.max(-120, Math.min(120, deltaY));
-      const opacity = deltaY < 0 ? Math.max(0, 1 - Math.abs(deltaY) / 100) : 1;
-      swipeCard.style.transform = `translate3d(0, ${limitedDelta}px, 0)`;
-      swipeCard.style.opacity = opacity;
-    }
-
-    function handleEnd() {
-      if (!isDragging) return;
-      isDragging = false;
-      const deltaY = currentY - startY;
-      swipeCard.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
-      swipeCard.style.transform = 'translate3d(0, 0, 0)';
-      swipeCard.style.opacity = 1;
-      if (deltaY < -40) goToNextCard();
-      else if (deltaY > 40 && !revealed) revealBlurred();
-    }
-
-    function goToNextCard() {
-      if (cards.length === 0) return;
-      animateCardExit('up', () => {
-        currentIndex = currentIndex >= cards.length - 1 ? 0 : currentIndex + 1;
-        revealed = false;
-        updateCard();
-        animateCardEnter();
-      });
-    }
-
-    function revealBlurred() {
-      if (revealed) return;
-      revealed = true;
-      const blurEl = document.getElementById('blurredContent');
-      if (blurEl) blurEl.classList.remove('blurred');
-      if (currentIndex === 0 && instructionsArea) instructionsArea.style.display = 'none';
-    }
-
-    function updateCard() {
-      if (cards.length === 0) return;
-      renderCard(cards[currentIndex]);
-      cardInner.scrollTop = 0;
-      if (instructionsArea) instructionsArea.style.display = currentIndex === 0 ? 'block' : 'none';
-      updateProgress();
-    }
-
-    function updateProgress() {
-      currentIndexEl.textContent = currentIndex + 1;
-      const progress = (currentIndex + 1) / cards.length;
-      const circumference = 88;
-      const offset = circumference * (1 - progress);
-      gsap.to(progressCircle, { strokeDashoffset: offset, duration: 0.25, ease: 'power2.out' });
-    }
-
-    function animateCardExit(direction, callback) {
-      gsap.to(swipeCard, {
-        y: direction === 'up' ? -100 : 100,
-        opacity: 0, duration: 0.2, ease: 'power2.in', onComplete: callback
-      });
-    }
-
-    function animateCardEnter() {
-      gsap.fromTo(swipeCard, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
-    }
-
-    // ==================== FILE UPLOAD ====================
-
-    const fileInput = document.getElementById('fileInput');
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          const data = JSON.parse(evt.target.result);
-          if (!data || typeof data !== 'object' || !Array.isArray(data.cards)) {
-            throw new Error('Expected an object with _title, _blur, and cards.');
-          }
-          const deckCards = data.cards;
-          const deckName = file.name.replace(/\.json$/i, '');
-          const newDeck = {
-            id: 'upload-' + Date.now(),
-            name: deckName,
-            cardCount: deckCards.length,
-            src: null,
-            data: data
-          };
-          decks.push(newDeck);
-          saveUploadedDecks();
-          renderDeckGrid();
-        } catch (err) {
-          alert('Failed to parse JSON: ' + err.message);
-        }
+      const BUILTIN_DECK = {
+        id: 'builtin-lenny',
+        name: "Lenny's Newsletter",
+        src: 'vocabulary_learning.json',
+        data: null
       };
-      reader.readAsText(file);
-      fileInput.value = '';
-    });
 
-    // ==================== MODALS ====================
+      let decks = [];
 
-    function openModal(modal) {
-      modal.classList.remove('hidden');
-      lucide.createIcons();
-      gsap.fromTo(modal.querySelector('.about-modal-content'),
-        { opacity: 0, y: 30, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }
-      );
-    }
+      function initLibrary() {
+        decks = [BUILTIN_DECK].concat(storage.loadUploadedDecks().filter(d => d && d.data && Array.isArray(d.data.cards)));
+        // Preload the built-in deck so counts and due badges show immediately.
+        if (!BUILTIN_DECK.data) {
+          fetch(BUILTIN_DECK.src)
+            .then(r => r.json())
+            .then(data => { BUILTIN_DECK.data = data; renderDeckGrid(); })
+            .catch(() => {});
+        }
+        renderDeckGrid();
+      }
 
-    function closeModalFn(modal) {
-      gsap.to(modal.querySelector('.about-modal-content'), {
-        opacity: 0, y: 20, scale: 0.95, duration: 0.25, ease: 'power2.in',
-        onComplete: () => modal.classList.add('hidden')
+      function deckCardCount(deck) {
+        return deck.data && Array.isArray(deck.data.cards) ? deck.data.cards.length : null;
+      }
+
+      function deckDueCount(deck) {
+        if (!deck.data) return null;
+        const progress = storage.loadProgress(deck.id);
+        return deckStats(deck.data.cards, progress.cards, Date.now()).due;
+      }
+
+      function renderDeckGrid() {
+        const grid = document.getElementById('deckGrid');
+        grid.innerHTML = '';
+
+        decks.forEach((deck, i) => {
+          const count = deckCardCount(deck);
+          const due = deckDueCount(deck);
+          const el = document.createElement('div');
+          el.className = 'deck-card rounded-2xl p-5 cursor-pointer flex flex-col justify-between aspect-[3/4]';
+          el.innerHTML =
+            '<div>' +
+              '<h3 class="display-font font-semibold text-white text-base leading-tight mb-1">' + escapeHtml(deck.name) + '</h3>' +
+              '<p class="text-zinc-500 display-font text-xs">' + (count !== null ? count + ' cards' : '') + '</p>' +
+            '</div>' +
+            '<div class="mt-3 flex flex-col items-start gap-1.5">' +
+              (due ? '<span class="inline-block px-2 py-0.5 rounded-full text-xs display-font due-badge">' + due + ' due</span>' : '') +
+              '<span class="inline-block px-2 py-0.5 rounded-full text-xs display-font ' + (deck.id === BUILTIN_DECK.id ? 'bg-lime-brand/10 text-lime-brand' : 'bg-zinc-800 text-zinc-400') + '">' + (deck.id === BUILTIN_DECK.id ? 'Built-in' : 'Uploaded') + '</span>' +
+            '</div>';
+          el.addEventListener('click', () => openDeck(i));
+          grid.appendChild(el);
+        });
+
+        // Add (+) card
+        const addEl = document.createElement('label');
+        addEl.className = 'add-card rounded-2xl cursor-pointer flex flex-col items-center justify-center aspect-[3/4] gap-3';
+        addEl.setAttribute('for', 'fileInput');
+        addEl.innerHTML =
+          '<div class="w-10 h-10 rounded-xl border border-zinc-700 flex items-center justify-center">' +
+            '<i data-lucide="plus" class="w-5 h-5 text-zinc-500"></i>' +
+          '</div>' +
+          '<span class="text-zinc-500 display-font text-xs">Upload JSON</span>' +
+          '<button id="formatHelpInline" class="mt-1 flex items-center gap-1 text-zinc-600 hover:text-lime-brand transition-colors display-font text-xs">' +
+            '<i data-lucide="help-circle" class="w-3 h-3"></i>' +
+            '<span>Format Guide</span>' +
+          '</button>';
+        grid.appendChild(addEl);
+        document.getElementById('formatHelpInline').addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openModal(formatModal);
+        });
+
+        lucide.createIcons();
+      }
+
+      // ==================== DASHBOARD ====================
+
+      function renderDashboard() {
+        const list = document.getElementById('dashboardList');
+        const summary = document.getElementById('dashboardSummary');
+        list.innerHTML = '';
+
+        let totalDue = 0, totalMastered = 0, totalCards = 0, decksStarted = 0;
+
+        decks.forEach((deck, i) => {
+          if (!deck.data) return;
+          const stats = deckStats(deck.data.cards, storage.loadProgress(deck.id).cards, Date.now());
+          const seen = stats.learning + stats.mastered;
+          totalDue += stats.due;
+          totalMastered += stats.mastered;
+          totalCards += stats.total;
+          if (seen > 0) decksStarted++;
+
+          const pctMastered = stats.total ? Math.round(stats.mastered / stats.total * 100) : 0;
+          const pctLearning = stats.total ? Math.round(stats.learning / stats.total * 100) : 0;
+
+          const el = document.createElement('div');
+          el.className = 'deck-card rounded-2xl p-5 cursor-pointer';
+          el.innerHTML =
+            '<div class="flex items-start justify-between gap-3 mb-3">' +
+              '<div>' +
+                '<h3 class="display-font font-semibold text-white text-base leading-tight">' + escapeHtml(deck.name) + '</h3>' +
+                '<p class="text-zinc-500 display-font text-xs mt-0.5">' + stats.total + ' cards</p>' +
+              '</div>' +
+              (stats.due > 0
+                ? '<span class="inline-block px-2.5 py-1 rounded-full text-xs display-font due-badge whitespace-nowrap">' + stats.due + ' due today</span>'
+                : '<span class="inline-block px-2.5 py-1 rounded-full text-xs display-font bg-zinc-800 text-zinc-500 whitespace-nowrap">nothing due</span>') +
+            '</div>' +
+            '<div class="stat-bar-track mb-3">' +
+              '<div class="stat-bar-mastered" style="width:' + pctMastered + '%"></div>' +
+              '<div class="stat-bar-learning" style="width:' + pctLearning + '%"></div>' +
+            '</div>' +
+            '<div class="flex gap-4 text-xs display-font">' +
+              '<span class="text-zinc-500">New <span class="text-zinc-300">' + stats.new + '</span></span>' +
+              '<span class="text-zinc-500">Learning <span class="text-amber-400">' + stats.learning + '</span></span>' +
+              '<span class="text-zinc-500">Mastered <span class="text-lime-brand">' + stats.mastered + '</span></span>' +
+              '<span class="text-zinc-500 ml-auto">' + pctMastered + '% mastered</span>' +
+            '</div>';
+          el.addEventListener('click', () => openDeck(i));
+          list.appendChild(el);
+        });
+
+        summary.innerHTML =
+          '<div class="grid grid-cols-3 gap-3">' +
+            '<div class="deck-card rounded-2xl p-4 text-center"><p class="text-2xl font-semibold display-font text-lime-brand">' + totalDue + '</p><p class="text-xs text-zinc-500 display-font mt-1">due today</p></div>' +
+            '<div class="deck-card rounded-2xl p-4 text-center"><p class="text-2xl font-semibold display-font text-white">' + totalMastered + '</p><p class="text-xs text-zinc-500 display-font mt-1">mastered</p></div>' +
+            '<div class="deck-card rounded-2xl p-4 text-center"><p class="text-2xl font-semibold display-font text-white">' + decksStarted + '/' + decks.filter(d => d.data).length + '</p><p class="text-xs text-zinc-500 display-font mt-1">decks started</p></div>' +
+          '</div>';
+      }
+
+      document.getElementById('dashboardLink').addEventListener('click', () => {
+        renderDashboard();
+        showView('dashboardView');
       });
+      document.getElementById('dashboardBackBtn').addEventListener('click', () => {
+        renderDeckGrid();
+        showView('libraryView');
+      });
+
+      // ==================== VIEW SWITCHING ====================
+
+      function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        document.body.classList.toggle('study-mode', viewId === 'studyView');
+        lucide.createIcons();
+      }
+
+      // ==================== STUDY SESSION ====================
+
+      let currentDeck = null;
+      let progress = null;          // { cards: { [cardIndex]: state } }
+      let fieldCfg = null;          // { titleField, modes, fields }
+      let sessionQueue = [];        // card indices
+      let sessionPos = 0;
+      let sessionCounts = { 0: 0, 1: 0, 2: 0 };
+      let revealed = false;
+      let inputLocked = false;      // true while a card transition animation runs
+      let startY = 0, currentY = 0, isDragging = false;
+
+      const swipeCard = document.getElementById('swipeCard');
+      const cardInner = document.getElementById('cardInner');
+      const cardFieldsEl = document.getElementById('cardFields');
+      const currentIndexEl = document.getElementById('currentIndex');
+      const totalCardsEl = document.getElementById('totalCards');
+      const progressCircle = document.getElementById('progressCircle');
+      const instructionsArea = document.getElementById('instructionsArea');
+      const ratingBar = document.getElementById('ratingBar');
+      const revealHint = document.getElementById('revealHint');
+      const sessionDone = document.getElementById('sessionDone');
+
+      function openDeck(index) {
+        const deck = decks[index];
+        if (!deck.data) {
+          alert('Deck data is not loaded yet, please try again.');
+          return;
+        }
+        currentDeck = deck;
+        document.getElementById('deckTitle').textContent = deck.name;
+        startSession();
+        showView('studyView');
+      }
+
+      function startSession() {
+        progress = storage.loadProgress(currentDeck.id);
+        fieldCfg = resolveFieldConfig(currentDeck.data, storage.loadFieldConfig(currentDeck.id));
+        sessionQueue = buildSessionQueue(currentDeck.data.cards, progress.cards, Date.now());
+        sessionPos = 0;
+        sessionCounts = { 0: 0, 1: 0, 2: 0 };
+        revealed = false;
+        sessionDone.classList.add('hidden');
+        swipeCard.classList.remove('hidden');
+
+        if (sessionQueue.length === 0) {
+          showSessionDone(true);
+          return;
+        }
+        totalCardsEl.textContent = sessionQueue.length;
+        updateCard();
+        inputLocked = true;
+        gsap.fromTo(swipeCard, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', onComplete: () => { inputLocked = false; } });
+      }
+
+      function currentCardIndex() { return sessionQueue[sessionPos]; }
+
+      function renderCard(card) {
+        cardFieldsEl.innerHTML = '';
+
+        const title = fieldCfg.titleField;
+        if (title && card[title] !== undefined) {
+          const titleEl = document.createElement('div');
+          titleEl.className = 'mb-3';
+          titleEl.innerHTML = '<h2 class="text-2xl sm:text-3xl font-bold text-white display-font">' + escapeHtml(String(card[title])) + '</h2>';
+          cardFieldsEl.appendChild(titleEl);
+        }
+
+        const visibleFields = fieldCfg.fields.filter(k => k !== title && fieldCfg.modes[k] === 'visible' && card[k] !== undefined);
+        if (visibleFields.length > 0) {
+          const visibleEl = document.createElement('div');
+          visibleEl.className = 'mb-3';
+          visibleEl.innerHTML = visibleFields.map(k =>
+            '<p class="text-zinc-400 display-font text-sm mb-1">' +
+              '<span class="text-zinc-600">' + escapeHtml(k) + '</span>' +
+              '<span class="text-zinc-500 mx-1.5">·</span>' +
+              '<span class="text-zinc-300">' + escapeHtml(String(card[k])) + '</span>' +
+            '</p>'
+          ).join('');
+          cardFieldsEl.appendChild(visibleEl);
+        }
+
+        const blurredFields = fieldCfg.fields.filter(k => k !== title && fieldCfg.modes[k] === 'blurred' && card[k] !== undefined);
+        if (blurredFields.length > 0) {
+          const blurEl = document.createElement('div');
+          blurEl.id = 'blurredContent';
+          blurEl.className = 'blur-content' + (revealed ? '' : ' blurred');
+          blurEl.innerHTML = blurredFields.map(k => {
+            const val = String(card[k]);
+            if (val.length > 60) {
+              return '<div class="mb-3">' +
+                '<span class="text-zinc-600 display-font text-xs uppercase tracking-wider">' + escapeHtml(k) + '</span>' +
+                '<p class="card-content text-zinc-100 mt-1">' + escapeHtml(val) + '</p>' +
+              '</div>';
+            }
+            return '<p class="text-zinc-400 display-font text-sm mb-2">' +
+              '<span class="text-zinc-600">' + escapeHtml(k) + '</span>' +
+              '<span class="text-zinc-500 mx-1.5">·</span>' +
+              '<span class="text-lime-brand">' + escapeHtml(val) + '</span>' +
+            '</p>';
+          }).join('');
+          cardFieldsEl.appendChild(blurEl);
+        }
+      }
+
+      function hasBlurredContent(card) {
+        return fieldCfg.fields.some(k => k !== fieldCfg.titleField && fieldCfg.modes[k] === 'blurred' && card[k] !== undefined);
+      }
+
+      function revealCard() {
+        if (revealed || inputLocked) return;
+        revealed = true;
+        const blurEl = document.getElementById('blurredContent');
+        if (blurEl) blurEl.classList.remove('blurred');
+        ratingBar.classList.remove('hidden');
+        ratingBar.classList.add('flex');
+        revealHint.classList.add('hidden');
+        instructionsArea.style.display = 'none';
+      }
+
+      function rateCard(rating) {
+        if (inputLocked) return;
+        if (!revealed) { revealCard(); return; }
+        const cardIdx = currentCardIndex();
+        progress.cards[cardIdx] = reviewCard(progress.cards[cardIdx], rating);
+        storage.saveProgress(currentDeck.id, progress);
+        sessionCounts[rating]++;
+
+        // "Again" cards resurface a few cards later in this session.
+        if (rating === RATING.AGAIN) {
+          sessionQueue.splice(Math.min(sessionPos + 4, sessionQueue.length), 0, cardIdx);
+          totalCardsEl.textContent = sessionQueue.length;
+        }
+        goToNextCard();
+      }
+
+      function goToNextCard() {
+        inputLocked = true;
+        animateCardExit('up', () => {
+          sessionPos++;
+          if (sessionPos >= sessionQueue.length) {
+            showSessionDone(false);
+            return;
+          }
+          revealed = false;
+          ratingBar.classList.add('hidden');
+          ratingBar.classList.remove('flex');
+          revealHint.classList.remove('hidden');
+          updateCard();
+          animateCardEnter(() => { inputLocked = false; });
+        });
+      }
+
+      function updateCard() {
+        const card = currentDeck.data.cards[currentCardIndex()];
+        renderCard(card);
+        cardInner.scrollTop = 0;
+        instructionsArea.style.display = sessionPos === 0 ? 'block' : 'none';
+        // Cards with nothing blurred can be rated immediately.
+        if (!hasBlurredContent(card)) revealCard();
+        updateProgress();
+      }
+
+      function updateProgress() {
+        currentIndexEl.textContent = Math.min(sessionPos + 1, sessionQueue.length);
+        const p = sessionQueue.length ? sessionPos / sessionQueue.length : 0;
+        const circumference = 88;
+        gsap.to(progressCircle, { strokeDashoffset: circumference * (1 - p), duration: 0.25, ease: 'power2.out' });
+      }
+
+      function showSessionDone(nothingDue) {
+        inputLocked = false;
+        swipeCard.classList.add('hidden');
+        sessionDone.classList.remove('hidden');
+        ratingBar.classList.add('hidden');
+        ratingBar.classList.remove('flex');
+        revealHint.classList.remove('hidden');
+        const reviewed = sessionCounts[0] + sessionCounts[1] + sessionCounts[2];
+        document.getElementById('sessionDoneStats').textContent = nothingDue
+          ? 'Nothing due right now — every card in this deck is scheduled for later. Come back tomorrow!'
+          : reviewed + ' reviewed · ' + sessionCounts[2] + ' Good · ' + sessionCounts[1] + ' Hard · ' + sessionCounts[0] + ' Again';
+        gsap.fromTo(sessionDone, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' });
+        lucide.createIcons();
+      }
+
+      function animateCardExit(direction, callback) {
+        gsap.to(swipeCard, {
+          y: direction === 'up' ? -100 : 100,
+          opacity: 0, duration: 0.2, ease: 'power2.in', onComplete: callback
+        });
+      }
+
+      function animateCardEnter(onDone) {
+        gsap.fromTo(swipeCard, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out', onComplete: onDone });
+      }
+
+      // Rating buttons
+      ratingBar.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.addEventListener('click', () => rateCard(Number(btn.dataset.rating)));
+      });
+
+      // Swipe & keyboard
+      swipeCard.addEventListener('touchstart', handleTouchStart, { passive: true });
+      swipeCard.addEventListener('touchmove', handleTouchMove, { passive: true });
+      swipeCard.addEventListener('touchend', handleEnd);
+
+      function handleTouchStart(e) {
+        if (!e.touches || !e.touches[0]) return;
+        isDragging = true;
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        swipeCard.style.transition = 'none';
+      }
+
+      function handleTouchMove(e) {
+        if (!isDragging || !e.touches || !e.touches[0]) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        const limitedDelta = Math.max(-120, Math.min(120, deltaY));
+        const opacity = deltaY < 0 ? Math.max(0, 1 - Math.abs(deltaY) / 100) : 1;
+        swipeCard.style.transform = 'translate3d(0, ' + limitedDelta + 'px, 0)';
+        swipeCard.style.opacity = opacity;
+      }
+
+      function handleEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        const deltaY = currentY - startY;
+        swipeCard.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
+        swipeCard.style.transform = 'translate3d(0, 0, 0)';
+        swipeCard.style.opacity = 1;
+        if (deltaY > 40) revealCard();
+        else if (deltaY < -40) { revealed ? rateCard(RATING.GOOD) : revealCard(); }
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (!document.getElementById('studyView').classList.contains('active')) return;
+        if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); revealCard(); }
+        else if (e.key === 'ArrowUp') { revealed ? rateCard(RATING.GOOD) : revealCard(); }
+        else if (revealed && (e.key === '1' || e.key === '2' || e.key === '3')) {
+          rateCard(Number(e.key) - 1);
+        }
+      });
+
+      document.getElementById('backBtn').addEventListener('click', () => {
+        renderDeckGrid();
+        showView('libraryView');
+      });
+      document.getElementById('sessionDoneBack').addEventListener('click', () => {
+        renderDeckGrid();
+        showView('libraryView');
+      });
+      document.getElementById('sessionDoneAgain').addEventListener('click', () => startSession());
+
+      // ==================== FIELD SETTINGS ====================
+
+      function renderFieldsModal() {
+        const list = document.getElementById('fieldsList');
+        list.innerHTML = '';
+        fieldCfg.fields.forEach(field => {
+          const isTitle = field === fieldCfg.titleField;
+          const mode = fieldCfg.modes[field];
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between gap-3 py-2 border-b border-zinc-800/50';
+          row.innerHTML =
+            '<span class="display-font text-sm ' + (isTitle ? 'text-lime-brand' : 'text-zinc-300') + ' truncate">' + escapeHtml(field) + '</span>' +
+            '<div class="flex gap-1.5 flex-shrink-0 display-font">' +
+              '<button class="field-mode-btn' + (isTitle ? ' active' : '') + '" data-field="' + escapeHtml(field) + '" data-mode="title">Title</button>' +
+              (isTitle ? '' :
+                '<button class="field-mode-btn' + (mode === 'visible' ? ' active' : '') + '" data-field="' + escapeHtml(field) + '" data-mode="visible">Visible</button>' +
+                '<button class="field-mode-btn' + (mode === 'blurred' ? ' active' : '') + '" data-field="' + escapeHtml(field) + '" data-mode="blurred">Blurred</button>' +
+                '<button class="field-mode-btn' + (mode === 'hidden' ? ' active' : '') + '" data-field="' + escapeHtml(field) + '" data-mode="hidden">Hidden</button>') +
+            '</div>';
+          list.appendChild(row);
+        });
+
+        list.querySelectorAll('.field-mode-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const field = btn.dataset.field;
+            const mode = btn.dataset.mode;
+            if (mode === 'title') {
+              const oldTitle = fieldCfg.titleField;
+              fieldCfg.titleField = field;
+              if (oldTitle && oldTitle !== field && !fieldCfg.modes[oldTitle]) fieldCfg.modes[oldTitle] = 'visible';
+              delete fieldCfg.modes[field];
+            } else {
+              fieldCfg.modes[field] = mode;
+            }
+            storage.saveFieldConfig(currentDeck.id, { titleField: fieldCfg.titleField, modes: fieldCfg.modes });
+            renderFieldsModal();
+            renderCard(currentDeck.data.cards[currentCardIndex()]);
+          });
+        });
+      }
+
+      document.getElementById('fieldSettingsBtn').addEventListener('click', () => {
+        if (!fieldCfg) return;
+        renderFieldsModal();
+        openModal(fieldsModal);
+      });
+
+      // ==================== FILE UPLOAD ====================
+
+      let lastUploadErrors = [];
+
+      const fileInput = document.getElementById('fileInput');
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          let data;
+          try {
+            data = JSON.parse(evt.target.result);
+          } catch (err) {
+            showUploadErrors(['The file is not valid JSON: ' + err.message]);
+            fileInput.value = '';
+            return;
+          }
+          const errors = validateDeck(data);
+          if (errors.length > 0) {
+            showUploadErrors(errors);
+          } else {
+            const newDeck = {
+              id: 'upload-' + Date.now(),
+              name: file.name.replace(/\.json$/i, ''),
+              src: null,
+              data: data
+            };
+            decks.push(newDeck);
+            const uploaded = decks.filter(d => d.id !== BUILTIN_DECK.id).map(d => ({ id: d.id, name: d.name, src: null, data: d.data }));
+            if (!storage.saveUploadedDecks(uploaded)) {
+              alert('Deck added, but could not be saved to local storage (quota exceeded). It will disappear when you close this tab.');
+            }
+            renderDeckGrid();
+          }
+          fileInput.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      function showUploadErrors(errors) {
+        lastUploadErrors = errors;
+        document.getElementById('errorsList').innerHTML = errors.map(e => '<li>' + escapeHtml(e) + '</li>').join('');
+        openModal(errorsModal);
+      }
+
+      // ==================== MODALS ====================
+
+      function openModal(modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+        gsap.fromTo(modal.querySelector('.about-modal-content'),
+          { opacity: 0, y: 30, scale: 0.95 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }
+        );
+      }
+
+      function closeModalFn(modal) {
+        gsap.to(modal.querySelector('.about-modal-content'), {
+          opacity: 0, y: 20, scale: 0.95, duration: 0.25, ease: 'power2.in',
+          onComplete: () => modal.classList.add('hidden')
+        });
+      }
+
+      const aboutModal = document.getElementById('aboutModal');
+      const formatModal = document.getElementById('formatModal');
+      const promptModal = document.getElementById('promptModal');
+      const errorsModal = document.getElementById('errorsModal');
+      const fieldsModal = document.getElementById('fieldsModal');
+      const allModals = [aboutModal, formatModal, promptModal, errorsModal, fieldsModal];
+
+      document.getElementById('aboutLinkLib').addEventListener('click', () => openModal(aboutModal));
+      document.getElementById('closeModal').addEventListener('click', () => closeModalFn(aboutModal));
+      document.getElementById('modalOverlay').addEventListener('click', () => closeModalFn(aboutModal));
+
+      document.getElementById('closeFormatModal').addEventListener('click', () => closeModalFn(formatModal));
+      document.getElementById('formatModalOverlay').addEventListener('click', () => closeModalFn(formatModal));
+
+      document.getElementById('closeErrorsModal').addEventListener('click', () => closeModalFn(errorsModal));
+      document.getElementById('errorsModalOverlay').addEventListener('click', () => closeModalFn(errorsModal));
+      document.getElementById('errorsFormatBtn').addEventListener('click', () => {
+        closeModalFn(errorsModal);
+        openModal(formatModal);
+      });
+      document.getElementById('errorsCopyBtn').addEventListener('click', function() {
+        copyText('My flashcard JSON failed validation. Fix these issues and output the corrected JSON only:\n\n' + lastUploadErrors.map(e => '- ' + e).join('\n'), this.querySelector('span'), 'Copy errors');
+      });
+
+      document.getElementById('closeFieldsModal').addEventListener('click', () => closeModalFn(fieldsModal));
+      document.getElementById('fieldsModalOverlay').addEventListener('click', () => closeModalFn(fieldsModal));
+
+      // AI prompt modal
+      document.getElementById('promptText').textContent = DECK_BUILDER_PROMPT;
+      document.getElementById('promptLink').addEventListener('click', () => openModal(promptModal));
+      document.getElementById('closePromptModal').addEventListener('click', () => closeModalFn(promptModal));
+      document.getElementById('promptModalOverlay').addEventListener('click', () => closeModalFn(promptModal));
+      document.getElementById('copyPromptBtn').addEventListener('click', function() {
+        copyText(DECK_BUILDER_PROMPT, this.querySelector('span'), 'Copy prompt');
+      });
+      document.getElementById('formatToPrompt').addEventListener('click', () => {
+        closeModalFn(formatModal);
+        openModal(promptModal);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') allModals.forEach(m => { if (!m.classList.contains('hidden')) closeModalFn(m); });
+      });
+
+      function copyText(text, labelEl, originalLabel) {
+        navigator.clipboard.writeText(text).then(() => {
+          labelEl.textContent = 'Copied!';
+          setTimeout(() => { labelEl.textContent = originalLabel; }, 2000);
+        }).catch(() => {
+          labelEl.textContent = 'Failed';
+          setTimeout(() => { labelEl.textContent = originalLabel; }, 2000);
+        });
+      }
+
+      // ==================== SHARE ====================
+
+      async function handleShare(btn) {
+        const textEl = btn.querySelector('span');
+        const shareData = { title: 'UpDownCard', text: 'Memorize Everything by Swiping Up & Down', url: window.location.href };
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          try { await navigator.share(shareData); return; } catch (err) { if (err.name !== 'AbortError') console.log('Share failed:', err); }
+        }
+        copyText(window.location.href, textEl, 'Share');
+      }
+
+      document.getElementById('shareBtnLib').addEventListener('click', function() { handleShare(this); });
+
+      // ==================== HELPERS ====================
+
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // ==================== INIT ====================
+
+      initLibrary();
     }
-
-    const aboutModal = document.getElementById('aboutModal');
-    const formatModal = document.getElementById('formatModal');
-
-    // About — from both views
-    document.getElementById('aboutLinkLib').addEventListener('click', () => openModal(aboutModal));
-    document.getElementById('closeModal').addEventListener('click', () => closeModalFn(aboutModal));
-    document.getElementById('modalOverlay').addEventListener('click', () => closeModalFn(aboutModal));
-
-    // Format guide
-    document.getElementById('closeFormatModal').addEventListener('click', () => closeModalFn(formatModal));
-    document.getElementById('formatModalOverlay').addEventListener('click', () => closeModalFn(formatModal));
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (!aboutModal.classList.contains('hidden')) closeModalFn(aboutModal);
-        if (!formatModal.classList.contains('hidden')) closeModalFn(formatModal);
-      }
-    });
-
-    // ==================== SHARE ====================
-
-    async function handleShare(btn) {
-      const textEl = btn.querySelector('span');
-      const shareData = { title: 'UpDownCard', text: 'Memorize Everything by Swiping Up & Down', url: window.location.href };
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        try { await navigator.share(shareData); return; } catch (err) { if (err.name !== 'AbortError') console.log('Share failed:', err); }
-      }
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        textEl.textContent = 'Link copied!';
-        setTimeout(() => textEl.textContent = 'Share', 2000);
-      } catch (err) {
-        textEl.textContent = 'Failed';
-        setTimeout(() => textEl.textContent = 'Share', 2000);
-      }
-    }
-
-    document.getElementById('shareBtn').addEventListener('click', function() { handleShare(this); });
-    document.getElementById('shareBtnLib').addEventListener('click', function() { handleShare(this); });
-
-    // ==================== INIT ====================
-
-    initLibrary();
   </script>
 </body>
 </html>
