@@ -100,7 +100,7 @@ hr{border:none;border-top:1px dashed rgba(28,26,23,.5);margin:30px 12%;}
 /* crosshair reticle at the beam's own center — cursor:none removes the OS arrow so
    without this the reader has no way to tell exactly where the pointer is; a dual-tone
    crosshair reads as a precision pointer instead of blending into the warm flashlight glow */
-#dot{position:fixed;top:var(--my,38vh);left:var(--mx,50vw);width:0;height:0;pointer-events:none;z-index:7;}
+#dot{position:fixed;top:var(--doty,38vh);left:var(--dotx,50vw);width:0;height:0;pointer-events:none;z-index:7;}
 #dot i{position:absolute;background:#fffaf0;border-radius:1px;
   box-shadow:0 0 0 1px rgba(20,16,10,.6),0 0 3px 1px rgba(255,246,220,.65);}
 #dot i:nth-child(1),#dot i:nth-child(2){width:1.5px;height:5px;margin-left:-.75px;}
@@ -468,19 +468,22 @@ document.fonts.ready.then(()=>{
     if(window.innerWidth===lastW)return;
     lastW=window.innerWidth; re();
   });
-  // mouse-following light source with a slight lag — the beam eases toward the
-  // pointer instead of snapping to it, which reads as a physical flashlight
-  // rather than a spotlight glued to the cursor
+  // crosshair tracks the pointer 1:1 via its own vars — it IS the cursor (cursor:none),
+  // so any lag there reads as broken aiming. Only the light pool eases, with a factor
+  // tight enough to feel like weight, not drift, snapping the last px to the pointer.
   let tx=innerWidth/2, ty=innerHeight*0.38, cx=tx, cy=ty, raf=0;
   function beamStep(){
     raf=0;
-    cx+=(tx-cx)*0.18; cy+=(ty-cy)*0.18;
+    cx+=(tx-cx)*0.4; cy+=(ty-cy)*0.4;
+    if(Math.abs(tx-cx)<=1&&Math.abs(ty-cy)<=1){cx=tx;cy=ty;}
     const st=document.documentElement.style;
     st.setProperty('--mx',cx+'px'); st.setProperty('--my',cy+'px');
-    if(Math.abs(tx-cx)>0.5||Math.abs(ty-cy)>0.5)raf=requestAnimationFrame(beamStep);
+    if(cx!==tx||cy!==ty)raf=requestAnimationFrame(beamStep);
   }
   window.addEventListener('mousemove',e=>{
     tx=e.clientX; ty=e.clientY;
+    const st=document.documentElement.style;
+    st.setProperty('--dotx',tx+'px'); st.setProperty('--doty',ty+'px');
     if(!raf)raf=requestAnimationFrame(beamStep);
   },{passive:true});
 });
