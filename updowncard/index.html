@@ -8,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     * {
@@ -106,25 +107,6 @@
       background: rgba(185, 255, 102, 0.12);
       color: #B9FF66;
     }
-
-    /* Rating buttons */
-    .rating-btn {
-      flex: 1;
-      padding: 0.65rem 0.5rem;
-      border-radius: 0.9rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      transition: transform 0.15s, background 0.2s, border-color 0.2s;
-      border: 1px solid #3f3f46;
-      background: #18181b;
-      color: #a1a1aa;
-    }
-    .rating-btn:hover { transform: translateY(-1px); }
-    .rating-btn .sub { display: block; font-size: 0.65rem; font-weight: 400; opacity: 0.7; margin-top: 2px; }
-    .rating-again:hover { border-color: #f87171; color: #f87171; }
-    .rating-hard:hover { border-color: #fbbf24; color: #fbbf24; }
-    .rating-good:hover { border-color: #B9FF66; color: #B9FF66; }
 
     /* Field config segmented control */
     .field-mode-btn {
@@ -272,13 +254,13 @@
                   <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
                     <i data-lucide="chevron-up" class="w-4 h-4 text-lime-brand"></i>
                   </div>
-                  <span>Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> to reveal, then rate your memory</span>
+                  <span>Know it? Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> for the next card</span>
                 </div>
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
                     <i data-lucide="chevron-down" class="w-4 h-4 text-lime-brand"></i>
                   </div>
-                  <span>Swipe down or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↓</kbd> to reveal</span>
+                  <span>Not sure? Swipe down, tap, or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↓</kbd> to reveal — that marks it for review</span>
                 </div>
               </div>
             </div>
@@ -304,23 +286,8 @@
 
     <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4">
       <div class="max-w-2xl mx-auto">
-        <!-- Rating bar (shown after reveal) -->
-        <div id="ratingBar" class="hidden flex gap-3 mb-3 display-font">
-          <button class="rating-btn rating-again" data-rating="0">
-            Again
-            <span class="sub">&lt; 10 min · key 1</span>
-          </button>
-          <button class="rating-btn rating-hard" data-rating="1">
-            Hard
-            <span class="sub">key 2</span>
-          </button>
-          <button class="rating-btn rating-good" data-rating="2">
-            Good
-            <span class="sub">key 3</span>
-          </button>
-        </div>
         <div id="revealHint" class="flex justify-center">
-          <span class="text-sm text-zinc-600 display-font">Reveal the card, then rate how well you knew it</span>
+          <span class="text-sm text-zinc-600 display-font">Know it? Swipe up. Not sure? Tap or swipe down to reveal</span>
         </div>
       </div>
     </footer>
@@ -345,7 +312,7 @@
             "Why not learn authentic English expressions while mastering top-tier product thinking at the same time?" That is why I built this website.
           </p>
           <p class="text-zinc-300 leading-relaxed">
-            Swipe to reveal a card, then rate how well you knew it. The app schedules your next review with spaced repetition. It's like flashcards, but more TikTok-y.
+            Swipe up if you know a card; tap or swipe down to reveal the answer — revealing marks it for review. It's like flashcards, but more TikTok-y.
           </p>
           <div class="pt-4 border-t border-zinc-800">
             <a href="https://x.com/imvanessali" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-lime-brand hover:underline display-font">
@@ -705,6 +672,72 @@
       };
     }
 
+    // ---------- Supabase cloud backend ----------
+    // Fills the same { getItem, setItem, removeItem } contract as localStorage,
+    // backed by the public.udc_store KV table (see supabase_setup.sql).
+    // Reads/writes go through an in-memory cache so the storage interface
+    // stays synchronous; writes are upserted to Supabase in the background.
+    //
+    // Setup: create a Supabase project, run supabase_setup.sql, then paste
+    // the project's URL and anon key below (anon key is safe to ship —
+    // row level security restricts every row to its owner).
+
+    const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    function isSupabaseConfigured() {
+      return SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0;
+    }
+
+    // client: a @supabase/supabase-js client. userId: auth.users id.
+    function createSupabaseBackend(client, userId) {
+      const cache = {}; // key -> string, mirrors what localStorage would hold
+      const TABLE = 'udc_store';
+
+      function push(key, stringValue) {
+        Promise.resolve(
+          client.from(TABLE).upsert({
+            user_id: userId,
+            key: key,
+            value: JSON.parse(stringValue),
+            updated_at: new Date().toISOString()
+          })
+        ).then(({ error }) => { if (error) console.warn('cloud save failed for ' + key, error); })
+         .catch(err => console.warn('cloud save failed for ' + key, err));
+      }
+
+      return {
+        // Must be awaited once after sign-in, before the backend is used.
+        load() {
+          return Promise.resolve(client.from(TABLE).select('key,value').eq('user_id', userId))
+            .then(({ data, error }) => {
+              if (error) { console.warn('cloud load failed', error); return; }
+              (data || []).forEach(row => { cache[row.key] = JSON.stringify(row.value); });
+            });
+        },
+        getItem(k) { return k in cache ? cache[k] : null; },
+        setItem(k, v) { cache[k] = String(v); push(k, cache[k]); },
+        removeItem(k) {
+          delete cache[k];
+          Promise.resolve(client.from(TABLE).delete().eq('user_id', userId).eq('key', k))
+            .then(({ error }) => { if (error) console.warn('cloud delete failed for ' + key, error); })
+            .catch(err => console.warn('cloud delete failed for ' + key, err));
+        }
+      };
+    }
+
+    // First sign-in on a device: copy local keys the cloud doesn't have yet.
+    // Existing cloud values always win (they may be newer, from other devices).
+    function migrateLocalToCloud(localBackend, cloudBackend, keyPrefix) {
+      const src = localBackend || {};
+      Object.keys(src).filter(k => k.indexOf(keyPrefix) === 0).forEach(k => {
+        if (cloudBackend.getItem(k) === null) {
+          const v = src[k];
+          if (v !== null && v !== undefined) cloudBackend.setItem(k, v);
+        }
+      });
+    }
+
     // ---------- AI deck-builder prompt ----------
 
     const DECK_BUILDER_PROMPT = [
@@ -739,7 +772,9 @@
         DAY_MS, NEW_CARDS_PER_SESSION, MASTERY_INTERVAL_DAYS, RATING,
         validateDeck, reviewCard, isDue, classifyCard,
         shuffle, buildSessionQueue, deckStats, resolveFieldConfig,
-        createMemoryBackend, createStorage, DECK_BUILDER_PROMPT
+        createMemoryBackend, createStorage, DECK_BUILDER_PROMPT,
+        SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured,
+        createSupabaseBackend, migrateLocalToCloud
       };
     }
 
@@ -750,7 +785,8 @@
 
       lucide.createIcons();
 
-      const storage = createStorage(typeof localStorage !== 'undefined' ? localStorage : createMemoryBackend());
+      const localBackend = typeof localStorage !== 'undefined' ? localStorage : createMemoryBackend();
+      let storage = createStorage(localBackend);
 
       // One-time migration: uploaded decks used to live in sessionStorage.
       try {
@@ -776,6 +812,11 @@
       };
 
       let decks = [];
+
+      function reloadDecks() {
+        decks = [BUILTIN_DECK].concat(storage.loadUploadedDecks().filter(d => d && d.data && Array.isArray(d.data.cards)));
+        renderDeckGrid();
+      }
 
       function initLibrary() {
         decks = [BUILTIN_DECK].concat(storage.loadUploadedDecks().filter(d => d && d.data && Array.isArray(d.data.cards)));
@@ -936,7 +977,6 @@
       const totalCardsEl = document.getElementById('totalCards');
       const progressCircle = document.getElementById('progressCircle');
       const instructionsArea = document.getElementById('instructionsArea');
-      const ratingBar = document.getElementById('ratingBar');
       const revealHint = document.getElementById('revealHint');
       const sessionDone = document.getElementById('sessionDone');
 
@@ -1026,30 +1066,38 @@
         return fieldCfg.fields.some(k => k !== fieldCfg.titleField && fieldCfg.modes[k] === 'blurred' && card[k] !== undefined);
       }
 
-      function revealCard() {
-        if (revealed || inputLocked) return;
-        revealed = true;
-        const blurEl = document.getElementById('blurredContent');
-        if (blurEl) blurEl.classList.remove('blurred');
-        ratingBar.classList.remove('hidden');
-        ratingBar.classList.add('flex');
-        revealHint.classList.add('hidden');
-        instructionsArea.style.display = 'none';
-      }
-
-      function rateCard(rating) {
-        if (inputLocked) return;
-        if (!revealed) { revealCard(); return; }
+      // Implicit zero-button grading:
+      //   swipe up / ArrowUp without revealing  = knew it  (Good)  -> next card
+      //   reveal (swipe down / tap / Space / ArrowDown)   = didn't know (Again) -> resurfaces later
+      //   swipe up after revealing              = just move on (already graded)
+      function gradeCurrent(rating) {
         const cardIdx = currentCardIndex();
         progress.cards[cardIdx] = reviewCard(progress.cards[cardIdx], rating);
         storage.saveProgress(currentDeck.id, progress);
         sessionCounts[rating]++;
-
         // "Again" cards resurface a few cards later in this session.
         if (rating === RATING.AGAIN) {
           sessionQueue.splice(Math.min(sessionPos + 4, sessionQueue.length), 0, cardIdx);
           totalCardsEl.textContent = sessionQueue.length;
         }
+      }
+
+      function revealCard() {
+        if (revealed || inputLocked) return;
+        const card = currentDeck.data.cards[currentCardIndex()];
+        revealed = true;
+        const blurEl = document.getElementById('blurredContent');
+        if (blurEl) blurEl.classList.remove('blurred');
+        revealHint.classList.add('hidden');
+        instructionsArea.style.display = 'none';
+        // Needing the answer counts as "Again" — but only when there was
+        // something hidden to ask for.
+        if (hasBlurredContent(card)) gradeCurrent(RATING.AGAIN);
+      }
+
+      function advanceCard() {
+        if (inputLocked || !sessionDone.classList.contains('hidden')) return;
+        if (!revealed) gradeCurrent(RATING.GOOD);
         goToNextCard();
       }
 
@@ -1062,8 +1110,6 @@
             return;
           }
           revealed = false;
-          ratingBar.classList.add('hidden');
-          ratingBar.classList.remove('flex');
           revealHint.classList.remove('hidden');
           updateCard();
           animateCardEnter(() => { inputLocked = false; });
@@ -1091,13 +1137,11 @@
         inputLocked = false;
         swipeCard.classList.add('hidden');
         sessionDone.classList.remove('hidden');
-        ratingBar.classList.add('hidden');
-        ratingBar.classList.remove('flex');
         revealHint.classList.remove('hidden');
         const reviewed = sessionCounts[0] + sessionCounts[1] + sessionCounts[2];
         document.getElementById('sessionDoneStats').textContent = nothingDue
           ? 'Nothing due right now — every card in this deck is scheduled for later. Come back tomorrow!'
-          : reviewed + ' reviewed · ' + sessionCounts[2] + ' Good · ' + sessionCounts[1] + ' Hard · ' + sessionCounts[0] + ' Again';
+          : reviewed + ' reviewed · ' + sessionCounts[2] + ' knew it · ' + sessionCounts[0] + ' needed a reveal';
         gsap.fromTo(sessionDone, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' });
         lucide.createIcons();
       }
@@ -1112,11 +1156,6 @@
       function animateCardEnter(onDone) {
         gsap.fromTo(swipeCard, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out', onComplete: onDone });
       }
-
-      // Rating buttons
-      ratingBar.querySelectorAll('.rating-btn').forEach(btn => {
-        btn.addEventListener('click', () => rateCard(Number(btn.dataset.rating)));
-      });
 
       // Swipe & keyboard
       swipeCard.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -1148,17 +1187,18 @@
         swipeCard.style.transition = 'transform 0.25s ease-out, opacity 0.25s ease-out';
         swipeCard.style.transform = 'translate3d(0, 0, 0)';
         swipeCard.style.opacity = 1;
-        if (deltaY > 40) revealCard();
-        else if (deltaY < -40) { revealed ? rateCard(RATING.GOOD) : revealCard(); }
+        if (Math.abs(deltaY) < 10) revealCard();      // tap = reveal
+        else if (deltaY < -40) advanceCard();         // swipe up = knew it / next
+        else if (deltaY > 40) revealCard();           // swipe down = reveal
       }
+
+      // Desktop: click the card to reveal (same as tap on mobile).
+      swipeCard.addEventListener('click', () => revealCard());
 
       document.addEventListener('keydown', (e) => {
         if (!document.getElementById('studyView').classList.contains('active')) return;
-        if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); revealCard(); }
-        else if (e.key === 'ArrowUp') { revealed ? rateCard(RATING.GOOD) : revealCard(); }
-        else if (revealed && (e.key === '1' || e.key === '2' || e.key === '3')) {
-          rateCard(Number(e.key) - 1);
-        }
+        if (e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); revealCard(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); advanceCard(); }
       });
 
       document.getElementById('backBtn').addEventListener('click', () => {
@@ -1264,6 +1304,41 @@
         openModal(errorsModal);
       }
 
+      // ==================== AUTH / CLOUD SYNC ====================
+      // NOTE: the sync UI (header button + auth modal) is intentionally not
+      // shipped yet — the backend below is dormant until SUPABASE_URL /
+      // SUPABASE_ANON_KEY are filled in and the UI is re-added.
+
+      let sbClient = null;
+      let sbUser = null;
+
+      function initAuth() {
+        if (!isSupabaseConfigured() || typeof window.supabase === 'undefined') return;
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        sbClient.auth.onAuthStateChange((event, session) => {
+          if (session && session.user) enterCloudMode(session.user);
+          else leaveCloudMode();
+        });
+      }
+
+      async function enterCloudMode(user) {
+        sbUser = user;
+        const cloudBackend = createSupabaseBackend(sbClient, user.id);
+        await cloudBackend.load();
+        // First sign-in on this device: push local data the cloud doesn't have.
+        migrateLocalToCloud(localBackend, cloudBackend, 'udc.');
+        storage = createStorage(cloudBackend);
+        reloadDecks();
+      }
+
+      function leaveCloudMode() {
+        sbUser = null;
+        storage = createStorage(localBackend);
+        reloadDecks();
+      }
+
       // ==================== MODALS ====================
 
       function openModal(modal) {
@@ -1359,6 +1434,7 @@
 
       // ==================== INIT ====================
 
+      initAuth();
       initLibrary();
     }
   </script>
