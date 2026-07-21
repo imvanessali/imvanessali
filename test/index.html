@@ -222,7 +222,14 @@
       flex-shrink: 0;
     }
     .item .body { color: #c9c9cf; font-size: 0.95rem; }
-    .item .body strong { color: var(--text); font-weight: 500; }
+    .item .body strong {
+      display: block;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .item .body .sub { color: var(--muted); font-size: 0.88rem; }
 
     /* ---------- products ---------- */
     .product-grid {
@@ -340,7 +347,7 @@
     <!-- hero -->
     <section class="hero">
       <p class="hello">你好，我是</p>
-      <h1>郦橙<span class="en">VANESSA LI · 锦妖 · IMVANESSALI<span class="cursor"></span></span></h1>
+      <h1>郦橙<span class="en">VANESSA LI · 锦妖<span class="cursor"></span></span></h1>
       <div class="roles">
         <p class="role"><strong>Nike 大中华区 AI 产品负责人</strong> — 推动 AI 在企业落地</p>
         <p class="role"><strong>TikTok 最早的产品经理之一</strong> — From Millions to 1B DAU</p>
@@ -401,19 +408,19 @@
       <div class="item-list">
         <div class="item">
           <span class="marker">→</span>
-          <p class="body"><strong>打造全球化产品</strong> — 在 TikTok 完整经历了一款产品从数百万到十亿 DAU 的增长过程。理解创作者、内容生态和全球化挑战。</p>
+          <p class="body"><strong>打造全球化产品</strong><span class="sub">在 TikTok 完整经历了一款产品从数百万到十亿 DAU 的增长过程。理解创作者、内容生态和全球化挑战。</span></p>
         </div>
         <div class="item">
           <span class="marker">→</span>
-          <p class="body"><strong>行业内的 AI 转型</strong> — 目前在 Nike 负责 AI 产品，探索 AI 在零售体验、市场营销、供应链、财务等领域的应用。</p>
+          <p class="body"><strong>行业内的 AI 转型</strong><span class="sub">目前在 Nike 负责 AI 产品，探索 AI 在零售体验、市场营销、供应链、财务等领域的应用。</span></p>
         </div>
         <div class="item">
           <span class="marker">→</span>
-          <p class="body"><strong>产品设计研发全栈</strong> — 曾是 UI、UX、用研、用户侧 PM、策略 PM、AI PM，现在还有个身份是 AI 加持下的非常初级的研发。</p>
+          <p class="body"><strong>产品设计研发全栈</strong><span class="sub">曾是 UI、UX、用研、用户侧 PM、策略 PM、AI PM，现在还有个身份是 AI 加持下的非常初级的研发。</span></p>
         </div>
         <div class="item">
           <span class="marker">→</span>
-          <p class="body"><strong>探索 AI OPC 之路</strong> — 一边创造，一边思考，一边踩坑，一边成长，是努力跟上 AI 节奏的超级个体。</p>
+          <p class="body"><strong>探索 AI OPC 之路</strong><span class="sub">一边创造，一边思考，一边踩坑，一边成长，是努力跟上 AI 节奏的超级个体。</span></p>
         </div>
       </div>
     </section>
@@ -458,7 +465,7 @@
           <span class="desc">用星系展示知识点</span>
         </a>
         <a class="product-card wide" href="https://bit.ly/imvanessaliAI" target="_blank" rel="noopener">
-          <span class="name">飞书笔记 <span class="arrow">↗</span></span>
+          <span class="name">AI实践记录 <span class="arrow">↗</span></span>
           <span class="desc">我在飞书文档上的零散记录</span>
         </a>
       </div>
