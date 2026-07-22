@@ -162,7 +162,10 @@
           </div>
           <span class="text-lg font-semibold tracking-tight display-font text-white">UpDownCard</span>
         </div>
-        <div class="flex items-center gap-5">
+        <div class="flex items-center justify-center flex-wrap gap-x-5 gap-y-1">
+          <button id="howItWorksLink" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+            How it works
+          </button>
           <button id="dashboardLink" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
             Progress
           </button>
@@ -444,6 +447,71 @@
           <h2 class="text-2xl font-semibold display-font text-white">Card fields</h2>
           <p class="text-zinc-400 text-sm leading-relaxed">Choose which field is the title, and how each other field shows: <span class="text-zinc-200">Visible</span> always, <span class="text-zinc-200">Blurred</span> until reveal, or <span class="text-zinc-200">Hidden</span>. Saved per deck.</p>
           <div id="fieldsList" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Modal (first visit) -->
+  <div id="onboardModal" class="fixed inset-0 z-[110] hidden">
+    <div class="absolute inset-0 bg-black/85 backdrop-blur-sm" id="onboardModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-md w-full p-8 sm:p-10 relative">
+        <button id="closeOnboardModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+
+        <!-- Step 1: how to study -->
+        <div class="onboard-step space-y-5" data-step="0">
+          <div class="w-12 h-12 rounded-2xl bg-lime-brand/10 flex items-center justify-center">
+            <i data-lucide="chevrons-up-down" class="w-6 h-6 text-lime-brand"></i>
+          </div>
+          <h2 class="text-2xl font-semibold display-font text-white">Swipe to memorize</h2>
+          <div class="space-y-3 text-sm text-zinc-400 leading-relaxed">
+            <p><span class="text-white">Know the card?</span> Swipe up — it moves on and gets scheduled further out.</p>
+            <p><span class="text-white">Not sure?</span> Tap or swipe down to reveal the answer. Revealing marks the card for review, and it will resurface in this session.</p>
+            <p class="text-zinc-500">That's the whole mechanic. No buttons, no typing.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: make a deck with AI -->
+        <div class="onboard-step hidden space-y-5" data-step="1">
+          <div class="w-12 h-12 rounded-2xl bg-lime-brand/10 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-6 h-6 text-lime-brand"></i>
+          </div>
+          <h2 class="text-2xl font-semibold display-font text-white">Turn anything into a deck</h2>
+          <div class="space-y-3 text-sm text-zinc-400 leading-relaxed">
+            <p>Take any material — notes, an article, a transcript, a textbook chapter — and paste it into <span class="text-white">your own AI</span> (ChatGPT, Claude, Kimi, anything) together with our ready-made prompt.</p>
+            <p>The AI hands you back a deck file, in exactly the format this app reads.</p>
+          </div>
+          <button id="onboardCopyPrompt" class="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm display-font transition-colors flex items-center justify-center gap-2">
+            <i data-lucide="copy" class="w-4 h-4 text-lime-brand"></i>
+            <span>Copy the prompt</span>
+          </button>
+        </div>
+
+        <!-- Step 3: upload -->
+        <div class="onboard-step hidden space-y-5" data-step="2">
+          <div class="w-12 h-12 rounded-2xl bg-lime-brand/10 flex items-center justify-center">
+            <i data-lucide="upload" class="w-6 h-6 text-lime-brand"></i>
+          </div>
+          <h2 class="text-2xl font-semibold display-font text-white">Upload & start swiping</h2>
+          <div class="space-y-3 text-sm text-zinc-400 leading-relaxed">
+            <p>Save the AI's reply as a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file, then tap the <span class="text-white">+</span> card in your library to upload it.</p>
+            <p>If the format is off, we tell you exactly what's wrong — paste the error back to the AI and it'll fix the file.</p>
+            <p class="text-zinc-500">Your memory progress is tracked on the Progress page.</p>
+          </div>
+        </div>
+
+        <!-- Footer: skip / dots / next -->
+        <div class="flex items-center justify-between mt-8">
+          <button id="onboardSkip" class="text-sm text-zinc-600 hover:text-zinc-400 transition-colors display-font">Skip</button>
+          <div id="onboardDots" class="flex gap-1.5">
+            <span class="onboard-dot w-1.5 h-1.5 rounded-full bg-lime-brand transition-colors"></span>
+            <span class="onboard-dot w-1.5 h-1.5 rounded-full bg-zinc-700 transition-colors"></span>
+            <span class="onboard-dot w-1.5 h-1.5 rounded-full bg-zinc-700 transition-colors"></span>
+          </div>
+          <button id="onboardNext" class="px-5 py-2.5 rounded-xl bg-lime-brand text-black text-sm font-semibold display-font hover:opacity-90 transition-opacity">Next</button>
         </div>
       </div>
     </div>
@@ -1397,6 +1465,57 @@
         openModal(promptModal);
       });
 
+      // ==================== ONBOARDING ====================
+
+      const ONBOARD_KEY = 'udc.onboarded.v1';
+      const onboardModal = document.getElementById('onboardModal');
+      let onboardStep = 0;
+
+      function showOnboardStep(i) {
+        onboardStep = i;
+        document.querySelectorAll('.onboard-step').forEach(el => {
+          el.classList.toggle('hidden', Number(el.dataset.step) !== i);
+        });
+        document.querySelectorAll('.onboard-dot').forEach((el, j) => {
+          el.classList.toggle('bg-lime-brand', j === i);
+          el.classList.toggle('bg-zinc-700', j !== i);
+        });
+        document.getElementById('onboardNext').textContent = i === 2 ? 'Get started' : 'Next';
+        lucide.createIcons();
+      }
+
+      function openOnboarding() {
+        showOnboardStep(0);
+        openModal(onboardModal);
+      }
+
+      // Any dismissal marks onboarding as seen — it never force-shows again.
+      function closeOnboarding() {
+        try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) {}
+        closeModalFn(onboardModal);
+      }
+
+      document.getElementById('howItWorksLink').addEventListener('click', openOnboarding);
+      document.getElementById('onboardNext').addEventListener('click', () => {
+        if (onboardStep < 2) showOnboardStep(onboardStep + 1);
+        else closeOnboarding();
+      });
+      document.getElementById('onboardSkip').addEventListener('click', closeOnboarding);
+      document.getElementById('closeOnboardModal').addEventListener('click', closeOnboarding);
+      document.getElementById('onboardModalOverlay').addEventListener('click', closeOnboarding);
+      document.getElementById('onboardCopyPrompt').addEventListener('click', function() {
+        copyText(DECK_BUILDER_PROMPT, this.querySelector('span'), 'Copy the prompt');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !onboardModal.classList.contains('hidden')) closeOnboarding();
+      });
+
+      function maybeShowOnboarding() {
+        let seen = null;
+        try { seen = localStorage.getItem(ONBOARD_KEY); } catch (e) {}
+        if (!seen) setTimeout(openOnboarding, 500);
+      }
+
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') allModals.forEach(m => { if (!m.classList.contains('hidden')) closeModalFn(m); });
       });
@@ -1436,6 +1555,7 @@
 
       initAuth();
       initLibrary();
+      maybeShowOnboarding();
     }
   </script>
 </body>
