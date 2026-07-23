@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>UpDownCard | Memorize Everything by Swiping Up & Down</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="./assets/index-BVjb0JmH.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Chlwg214.css">
+</head>
+<body class="min-h-screen text-white antialiased selection:bg-[#B9FF66] selection:text-black">
+  <div class="grain-overlay"></div>
+
+  <!-- ==================== LIBRARY VIEW ==================== -->
+  <div id="libraryView" class="view active">
+    <header class="px-6 pt-8 pb-4">
+      <div class="max-w-2xl mx-auto flex flex-col items-center gap-2">
+        <div class="flex items-center gap-2">
+          <div class="relative w-3 h-4" style="transform: rotate(10deg);">
+            <div class="w-full h-full rounded-sm" style="background-color: #B9FF66; transform: translateY(-2px);"></div>
+          </div>
+          <span class="text-lg font-semibold tracking-tight display-font text-white">UpDownCard</span>
+        </div>
+        <button id="aboutLinkLib" class="text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          Why I built this?
+        </button>
+      </div>
+    </header>
+
+    <main class="px-6 pb-20">
+      <div class="max-w-2xl mx-auto">
+        <div id="deckGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <!-- Decks rendered by JS -->
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b] to-transparent">
+      <div class="max-w-2xl mx-auto flex justify-center gap-6">
+        <button id="shareBtnLib" class="flex items-center gap-2 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="share" class="w-4 h-4"></i>
+          <span>Share</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== STUDY VIEW ==================== -->
+  <div id="studyView" class="view">
+    <header class="fixed top-0 left-0 right-0 z-50 px-6 py-5">
+      <div class="max-w-2xl mx-auto flex items-center justify-between">
+        <button id="backBtn" class="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>Decks</span>
+        </button>
+        <span id="deckTitle" class="text-sm text-zinc-500 display-font truncate max-w-[50%]"></span>
+        <div class="w-16"></div>
+      </div>
+    </header>
+
+    <main class="min-h-screen flex items-center justify-center px-4 pt-20 pb-16">
+      <div class="card-container w-full max-w-2xl">
+        <div id="swipeCard" class="swipe-card">
+          <div class="flex items-center justify-center gap-2 mb-2.5">
+            <svg class="progress-ring w-5 h-5" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="14" fill="none" stroke="#27272a" stroke-width="4"/>
+              <circle id="progressCircle" cx="18" cy="18" r="14" fill="none" stroke="#B9FF66" stroke-width="4" 
+                      stroke-dasharray="88" stroke-dashoffset="70.4" stroke-linecap="round"/>
+            </svg>
+            <span class="text-sm text-zinc-500 display-font whitespace-nowrap">
+              <span id="currentIndex">1</span>/<span id="totalCards">5</span>
+            </span>
+          </div>
+          <div id="cardInner" class="card-inner rounded-[32px] p-6 sm:p-8 card-shadow">
+            <div id="cardFields"></div>
+            <div id="instructionsArea" class="mt-6 pt-6 border-t border-zinc-800/50">
+              <div class="flex flex-col gap-3 text-sm text-white">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="chevron-up" class="w-4 h-4 text-lime-brand"></i>
+                  </div>
+                  <span>Swipe up or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↑</kbd> for next card</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-lime-brand"></i>
+                  </div>
+                  <span>Swipe down or press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">↓</kbd> to reveal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 z-50 px-6 py-4">
+      <div class="max-w-2xl mx-auto flex justify-center gap-6">
+        <button id="shareBtn" class="flex items-center gap-2 text-sm text-zinc-500 hover:text-lime-brand transition-colors display-font">
+          <i data-lucide="share" class="w-4 h-4"></i>
+          <span>Share</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="modalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative">
+        <button id="closeModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">Why I built this?</h2>
+          <p class="text-zinc-300 leading-relaxed">
+            All sentences are sourced from podcast transcripts generously made public by <a href="https://x.com/lennysan" target="_blank" rel="noopener noreferrer" class="text-lime-brand hover:underline">Lenny</a>.
+          </p>
+          <p class="text-zinc-300 leading-relaxed">
+            "Why not learn authentic English expressions while mastering top-tier product thinking at the same time?" That is why I built this website.
+          </p>
+          <p class="text-zinc-300 leading-relaxed">
+            Swipe up for the next card, and swipe down to reveal hidden content. It's like flashcards, but more TikTok-y.
+          </p>
+          <div class="pt-4 border-t border-zinc-800">
+            <a href="https://x.com/imvanessali" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-lime-brand hover:underline display-font">
+              Built by @imvanessali
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Format Guide Modal -->
+  <div id="formatModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="formatModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
+        <button id="closeFormatModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
+        </button>
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold display-font text-white">JSON Format Guide</h2>
+          <div class="space-y-4">
+            <p class="text-zinc-300 leading-relaxed">Upload a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file to create your own flashcard deck. Your file should follow this structure:</p>
+            <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
+              <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">{
+  <span class="text-lime-brand">"_title"</span>: <span class="text-amber-400">"word"</span>,
+  <span class="text-lime-brand">"_blur"</span>: [<span class="text-amber-400">"meaning"</span>, <span class="text-amber-400">"sentence"</span>],
+  <span class="text-lime-brand">"cards"</span>: [
+    {
+      <span class="text-zinc-500">"word"</span>: <span class="text-amber-400">"abandon"</span>,
+      <span class="text-zinc-500">"phonetic"</span>: <span class="text-amber-400">"/əˈbændən/"</span>,
+      <span class="text-zinc-500">"meaning"</span>: <span class="text-amber-400">"放弃"</span>,
+      <span class="text-zinc-500">"sentence"</span>: <span class="text-amber-400">"Never abandon your dreams."</span>
+    }
+  ]
+}</code></pre>
+            </div>
+            <div class="space-y-3">
+              <h3 class="text-lg font-semibold display-font text-white">Three config fields</h3>
+              <div class="space-y-2">
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_title</code>
+                  <p class="text-zinc-400 text-sm">Which field to show as the card heading (always visible). Defaults to the first field if omitted.</p>
+                </div>
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_blur</code>
+                  <p class="text-zinc-400 text-sm">Array of field names to blur-hide initially. Swipe down to reveal. All other fields stay visible.</p>
+                </div>
+                <div class="flex gap-3">
+                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">cards</code>
+                  <p class="text-zinc-400 text-sm">Array of card objects. Each card can have any fields you want — they'll be rendered automatically.</p>
+                </div>
+              </div>
+              <p class="text-zinc-500 text-sm">Only this object-based schema is supported.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for upload -->
+  <input type="file" id="fileInput" accept=".json" class="hidden">
+
+</body>
+</html>
