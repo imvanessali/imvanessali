@@ -7,8 +7,8 @@
   <title>UpDownCard | Memorize Everything by Swiping Up & Down</title>
   <link rel="canonical" href="https://imvanessa.li/Up-Down-Cards/">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-BVjb0JmH.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Chlwg214.css">
+  <script type="module" crossorigin src="./assets/index-CunKQB1j.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-COPO403c.css">
 </head>
 <body class="min-h-screen text-white antialiased selection:bg-[#B9FF66] selection:text-black">
   <div class="grain-overlay"></div>
@@ -138,20 +138,46 @@
     </div>
   </div>
 
-  <!-- Format Guide Modal -->
-  <div id="formatModal" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="formatModalOverlay"></div>
-    <div class="relative min-h-screen flex items-center justify-center p-6">
-      <div class="about-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-xl w-full p-8 sm:p-10 relative max-h-[85vh] overflow-y-auto">
-        <button id="closeFormatModal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
+  <!-- Custom Upload Modal -->
+  <div id="uploadModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="uploadModalOverlay"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-3 sm:p-6">
+      <div class="about-modal-content upload-modal-content bg-[#111113] border border-zinc-800 rounded-[24px] max-w-3xl w-full relative max-h-[92vh] overflow-y-auto">
+        <button id="closeUploadModal" aria-label="Close custom upload" class="absolute z-10 top-4 right-4 w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">
           <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
         </button>
-        <div class="space-y-6">
-          <h2 class="text-2xl font-semibold display-font text-white">JSON Format Guide</h2>
-          <div class="space-y-4">
-            <p class="text-zinc-300 leading-relaxed">Upload a <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-lime-brand font-mono text-xs">.json</code> file to create your own flashcard deck. Your file should follow this structure:</p>
-            <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 overflow-x-auto">
-              <pre class="text-sm font-mono leading-relaxed"><code class="text-zinc-300">{
+        <div class="p-6 sm:p-10">
+          <div class="pr-12 mb-8">
+            <p class="text-lime-brand display-font text-xs font-semibold uppercase tracking-[0.18em] mb-2">Custom deck</p>
+            <h2 class="text-2xl sm:text-3xl font-semibold display-font text-white">Prepare a deck that works</h2>
+            <p class="text-zinc-400 mt-2 leading-relaxed">Follow these three steps, then upload your JSON file. We’ll check the structure before adding it to your library.</p>
+          </div>
+
+          <div class="upload-steps grid sm:grid-cols-3 gap-3 mb-8">
+            <section class="upload-step">
+              <span class="step-number">1</span>
+              <h3>Use one object</h3>
+              <p>Your file needs <code>_title</code>, <code>_blur</code>, and a non-empty <code>cards</code> list.</p>
+            </section>
+            <section class="upload-step">
+              <span class="step-number">2</span>
+              <h3>Keep fields consistent</h3>
+              <p>Every card must contain the field named by <code>_title</code>. Use the same field names throughout.</p>
+            </section>
+            <section class="upload-step">
+              <span class="step-number">3</span>
+              <h3>Choose what to hide</h3>
+              <p>Put answer fields in <code>_blur</code>. These are revealed when you swipe down.</p>
+            </section>
+          </div>
+
+          <div class="grid lg:grid-cols-[1.2fr_0.8fr] gap-4 items-stretch">
+            <div class="bg-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden">
+              <div class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+                <span class="display-font text-sm font-medium text-white">A compliant vocabulary deck</span>
+                <span class="text-xs text-zinc-600 display-font">template.json</span>
+              </div>
+              <pre class="upload-code p-5 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto"><code class="text-zinc-300">{
   <span class="text-lime-brand">"_title"</span>: <span class="text-amber-400">"word"</span>,
   <span class="text-lime-brand">"_blur"</span>: [<span class="text-amber-400">"meaning"</span>, <span class="text-amber-400">"sentence"</span>],
   <span class="text-lime-brand">"cards"</span>: [
@@ -164,23 +190,26 @@
   ]
 }</code></pre>
             </div>
-            <div class="space-y-3">
-              <h3 class="text-lg font-semibold display-font text-white">Three config fields</h3>
-              <div class="space-y-2">
-                <div class="flex gap-3">
-                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_title</code>
-                  <p class="text-zinc-400 text-sm">Which field to show as the card heading (always visible). Defaults to the first field if omitted.</p>
-                </div>
-                <div class="flex gap-3">
-                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">_blur</code>
-                  <p class="text-zinc-400 text-sm">Array of field names to blur-hide initially. Swipe down to reveal. All other fields stay visible.</p>
-                </div>
-                <div class="flex gap-3">
-                  <code class="text-lime-brand font-mono text-sm whitespace-nowrap">cards</code>
-                  <p class="text-zinc-400 text-sm">Array of card objects. Each card can have any fields you want — they'll be rendered automatically.</p>
-                </div>
+
+            <div class="upload-actions rounded-2xl border border-zinc-800 p-5 flex flex-col">
+              <h3 class="display-font font-semibold text-white">Before you upload</h3>
+              <ul class="upload-checklist mt-4 space-y-3 text-sm text-zinc-400">
+                <li><i data-lucide="check" class="w-4 h-4"></i><span>Saved as a <code>.json</code> file</span></li>
+                <li><i data-lucide="check" class="w-4 h-4"></i><span><code>cards</code> contains at least one card</span></li>
+                <li><i data-lucide="check" class="w-4 h-4"></i><span><code>_title</code> exists on every card</span></li>
+                <li><i data-lucide="check" class="w-4 h-4"></i><span>Every name in <code>_blur</code> is a card field</span></li>
+              </ul>
+              <div class="mt-auto pt-6 space-y-3">
+                <p id="uploadStatus" class="upload-status hidden" role="status"></p>
+                <button id="selectFileBtn" type="button" class="w-full bg-lime-brand text-zinc-950 rounded-xl px-4 py-3 display-font text-sm font-semibold hover:brightness-95 transition flex items-center justify-center gap-2">
+                  <i data-lucide="upload" class="w-4 h-4"></i>
+                  Choose JSON file
+                </button>
+                <button id="downloadTemplateBtn" type="button" class="w-full bg-zinc-800 text-zinc-200 rounded-xl px-4 py-3 display-font text-sm font-medium hover:bg-zinc-700 transition flex items-center justify-center gap-2">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  Download template
+                </button>
               </div>
-              <p class="text-zinc-500 text-sm">Only this object-based schema is supported.</p>
             </div>
           </div>
         </div>
