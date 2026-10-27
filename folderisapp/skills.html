@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folderis.app - 技能手册</title>
+  <link rel="icon" type="image/png" sizes="48x48" href="/folderisapp/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/folderisapp/icon-192.png">
+  <link rel="apple-touch-icon" href="/folderisapp/apple-touch-icon.png">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
+
+    :root {
+      --bg: #09080c;
+      --ink: #fff7ef;
+      --muted: rgba(255, 247, 239, 0.66);
+      --rule: rgba(255, 255, 255, 0.18);
+      --accent: #ff9f6b;
+      --accent2: #ac9eff;
+      --pointer-x: 0;
+      --pointer-y: 0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--bg);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Outfit", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .photo-bg {
+      position: fixed;
+      inset: -2.5vh -2.5vw;
+      z-index: -4;
+      background-image: url("/folderisapp/folderis-background.jpg");
+      background-position: center;
+      background-size: cover;
+      transform: translate3d(calc(var(--pointer-x) * -18px), calc(var(--pointer-y) * -14px), 0) scale(1.04);
+      transition: transform 180ms ease-out;
+    }
+
+    .shade {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(2, 2, 5, 0.86) 0%, rgba(4, 4, 9, 0.6) 45%, rgba(5, 4, 9, 0.35) 75%),
+        linear-gradient(0deg, rgba(2, 2, 5, 0.72) 0%, rgba(2, 2, 5, 0.3) 50%, rgba(2, 2, 5, 0.52) 100%);
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      opacity: 0.18;
+      mix-blend-mode: soft-light;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 3px 3px, 5px 5px;
+    }
+
+    .topbar {
+      position: fixed;
+      z-index: 5;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(18px, 2.4vw, 32px) clamp(20px, 3vw, 40px);
+      background: linear-gradient(180deg, rgba(9, 8, 12, 0.9) 0%, rgba(9, 8, 12, 0.78) 60%, rgba(9, 8, 12, 0.55) 100%);
+      backdrop-filter: blur(16px) saturate(1.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.6vw, 20px);
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(255, 247, 239, 0.72);
+      line-height: 1;
+      text-decoration: none;
+      transition: color 160ms ease, transform 160ms ease;
+    }
+
+    .back svg {
+      display: block;
+      width: clamp(20px, 1.7vw, 23px);
+      height: auto;
+    }
+
+    .back:hover {
+      color: var(--ink);
+      transform: translateX(-3px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 4px;
+      color: var(--ink);
+      font-size: clamp(1.2rem, 1.7vw, 1.55rem);
+      line-height: 0.82;
+      font-weight: 500;
+      text-decoration: none;
+      text-shadow: 0 16px 44px rgba(0, 0, 0, 0.5);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-badge,
+    .lang-toggle {
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      color: rgba(255, 247, 239, 0.9);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 680;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .lang-toggle {
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    .lang-toggle:hover {
+      color: #1a1310;
+      background: rgba(255, 247, 239, 0.92);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(120px, 16vh, 170px) 24px clamp(40px, 8vh, 80px);
+    }
+
+    .hero {
+      margin-bottom: clamp(48px, 8vh, 80px);
+    }
+
+    .kicker {
+      display: inline-block;
+      margin-bottom: 18px;
+      padding: 9px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 999px;
+      color: rgba(255, 247, 239, 0.9);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      font-size: 0.84rem;
+      font-weight: 680;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.4vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.01em;
+      text-shadow: 0 22px 72px rgba(0, 0, 0, 0.72);
+    }
+
+    html[lang="en"] .hero h1 {
+      font-weight: 600;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .step {
+      padding: 20px 22px;
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: var(--bg);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .step p {
+      color: rgba(255, 247, 239, 0.85);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .section {
+      margin-bottom: clamp(44px, 7vh, 68px);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .section-head .index {
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .section-desc {
+      margin: 0 0 18px 34px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .section > .note,
+    .section > .group-label:first-of-type,
+    .section > .cmd-list:first-of-type {
+      margin-top: 16px;
+    }
+
+    .note {
+      margin: 16px 0 18px;
+      padding: 14px 18px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      background: linear-gradient(90deg, rgba(255, 159, 107, 0.1), rgba(255, 255, 255, 0.03));
+      color: rgba(255, 247, 239, 0.82);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    .group-label {
+      margin: 24px 0 12px;
+      color: rgba(255, 247, 239, 0.55);
+      font-size: 0.8rem;
+      font-weight: 720;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .cmd-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      max-width: 100%;
+      padding: 11px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 18px 18px 4px 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)),
+        rgba(17, 13, 20, 0.42);
+      backdrop-filter: blur(18px) saturate(1.25);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      color: #fffaf5;
+      font-size: 0.94rem;
+      font-weight: 560;
+      line-height: 1.55;
+    }
+
+    .cmd-list .chip:nth-child(3n+2) {
+      background:
+        linear-gradient(135deg, rgba(255, 242, 193, 0.14), rgba(172, 158, 255, 0.08)),
+        rgba(18, 12, 22, 0.4);
+    }
+
+    .cmd-list .chip:nth-child(4n+3) {
+      background:
+        linear-gradient(135deg, rgba(255, 117, 75, 0.14), rgba(255, 255, 255, 0.06)),
+        rgba(18, 12, 22, 0.42);
+    }
+
+    .chip em {
+      font-style: normal;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .chip small {
+      color: var(--muted);
+      font-size: 0.84em;
+      font-weight: 480;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px 24px 56px;
+      color: rgba(255, 247, 239, 0.45);
+      font-size: 0.88rem;
+    }
+
+    footer .brand-footer {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: rgba(255, 247, 239, 0.7);
+      margin-bottom: 6px;
+    }
+
+    footer a {
+      color: rgba(255, 247, 239, 0.72);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 760px) {
+      .steps { grid-template-columns: 1fr; }
+      .section-desc { margin-left: 0; }
+      .chip { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="photo-bg" aria-hidden="true"></div>
+  <div class="shade" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="back" href="/folderisapp/" aria-label="返回首页"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></a>
+      <a class="brand" href="/folderisapp/">Folderis.app</a>
+    </div>
+    <div class="topbar-right">
+      <button class="lang-toggle" type="button" aria-label="Switch language">EN</button>
+    </div>
+  </header>
+
+  <main id="content"></main>
+
+  <footer>
+    <div class="brand-footer">Folderis.app</div>
+    <p data-role="footer-line">选中文件，告诉 Folderis 要做什么</p>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    window.addEventListener("pointermove", (event) => {
+      const x = event.clientX / window.innerWidth - 0.5;
+      const y = event.clientY / window.innerHeight - 0.5;
+      root.style.setProperty("--pointer-x", x.toFixed(3));
+      root.style.setProperty("--pointer-y", y.toFixed(3));
+    });
+
+    const ui = {
+      zh: {
+        metaTitle: "Folderis.app - 技能手册",
+        kicker: "内置 60+ 办公技能",
+        heroTitle: "Folderis 技能手册",
+        home: "返回首页",
+        footerLine: "选中文件，告诉 Folderis 要做什么",
+        langToggle: "EN",
+        langToggleAria: "Switch to English",
+      },
+      en: {
+        metaTitle: "Folderis.app - Skills Handbook",
+        kicker: "60+ built-in office skills",
+        heroTitle: "Folderis Skills Handbook",
+        home: "Back to home",
+        footerLine: "Pick your files, tell Folderis what to do",
+        langToggle: "中文",
+        langToggleAria: "切换到中文",
+      },
+    };
+
+    const steps = [
+      {
+        zh: "打开文件夹，选中一个或多个文件，然后在面板里描述你想要做的处理，也即“指令”。",
+        en: "Open a folder, select one or more files, then describe what you want done in the panel — that's your \"instruction\".",
+      },
+      {
+        zh: "处理结果会放在当前文件夹中，或者可以在指令里指定文件夹。",
+        en: "Results land in the current folder, or name a destination folder right in the instruction.",
+      },
+      {
+        zh: "历史对话记录与文件或文件夹绑定，再次选中的时候，可以看到之前的指令。",
+        en: "Conversation history is tied to each file or folder — select it again to see your previous instructions.",
+      },
+    ];
+
+    const sections = [
+      {
+        title: { zh: "图片处理", en: "Images" },
+        groups: [
+          {
+            label: { zh: "编辑", en: "Edit" },
+            items: [
+              { zh: "「这批图片背景全部抠掉」", en: "“Remove the background from all these images”" },
+              { zh: "「每张右下角加半透明水印：© 2026 Vanessa」", en: "“Add a translucent watermark to each bottom-right corner: © 2026 Vanessa”" },
+              { zh: "「全部顺时针转 90 度」／「全部水平翻转」", en: "“Rotate all 90° clockwise” / “Flip all horizontally”" },
+            ],
+          },
+          {
+            label: { zh: "压缩与转换", en: "Compress & convert" },
+            items: [
+              { zh: "「这批 PNG 视觉无损压缩一下」", en: "“Visually losslessly compress these PNGs”" },
+              { zh: "「这批 JPG 视觉无损压缩一下」<small>（JPG 真无损空间很小，默认高质量重编码）</small>", en: "“Visually losslessly compress these JPGs” <small>(true lossless JPG savings are tiny; defaults to high-quality re-encoding)</small>" },
+              { zh: "「全部转成 PNG」／「全部转 WebP」", en: "“Convert all to PNG” / “Convert all to WebP”" },
+              { zh: "「比例不变，改成宽 1920 px」", en: "“Resize to 1920 px wide, keep the aspect ratio”" },
+            ],
+          },
+          {
+            label: { zh: "提取与合成", en: "Extract & combine" },
+            items: [
+              { zh: "「这批截图挨个 OCR，每张出一个同名 txt」", en: "“OCR each of these screenshots into a same-named txt”" },
+              { zh: "「这批票据 OCR 之后把金额和日期整理成一个 Excel，再按类别汇总」", en: "“OCR these receipts, collect amounts and dates into one Excel, then summarize by category”" },
+              { zh: "「这几张图按顺序竖向拼成一张长图」", en: "“Stitch these images vertically into one long image, in order”" },
+              { zh: "「把这些图片按顺序合成一个 PDF」", en: "“Combine these images into one PDF, in order”" },
+            ],
+          },
+          {
+            label: { zh: "高级操作", en: "Advanced" },
+            items: [
+              { zh: "「从 (100,50) 裁 800×600」", en: "“Crop 800×600 starting at (100,50)”" },
+              { zh: "「这些长截图每张切 3 段」", en: "“Cut each of these long screenshots into 3 pieces”" },
+              { zh: "「这批 logo 各生成一个 .ico」", en: "“Generate an .ico from each of these logos”" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "文档处理", en: "Documents" },
+        groups: [
+          {
+            items: [
+              { zh: "「这几个 Word/TXT 按文件名顺序合并成一个」", en: "“Merge these Word/TXT files into one, in filename order”" },
+              { zh: "「这几份合同全部转成 PDF、加上“机密”水印，加密打包，密码 8888」", en: "“Convert these contracts to PDF, add a ‘Confidential’ watermark, and pack them encrypted with password 8888”" },
+              { zh: "「这批 txt 全部清理：去行尾空格、压缩连续空行」", en: "“Clean up these txt files: strip trailing spaces, collapse consecutive blank lines”" },
+              { zh: "「这批文件是 GBK 编码，全部转成 UTF-8」", en: "“These files are GBK-encoded — convert them all to UTF-8”" },
+            ],
+          },
+          {
+            label: { zh: "高级操作", en: "Advanced" },
+            items: [
+              { zh: "「这个 txt 每 1000 行切一个文件」", en: "“Split this txt into one file per 1,000 lines”" },
+              { zh: "<em>选中 Word 模板和 Excel 名单：</em>「按名单每人生成一份」<small>（模板里写 {{姓名}}、{{岗位}} 占位符）</small>", en: "<em>Select a Word template and an Excel roster:</em> “Generate one copy per person on the roster” <small>(use {{name}}, {{title}} placeholders in the template)</small>" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "PDF", en: "PDF" },
+        note: {
+          zh: "PDF 转 Word 默认只保留文字；如需保留排版/表格/图片，AI 会询问是否安装 LibreOffice（一次性，约 700MB）。",
+          en: "PDF to Word keeps text only by default; to preserve layout, tables, and images, the AI will ask to install LibreOffice (one-time, ~700MB).",
+        },
+        groups: [
+          {
+            label: { zh: "整体处理", en: "Whole files" },
+            items: [
+              { zh: "「这几个 PDF 合并成一个」", en: "“Merge these PDFs into one”" },
+              { zh: "「这批 PDF 无损压缩一下」", en: "“Losslessly compress these PDFs”" },
+              { zh: "「这几个 PDF 全部去掉密码和复制限制」<small>（告诉它密码）</small>", en: "“Remove passwords and copy restrictions from these PDFs” <small>(tell it the password)</small>" },
+              { zh: "「加密码 abc123」", en: "“Add password abc123”" },
+            ],
+          },
+          {
+            label: { zh: "页面操作", en: "Pages" },
+            items: [
+              { zh: "「每页拆成单独文件」", en: "“Split each page into a separate file”" },
+              { zh: "「抽第 2-5 页」", en: "“Extract pages 2–5”" },
+              { zh: "「页面顺序改成 3,1,2」", en: "“Reorder pages to 3, 1, 2”" },
+            ],
+          },
+          {
+            label: { zh: "格式转换", en: "Convert" },
+            items: [
+              { zh: "「这批 PDF 每个都转成 txt」", en: "“Convert each of these PDFs to txt”" },
+              { zh: "「转成图片/txt/Word」", en: "“Convert to images / txt / Word”" },
+            ],
+          },
+          {
+            label: { zh: "水印与盖章", en: "Watermark & stamp" },
+            items: [
+              { zh: "「这批 PDF 全部加上“机密”水印」", en: "“Add a ‘Confidential’ watermark to all these PDFs”" },
+              { zh: "<em>选中 PDF 和一张印章图：</em>「把章盖到最后一页右下角」", en: "<em>Select a PDF and a stamp image:</em> “Stamp it on the bottom-right of the last page”" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "Excel", en: "Excel" },
+        groups: [
+          {
+            label: { zh: "表与行", en: "Sheets & rows" },
+            items: [
+              { zh: "「转成 CSV」／「这批 CSV 转成 Excel」", en: "“Convert to CSV” / “Convert these CSVs to Excel”" },
+              { zh: "「每个工作表拆成独立文件」", en: "“Split each worksheet into its own file”" },
+              { zh: "「按第 2 列去重」", en: "“Deduplicate by column 2”" },
+              { zh: "<em>选中两个表：</em>「按 id 列对比差异」", en: "<em>Select two sheets:</em> “Compare differences by the id column”" },
+            ],
+          },
+          {
+            label: { zh: "列操作", en: "Columns" },
+            items: [
+              { zh: "「把第一列按 - 拆成姓名和电话两列」", en: "“Split the first column on ‘-’ into name and phone columns”" },
+              { zh: "「把 2、3 列合并成一列」", en: "“Merge columns 2 and 3 into one”" },
+            ],
+          },
+          {
+            label: { zh: "汇总", en: "Summaries" },
+            items: [
+              { zh: "「按部门把报销金额求和，出一张汇总表」", en: "“Sum reimbursements by department into a summary sheet”" },
+            ],
+          },
+          {
+            label: { zh: "高级操作", en: "Advanced" },
+            items: [
+              { zh: "「这个 CSV 太大了，看下多少行、表头长什么样」", en: "“This CSV is too big — check how many rows it has and what the header looks like”" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "视频处理", en: "Video" },
+        note: {
+          zh: "首次使用音视频功能时，AI 会询问是否下载 ffmpeg 组件（一次性，约 80MB）。",
+          en: "The first time you use audio or video features, the AI will ask to download the ffmpeg component (one-time, ~80MB).",
+        },
+        groups: [
+          {
+            label: { zh: "转换与压缩", en: "Convert & compress" },
+            items: [
+              { zh: "「这批 mov 全部转成 mp4」", en: "“Convert all these MOVs to MP4”" },
+              { zh: "「全部压成 1080p，体积减半左右，尽量视觉无损」", en: "“Compress all to 1080p, roughly half the size, visually lossless as possible”" },
+            ],
+          },
+          {
+            label: { zh: "提取与合成", en: "Extract & combine" },
+            items: [
+              { zh: "「这批视频的音轨全部提出来存成 mp3」", en: "“Extract the audio track from each of these videos as MP3”" },
+              { zh: "「每 10 秒截一帧存成图片」", en: "“Grab one frame every 10 seconds as images”" },
+              { zh: "「这三段视频按文件名顺序拼成一个」", en: "“Join these three videos into one, in filename order”" },
+            ],
+          },
+          {
+            label: { zh: "高级操作", en: "Advanced" },
+            items: [
+              { zh: "「这几个视频都截第 10 到 30 秒」", en: "“Trim each of these videos to seconds 10–30”" },
+              { zh: "「都把前 5 秒做成 GIF，宽 480」", en: "“Turn the first 5 seconds of each into a GIF, 480 wide”" },
+              { zh: "<em>选中视频和字幕：</em>「字幕烧进去」<small>（批量自动按同名配对）</small>", en: "<em>Select videos and subtitles:</em> “Burn the subtitles in” <small>(auto-pairs by matching filenames)</small>" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "音频处理", en: "Audio" },
+        groups: [
+          {
+            items: [
+              { zh: "「这批 wav 全部转 m4a」", en: "“Convert all these WAVs to M4A”" },
+              { zh: "「这两段音频接在一起」", en: "“Join these two audio clips together”" },
+              { zh: "「这批录音都剪掉前 5 秒」", en: "“Trim the first 5 seconds off all these recordings”" },
+            ],
+          },
+          {
+            label: { zh: "高级操作", en: "Advanced" },
+            items: [
+              { zh: "「全部降噪」<small>（人声/伴奏分离需另装 demucs，AI 会给指引）</small>", en: "“Denoise all” <small>(vocal/instrumental separation needs demucs; the AI will guide you)</small>" },
+              { zh: "「这段会议录音转成文字」<small>（离线转写，首次需允许语音识别授权）</small>", en: "“Transcribe this meeting recording” <small>(offline transcription; grant speech-recognition permission on first use)</small>" },
+              { zh: "「转成文字然后总结成会议纪要」", en: "“Transcribe it, then summarize into meeting minutes”" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "综合", en: "Mixed tasks" },
+        groups: [
+          {
+            label: { zh: "组合产出", en: "Combine & create" },
+            items: [
+              { zh: "<em>选中一堆图片和文档：</em>「用这些素材做一个 HTML 格式的 PPT」", en: "<em>Select a pile of images and documents:</em> “Turn these assets into an HTML slide deck”" },
+              { zh: "<em>选中几份报表和记录：</em>「汇总成一页周报，存成 report.md」", en: "<em>Select a few reports and records:</em> “Summarize into a one-page weekly report, save as report.md”" },
+              { zh: "<em>选中会议录音和白板照片：</em>「录音转成会议纪要，照片压缩后一起打包存档」", en: "<em>Select a meeting recording and whiteboard photos:</em> “Turn the recording into minutes, compress the photos, and archive everything together”" },
+            ],
+          },
+          {
+            label: { zh: "批量整理", en: "Organize & clean up" },
+            items: [
+              { zh: "<em>选中整个项目文件夹的文件：</em>「按类型归到子文件夹，导出一份清单 Excel」", en: "<em>Select everything in a project folder:</em> “Sort into subfolders by type and export an inventory Excel”" },
+              { zh: "「重命名成 vacation_001、vacation_002 这种格式，按拍摄时间排序」", en: "“Rename to vacation_001, vacation_002…, ordered by shooting time”" },
+              { zh: "「按文件类型归类到子文件夹里：图片、文档、视频各一个」", en: "“Sort into subfolders by type: one each for images, documents, and videos”" },
+              { zh: "「根据 MD5，把重复的文件删掉」", en: "“Delete duplicate files based on MD5”" },
+            ],
+          },
+        ],
+      },
+      {
+        title: { zh: "其他", en: "More" },
+        groups: [
+          {
+            items: [
+              { zh: "<em>写代码：</em>打开项目文件夹，用自然语言说需求即可——从零建项目、链接 GitHub、修改代码都可以", en: "<em>Coding:</em> open a project folder and state what you need in plain language — build a project from scratch, link GitHub, or modify code" },
+              { zh: "<em>压缩包：</em>解压、分卷压缩、修复损坏的 zip，选中后直接说", en: "<em>Archives:</em> unzip, split-volume compression, repair a broken zip — select and just say it" },
+              { zh: "<em>加密发送：</em>「把这几个文件加密打包，密码 abc123」", en: "<em>Encrypted sharing:</em> “Pack these files encrypted with password abc123”" },
+              { zh: "<em>二维码：</em>「把这个链接做成二维码」／<em>选中带码的截图：</em>「读出里面的二维码」", en: "<em>QR codes:</em> “Turn this link into a QR code” / <em>select a screenshot with a code:</em> “Read the QR code in it”" },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const LANG_KEY = "folderis-lang";
+    let lang = localStorage.getItem(LANG_KEY);
+    if (lang !== "zh" && lang !== "en") {
+      lang = (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    }
+
+    const content = document.querySelector("#content");
+    const langToggle = document.querySelector(".lang-toggle");
+
+    function render() {
+      const t = ui[lang];
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      document.title = t.metaTitle;
+      document.querySelector(".back").setAttribute("aria-label", t.home);
+      document.querySelector('[data-role="footer-line"]').textContent = t.footerLine;
+      langToggle.textContent = t.langToggle;
+      langToggle.setAttribute("aria-label", t.langToggleAria);
+
+      content.innerHTML = `
+        <section class="hero">
+          <div class="kicker">${t.kicker}</div>
+          <h1>${t.heroTitle}</h1>
+          <div class="steps">
+            ${steps
+              .map((step, i) => `<div class="step"><span class="num">${i + 1}</span><p>${step[lang]}</p></div>`)
+              .join("")}
+          </div>
+        </section>
+        ${sections
+          .map(
+            (section, i) => `
+              <section class="section">
+                <div class="section-head">
+                  <span class="index">${String(i + 1).padStart(2, "0")}</span>
+                  <h2>${section.title[lang]}</h2>
+                </div>
+                ${section.desc ? `<p class="section-desc">${section.desc[lang]}</p>` : ""}
+                ${section.note ? `<div class="note">${section.note[lang]}</div>` : ""}
+                ${section.groups
+                  .map(
+                    (group) => `
+                      ${group.label ? `<div class="group-label">${group.label[lang]}</div>` : ""}
+                      <div class="cmd-list">
+                        ${group.items.map((item) => `<div class="chip">${item[lang]}</div>`).join("")}
+                      </div>
+                    `,
+                  )
+                  .join("")}
+              </section>
+            `,
+          )
+          .join("")}
+      `;
+    }
+
+    langToggle.addEventListener("click", () => {
+      lang = lang === "zh" ? "en" : "zh";
+      localStorage.setItem(LANG_KEY, lang);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

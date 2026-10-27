@@ -28,9 +28,9 @@
 ## 我的产品
 
 > https://getfoca.ai/ - 一个随手拍生成产品图的网站
-> https://folderis.app/ - 文件即应用，内置60+办公skills
+> https://imvanessa.li/folderisapp/ - 文件即应用，内置60+办公skills
 > https://imvanessa.li/d33p-research/people - 基于自研AI research skill做的人物档案
-> https://todo.imvanessa.li/ - 一个只有今天和明天的todo工具
+> https://imvanessa.li/todayornottoday/ - 一个只有今天和明天的todo工具
 > https://imvanessa.li/slides - 一个便于编辑HTML演示文稿的skill
 > https://imvanessa.li/updowncard - 一个上下滑的记忆卡片网站
 > https://imvanessa.li/speak - 一个生成AI口语对练开场白的网站

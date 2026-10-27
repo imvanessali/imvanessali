@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mooda">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>皮肤制作指南 · Today or Not Today</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z' fill='%23f4c340'/><circle cx='24' cy='27' r='2.4' fill='%2352565e'/><circle cx='40' cy='27' r='2.4' fill='%2352565e'/><path d='M25 38 Q32 43 39 38' fill='none' stroke='%2352565e' stroke-width='2.6' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css?v=86">
+  <style>
+    .studio-wrap { max-width: 1020px; margin: 0 auto; padding: 0 24px 100px; }
+    .studio-intro { max-width: 720px; margin: 0 auto; padding: 64px 24px 40px; text-align: center; }
+    .studio-intro h1 {
+      font-family: "Gaegu", "Yuanti SC", "Noto Sans SC", "PingFang SC", ui-rounded, sans-serif;
+      font-size: 46px; color: #353941; margin-bottom: 14px;
+    }
+    .studio-intro p { font-size: 17px; color: var(--ink-light); line-height: 1.7; }
+
+    /* 区块标题 */
+    .sec-title {
+      font-family: "Gaegu", "Yuanti SC", "Noto Sans SC", cursive; font-size: 26px; font-weight: 700; color: var(--ink);
+      margin: 48px 0 18px; display: inline-block; padding: 0 8px;
+      background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 24' preserveAspectRatio='none'><path d='M1.6 7.5 C22 3.8 53 6.2 78 4.8 C89 4.2 96 5.6 98.6 7.2 C99.6 12 99 16.4 97.8 20 C71 22 37 20.6 16.5 20.2 C9.4 20 4 19 1.6 17.4 C0.6 14 0.8 10.4 1.6 7.5 Z' fill='%23f4c340' opacity='0.6'/></svg>");
+      background-repeat: no-repeat; background-position: 0 78%; background-size: 100% 48%;
+    }
+
+    /* MOODA 风格卡片 */
+    .spec-card {
+      background-color: var(--paper);
+      background-image: radial-gradient(circle, rgba(82,86,94,0.13) 1.1px, transparent 1.1px);
+      background-size: 17px 17px;
+      border: 1.5px solid var(--ink); border-radius: 14px;
+      box-shadow: 4px 4px 0 rgba(82,86,94,0.12);
+      padding: 22px 24px; margin-bottom: 22px;
+    }
+    .spec-card h3 {
+      font-family: "Gaegu", "Yuanti SC", "Noto Sans SC", cursive; font-size: 21px; color: var(--ink);
+      display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+    }
+    .spec-num {
+      flex: none; width: 26px; height: 26px; border-radius: 50%; background: #f4c340; color: #52565e;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid var(--ink);
+    }
+    .spec-card .where {
+      font-size: 14px; color: var(--ink); margin-bottom: 14px; line-height: 1.65;
+      background: var(--paper-2); border-left: 3px solid #f4c340;
+      border-radius: 0 8px 8px 0; padding: 9px 13px;
+    }
+    .spec-card .where b { font-weight: 700; }
+    .spec-card .where + .where { margin-top: -8px; }
+
+    /* 规格表 */
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .spec-table th, .spec-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--edge-soft); }
+    .spec-table th { color: var(--ink-faint); font-weight: 600; width: 30%; }
+    .spec-table td { color: var(--ink); }
+    .spec-table tr:last-child th, .spec-table tr:last-child td { border-bottom: none; }
+    .pill { display: inline-block; background: var(--blue-soft); color: var(--blue); border-radius: 6px; padding: 1px 8px; font-size: 12px; margin: 1px 2px; }
+
+    /* 配色色板 */
+    .swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+    .swatch { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-light); }
+    .swatch i { width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--ink); display: block; }
+
+    /* 表情梯度示意 */
+    .faces-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
+    .face-item { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-light); width: 84px; text-align: center; }
+    .face-item .ph {
+      width: 56px; height: 56px; border-radius: 14px; border: 1.5px dashed var(--edge);
+      display: flex; align-items: center; justify-content: center; background: var(--paper-2);
+      font-size: 32px; line-height: 1;
+    }
+    .face-item .ph svg { width: 46px; height: 46px; display: block; }
+
+    /* 主形象展示 */
+    .mascot-hero { display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; }
+    .mascot-main {
+      flex: none; width: 84px; height: 84px; border-radius: 18px;
+      border: 1.5px solid var(--ink); background: var(--paper-2);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+    .note { font-size: 13px; color: var(--ink-light); line-height: 1.7; }
+    .note code, .filelist code {
+      background: var(--paper-2); border: 1px solid var(--edge-soft); border-radius: 5px;
+      padding: 1px 6px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; color: var(--ink);
+    }
+    .filelist { list-style: none; line-height: 2; font-size: 14px; }
+    .filelist li::before { content: "📄 "; }
+  </style>
+</head>
+<body>
+  <nav class="landing-nav">
+    <a class="logo" href="index.html">
+      <svg width="24" height="24" viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><circle cx="24" cy="27" r="2.4" fill="#52565e"/><circle cx="40" cy="27" r="2.4" fill="#52565e"/><path d="M25 38 Q32 43 39 38" fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <span class="logo-text">Today or Not Today</span>
+    </a>
+    <div class="nav-actions">
+      <a class="nav-link" href="app.html">打开 App</a>
+    </div>
+  </nav>
+
+  <header class="studio-intro">
+    <h1>给插画师的皮肤指南</h1>
+    <p>提供素材和配色，制作你的专属主题。通过<strong>粉丝链接</strong>注册的用户，后续产生的<strong>收益将与创作者分成</strong>。</p>
+  </header>
+
+  <div class="studio-wrap">
+
+    <!-- 吉祥物 -->
+    <div class="sec-title">① 吉祥物（你的 IP 形象）</div>
+    <div class="spec-card">
+      <h3><span class="spec-num">1</span>主形象 + 状态</h3>
+      <p class="where">📍 <b>显示在</b>：左上角 Logo、浏览器标签小图标、以及两页顶部随完成进度变化的「状态图」。这是皮肤的灵魂，建议重点打磨。</p>
+      <div class="mascot-hero">
+        <div class="mascot-main">
+          <svg viewBox="0 0 64 64" width="64" height="64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 38 Q32 43 39 38"/></g></svg>
+        </div>
+        <p class="note" style="margin:0"><strong>主形象</strong>是你的 IP 基础长相（默认这只黄脸）。下面 5 种是随完成进度变化的<strong>状态图</strong>——可以是同一角色的不同样子，也可以是 <strong>5 个完全不同的形象</strong>，随你发挥。</p>
+      </div>
+      <table class="spec-table">
+        <tr><th>格式</th><td><span class="pill">PNG（透明底）</span><span class="pill">GIF（可动）</span></td></tr>
+        <tr><th>尺寸</th><td>正方形，建议 <strong>256 × 256 px</strong>（最小 128×128）</td></tr>
+        <tr><th>单张上限</th><td>≤ 500 KB（GIF 尽量更小）</td></tr>
+        <tr><th>数量</th><td><strong>方案 A：</strong>1 张通用形象（所有状态都用它）<br><strong>方案 B：</strong>5 张状态图，对应下面 5 种完成度</td></tr>
+      </table>
+      <div class="faces-row" style="margin-top:14px">
+        <div class="face-item"><div class="ph"><svg viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#d9d5cc"/><g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M26 39 L38 39"/></g></svg></div>空白的一天</div>
+        <div class="face-item"><div class="ph"><svg viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#57b6e4"/><g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 38 Q32 43 39 38"/></g></svg></div>还没开始</div>
+        <div class="face-item"><div class="ph"><svg viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g><g fill="#ef6f61" opacity="0.45"><ellipse cx="16.5" cy="34.5" rx="4.4" ry="2.5"/><ellipse cx="47.5" cy="34.5" rx="4.4" ry="2.5"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 38 Q32 43 39 38"/></g></svg></div>做了一点</div>
+        <div class="face-item"><div class="ph"><svg viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#7fd8a8"/><g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g><g fill="#ef6f61" opacity="0.45"><ellipse cx="16.5" cy="34.5" rx="4.4" ry="2.5"/><ellipse cx="47.5" cy="34.5" rx="4.4" ry="2.5"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 37 Q32 45 40 37"/></g></svg></div>快做完了</div>
+        <div class="face-item"><div class="ph"><svg viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#ff8a5c"/><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round"><path d="M20 27.5 Q24 23 28 27.5"/><path d="M36 27.5 Q40 23 44 27.5"/></g><g fill="#ef6f61" opacity="0.45"><ellipse cx="16.5" cy="34.5" rx="4.4" ry="2.5"/><ellipse cx="47.5" cy="34.5" rx="4.4" ry="2.5"/></g><g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 36 Q32 47 41 36"/></g></svg></div>全部完成</div>
+      </div>
+      <p class="note" style="margin-top:12px">文件命名：通用形象 <code>mascot.png</code>；若做 5 张状态图，命名 <code>mascot-1.png</code> … <code>mascot-5.png</code>（从「空白」到「全完成」）。</p>
+    </div>
+
+    <!-- 配色 + 风格 两栏 -->
+    <div class="two-col">
+      <div>
+        <div class="sec-title">② 配色</div>
+        <div class="spec-card">
+          <h3><span class="spec-num">2</span>颜色（填色值，不用传图）</h3>
+          <p class="where">📍 <b>显示在</b>：这 4 个色值决定整个 App 的基调，遍布每一页。给色值（如 <code>#f4c340</code>）即可。</p>
+          <div class="swatches">
+            <div class="swatch"><i style="background:#57b6e4"></i>强调色</div>
+            <div class="swatch"><i style="background:#52565e"></i>文字色</div>
+            <div class="swatch"><i style="background:#ffffff"></i>纸张色</div>
+            <div class="swatch"><i style="background:#f4c340"></i>荧光笔</div>
+          </div>
+          <p class="note" style="margin-top:10px">
+            · <strong>强调色</strong> → 勾选框、按钮、链接、甘特图任务条<br>
+            · <strong>文字色</strong> → 所有正文文字<br>
+            · <strong>纸张色</strong> → 页面与卡片背景<br>
+            · <strong>荧光笔</strong> → 页面标题（如「Today · 今天」）的高亮底色
+          </p>
+          <p class="where" style="margin-top:16px">📍 <b>心情色板（4 色）显示在</b>：每个任务的勾选框颜色、甘特图上循环任务的小方块——4 色循环分配，建议互相协调。</p>
+          <div class="swatches" style="margin-top:8px">
+            <div class="swatch"><i style="background:#7fd8a8"></i></div>
+            <div class="swatch"><i style="background:#9c8fd9"></i></div>
+            <div class="swatch"><i style="background:#f4c340"></i></div>
+            <div class="swatch"><i style="background:#ff8a5c"></i></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">③ 卡片风格</div>
+        <div class="spec-card">
+          <h3><span class="spec-num">3</span>风格选项（不用传图）</h3>
+          <p class="where">📍 <b>显示在</b>：圆角决定每个任务卡片、按钮的圆润程度；字体应用于全站所有文字。</p>
+          <table class="spec-table">
+            <tr><th>圆角</th><td>大 / 小</td></tr>
+            <tr><th>字体</th><td>圆润 / 黑体 / 手写</td></tr>
+          </table>
+          <p class="note" style="margin-top:12px">不确定就用默认值，整体会接近现在的「心情」主题。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 交付 -->
+    <div class="sec-title">④ 怎么交给我们</div>
+    <div class="spec-card">
+      <h3><span class="spec-num">4</span>打包提交</h3>
+      <p class="note" style="margin-bottom:8px">一个文件夹，里面放：</p>
+      <ul class="filelist">
+        <li><code>skin.json</code> — 皮肤名 + 上面的颜色 / 风格选项（给你模板填空）</li>
+        <li><code>mascot.png</code> 或 <code>mascot-1.png</code> … <code>mascot-5.png</code> — 吉祥物</li>
+      </ul>
+      <p class="note" style="margin-top:8px"><strong>总量限制：</strong>所有素材加起来 <strong>&lt; 4 MB</strong>（越小加载越快、用户体验越好）。</p>
+    </div>
+
+  </div>
+
+  <footer class="landing-footer">
+    Today or Not Today · 皮肤制作指南
+  </footer>
+</body>
+</html>

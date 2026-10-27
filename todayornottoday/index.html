@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mooda">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Today or Not Today – 有些任务啊，可以改天再做。</title>
+  <meta name="description" content="为ADHD设计的极简记事本。今天只需要关注今天的事，但今天没做完也没关系。支持搜索与甘特图。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z' fill='%23f4c340'/><circle cx='24' cy='27' r='2.4' fill='%2352565e'/><circle cx='40' cy='27' r='2.4' fill='%2352565e'/><path d='M25 38 Q32 43 39 38' fill='none' stroke='%2352565e' stroke-width='2.6' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css?v=86">
+</head>
+<body>
+  <nav class="landing-nav">
+    <a class="logo" href=".">
+      <svg width="24" height="24" viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><circle cx="24" cy="27" r="2.4" fill="#52565e"/><circle cx="40" cy="27" r="2.4" fill="#52565e"/><path d="M25 38 Q32 43 39 38" fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <span class="logo-text">Today or Not Today</span>
+    </a>
+    <div class="nav-actions" id="nav-actions">
+      <a class="nav-link" href="app.html">登录</a>
+      <a class="nav-cta" href="app.html">开始使用</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="eyebrow">为ADHD设计的极简记事本</span>
+    <h1>有些任务啊，<br>可以改天再做。</h1>
+    <p>今天只需要关注今天的事，但今天没做完也没关系。</p>
+    <div class="cta-row">
+      <a class="cta-main" id="hero-cta" href="app.html">开始记录 <svg class="cta-arrow" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M23.73,11.356l-5.154-5.087c-.581-.574-1.575-.167-1.575,.644v3.587H1.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15.5v3.587c0,.811,.994,1.218,1.575,.644l5.154-5.087c.36-.356,.36-.932,0-1.288Z"/></svg></a>
+    </div>
+  </header>
+
+  <div class="hero-carousel" id="hero-carousel">
+    <div class="carousel-track" id="carousel-track">
+    <div class="carousel-slide">
+    <div class="frame">
+      <svg viewBox="0 0 960 524" xmlns="http://www.w3.org/2000/svg" font-family="'Yuanti SC','Noto Sans SC','PingFang SC',ui-rounded,sans-serif">
+        <defs>
+          <pattern id="pdots" x="0" y="0" width="17" height="17" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1.1" fill="rgba(82,86,94,0.13)"/>
+          </pattern>
+        </defs>
+
+        <!-- Background -->
+        <rect width="960" height="524" fill="#ffffff"/>
+
+        <!-- Nav bar -->
+        <rect width="960" height="56" fill="#ffffff"/>
+        <line x1="0" y1="56" x2="960" y2="56" stroke="#52565e" stroke-width="1.5"/>
+        <svg x="18" y="16" width="24" height="24" viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><circle cx="24" cy="27" r="2.4" fill="#52565e"/><circle cx="40" cy="27" r="2.4" fill="#52565e"/><path d="M25 38 Q32 43 39 38" fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <text x="48" y="33" font-size="13" font-weight="700" fill="#52565e">Today or Not Today</text>
+<circle cx="920" cy="26" r="5.5" fill="none" stroke="#57b6e4" stroke-width="2"/>
+        <line x1="924" y1="30" x2="928" y2="34" stroke="#57b6e4" stroke-width="2" stroke-linecap="round"/>
+
+        <g transform="translate(0,34)">
+        <!-- ===== Left card (Today) ===== -->
+        <rect x="27" y="61" width="438" height="408" rx="12" fill="rgba(82,86,94,0.09)"/>
+        <rect x="22" y="56" width="438" height="408" rx="12" fill="white"/>
+        <rect x="22" y="56" width="438" height="408" rx="12" fill="url(#pdots)"/>
+        <rect x="22" y="56" width="438" height="408" rx="12" fill="none" stroke="#52565e" stroke-width="1.5"/>
+
+        <!-- Today blob: yellow, slight smile (1/5 done) -->
+        <svg x="38" y="75" width="48" height="48" viewBox="0 0 64 64">
+          <path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/>
+          <g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g>
+          <g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 38 Q32 43 39 38"/></g>
+        </svg>
+
+        <!-- Today label (highlighter) + date -->
+        <path d="M97 100 C135 96 188 98.5 232 97.2 C257 96.5 272 98 278 99.5 C279 103 278 107 276.5 110 C236 112 178 110 132 111 C114 111.3 103 110.2 97 109 C95.5 106 95.5 102.5 97 100 Z" fill="#f4c340" opacity="0.6"/>
+        <text x="98" y="106" font-size="30" font-weight="700" fill="#52565e" font-family="Gaegu,'Yuanti SC','Noto Sans SC',sans-serif">Today · 今天</text>
+        <g transform="translate(0,18)">
+        <line x1="36" y1="115" x2="444" y2="115" stroke="rgba(82,86,94,0.07)" stroke-width="1"/>
+
+        <!-- Today items -->
+        <circle cx="54" cy="137" r="10" fill="#7fd8a8"/>
+        <path d="M48 137l4 4 7-8" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <text x="74" y="142" font-size="13.5" fill="rgba(82,86,94,0.42)" text-decoration="line-through">晨跑 5 公里</text>
+
+        <circle cx="54" cy="179" r="10" fill="none" stroke="#9c8fd9" stroke-width="2"/>
+        <text x="74" y="184" font-size="13.5" fill="#52565e">写季度复盘报告</text>
+
+        <circle cx="54" cy="221" r="10" fill="none" stroke="#f4c340" stroke-width="2"/>
+        <text x="74" y="226" font-size="13.5" fill="#52565e">写第三章初稿</text>
+
+        <circle cx="54" cy="263" r="10" fill="none" stroke="#ff8a5c" stroke-width="2"/>
+        <text x="74" y="268" font-size="13.5" fill="#52565e">给妈妈打电话</text>
+        <rect x="406" y="256" width="34" height="16" rx="4" fill="rgba(87,182,228,0.18)"/>
+        <text x="423" y="268" font-size="10" fill="#57b6e4" text-anchor="middle">每周</text>
+
+        <circle cx="54" cy="305" r="10" fill="none" stroke="#57b6e4" stroke-width="2"/>
+        <text x="74" y="310" font-size="13.5" fill="#52565e">买菜</text>
+
+        <text x="40" y="355" font-size="13" fill="rgba(82,86,94,0.28)">＋  添加今天的任务</text>
+        </g>
+
+        <!-- ===== Right card (Not Today) ===== -->
+        <rect x="505" y="61" width="438" height="408" rx="12" fill="rgba(82,86,94,0.09)"/>
+        <rect x="500" y="56" width="438" height="408" rx="12" fill="white"/>
+        <rect x="500" y="56" width="438" height="408" rx="12" fill="url(#pdots)"/>
+        <rect x="500" y="56" width="438" height="408" rx="12" fill="none" stroke="#52565e" stroke-width="1.5"/>
+
+        <!-- Not Today blob: mint green, happy (different shape) -->
+        <svg x="516" y="75" width="48" height="48" viewBox="0 0 64 64">
+          <path d="M30 4 C45 3 62 14 61 32 C60 50 48 62 30 60 C14 59 3 47 4 30 C5 14 17 5 30 4 Z" fill="#7fd8a8"/>
+          <g fill="#52565e"><circle cx="24" cy="27" r="2.4"/><circle cx="40" cy="27" r="2.4"/></g>
+          <g fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 38 Q32 43 39 38"/></g>
+        </svg>
+
+        <!-- Not Today label -->
+        <path d="M575 100 C628 96 702 98.5 762 97.2 C792 96.5 813 98 822 99.5 C823 103 822 107 820.5 110 C766 112 690 110 632 111 C609 111.3 589 110.2 575 109 C573.5 106 573.5 102.5 575 100 Z" fill="#f4c340" opacity="0.6"/>
+        <text x="576" y="106" font-size="30" font-weight="700" fill="#52565e" font-family="Gaegu,'Yuanti SC','Noto Sans SC',sans-serif">Not Today · 改天</text>
+
+        <g transform="translate(0,18)">
+        <line x1="514" y1="115" x2="922" y2="115" stroke="rgba(82,86,94,0.07)" stroke-width="1"/>
+
+        <!-- Not Today items -->
+        <circle cx="532" cy="137" r="10" fill="none" stroke="#ff8a5c" stroke-width="2"/>
+        <text x="552" y="142" font-size="13.5" fill="#52565e">准备周一的演示</text>
+
+        <circle cx="532" cy="179" r="10" fill="none" stroke="#7fd8a8" stroke-width="2"/>
+        <text x="552" y="184" font-size="13.5" fill="#52565e">预订牙医复诊</text>
+
+        <circle cx="532" cy="221" r="10" fill="none" stroke="#9c8fd9" stroke-width="2"/>
+        <text x="552" y="226" font-size="13.5" fill="#52565e">整理工作笔记</text>
+        <rect x="882" y="214" width="34" height="16" rx="4" fill="rgba(87,182,228,0.18)"/>
+        <text x="899" y="226" font-size="10" fill="#57b6e4" text-anchor="middle">每天</text>
+
+        <circle cx="532" cy="263" r="10" fill="none" stroke="#f4c340" stroke-width="2"/>
+        <text x="552" y="268" font-size="13.5" fill="#52565e">回复邮件</text>
+
+        <text x="518" y="325" font-size="13" fill="rgba(82,86,94,0.28)">＋  添加改天的任务</text>
+        </g>
+        </g>
+      </svg>
+    </div>
+    </div>
+    <div class="carousel-slide">
+    <div class="frame">
+      <svg viewBox="0 0 960 524" xmlns="http://www.w3.org/2000/svg" font-family="'Yuanti SC','Noto Sans SC','PingFang SC',ui-rounded,sans-serif">
+        <!-- Background -->
+        <rect width="960" height="524" fill="#ffffff"/>
+
+        <!-- Nav bar -->
+        <rect width="960" height="56" fill="#ffffff"/>
+        <line x1="0" y1="56" x2="960" y2="56" stroke="#52565e" stroke-width="1.5"/>
+        <svg x="18" y="16" width="24" height="24" viewBox="0 0 64 64"><path d="M33 5 C46 4 59 15 58 31 C57 47 47 59 31 58 C16 57 5 47 6 30 C7 15 19 6 33 5 Z" fill="#f4c340"/><circle cx="24" cy="27" r="2.4" fill="#52565e"/><circle cx="40" cy="27" r="2.4" fill="#52565e"/><path d="M25 38 Q32 43 39 38" fill="none" stroke="#52565e" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <text x="48" y="33" font-size="13" font-weight="700" fill="#52565e">Today or Not Today</text>
+        <!-- view toggle (甘特图 active) -->
+        <rect x="398" y="13" width="172" height="30" rx="9" fill="none" stroke="rgba(82,86,94,0.25)"/>
+        <text x="440" y="33" font-size="13" fill="rgba(82,86,94,0.6)" text-anchor="middle">Todo</text>
+        <rect x="484" y="17" width="80" height="22" rx="7" fill="#57b6e4"/>
+        <text x="524" y="33" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">甘特图</text>
+        <!-- search icon -->
+        <circle cx="920" cy="26" r="5.5" fill="none" stroke="#57b6e4" stroke-width="2"/>
+        <line x1="924" y1="30" x2="928" y2="34" stroke="#57b6e4" stroke-width="2" stroke-linecap="round"/>
+
+        <g transform="translate(0,10)">
+        <!-- toolbar -->
+        <text x="22" y="86" font-size="18" font-weight="700" fill="#52565e" font-family="Gaegu,'Yuanti SC','Noto Sans SC',sans-serif">2026 年 6 月</text>
+        <rect x="150" y="72" width="22" height="20" rx="5" fill="none" stroke="rgba(82,86,94,0.2)"/>
+        <text x="161" y="86" font-size="12" fill="rgba(82,86,94,0.6)" text-anchor="middle">‹</text>
+        <rect x="176" y="72" width="40" height="20" rx="5" fill="none" stroke="rgba(82,86,94,0.2)"/>
+        <text x="196" y="86" font-size="11" fill="#52565e" text-anchor="middle">今天</text>
+        <rect x="220" y="72" width="22" height="20" rx="5" fill="none" stroke="rgba(82,86,94,0.2)"/>
+        <text x="231" y="86" font-size="12" fill="rgba(82,86,94,0.6)" text-anchor="middle">›</text>
+
+        <!-- ===== gantt grid ===== -->
+        <!-- shading: weekends + today -->
+        <rect x="442" y="110" width="108" height="380" fill="rgba(82,86,94,0.045)"/>
+        <rect x="820" y="110" width="108" height="380" fill="rgba(82,86,94,0.045)"/>
+        <rect x="550" y="110" width="54" height="380" fill="rgba(87,182,228,0.09)"/>
+
+        <!-- outer border + header bg -->
+        <rect x="22" y="110" width="906" height="32" fill="rgba(82,86,94,0.03)"/>
+        <rect x="22" y="110" width="906" height="380" rx="8" fill="none" stroke="rgba(82,86,94,0.18)" stroke-width="1.2"/>
+
+        <!-- column separators -->
+        <g stroke="rgba(82,86,94,0.08)" stroke-width="1">
+          <line x1="172" y1="110" x2="172" y2="490"/>
+          <line x1="226" y1="110" x2="226" y2="490"/>
+          <line x1="280" y1="110" x2="280" y2="490"/>
+          <line x1="334" y1="110" x2="334" y2="490"/>
+          <line x1="388" y1="110" x2="388" y2="490"/>
+          <line x1="442" y1="110" x2="442" y2="490"/>
+          <line x1="496" y1="110" x2="496" y2="490"/>
+          <line x1="550" y1="110" x2="550" y2="490"/>
+          <line x1="604" y1="110" x2="604" y2="490"/>
+          <line x1="658" y1="110" x2="658" y2="490"/>
+          <line x1="712" y1="110" x2="712" y2="490"/>
+          <line x1="766" y1="110" x2="766" y2="490"/>
+          <line x1="820" y1="110" x2="820" y2="490"/>
+          <line x1="874" y1="110" x2="874" y2="490"/>
+        </g>
+        <!-- row separators -->
+        <g stroke="rgba(82,86,94,0.08)" stroke-width="1">
+          <line x1="22" y1="142" x2="928" y2="142"/>
+          <line x1="22" y1="180" x2="928" y2="180"/>
+          <line x1="22" y1="218" x2="928" y2="218"/>
+          <line x1="22" y1="256" x2="928" y2="256"/>
+          <line x1="22" y1="294" x2="928" y2="294"/>
+          <line x1="22" y1="332" x2="928" y2="332"/>
+          <line x1="22" y1="370" x2="928" y2="370"/>
+          <line x1="22" y1="408" x2="928" y2="408"/>
+          <line x1="22" y1="446" x2="928" y2="446"/>
+        </g>
+
+        <!-- day headers (weekday char + day number) -->
+        <g text-anchor="middle" font-family="Gaegu,'Yuanti SC','Noto Sans SC',sans-serif">
+          <g font-size="10" fill="rgba(82,86,94,0.5)">
+            <text x="199" y="124">一</text><text x="253" y="124">二</text><text x="307" y="124">三</text><text x="361" y="124">四</text><text x="415" y="124">五</text><text x="469" y="124">六</text><text x="523" y="124">日</text><text x="577" y="124">一</text><text x="631" y="124">二</text><text x="685" y="124">三</text><text x="739" y="124">四</text><text x="793" y="124">五</text><text x="847" y="124">六</text><text x="901" y="124">日</text>
+          </g>
+          <g font-size="13" font-weight="700" fill="#52565e">
+            <text x="199" y="139">8</text><text x="253" y="139">9</text><text x="307" y="139">10</text><text x="361" y="139">11</text><text x="415" y="139">12</text><text x="469" y="139">13</text><text x="523" y="139">14</text><text x="577" y="139" fill="#57b6e4">15</text><text x="631" y="139">16</text><text x="685" y="139">17</text><text x="739" y="139">18</text><text x="793" y="139">19</text><text x="847" y="139">20</text><text x="901" y="139">21</text>
+          </g>
+        </g>
+
+        <!-- task labels -->
+        <g font-size="13" fill="#52565e">
+          <text x="32" y="166" fill="rgba(82,86,94,0.42)" text-decoration="line-through">晨跑 5 公里</text>
+          <text x="32" y="204">写季度复盘报告</text>
+          <text x="32" y="242">整理工作笔记</text>
+          <text x="32" y="280">写第三章初稿</text>
+          <text x="32" y="318">给妈妈打电话</text>
+          <text x="32" y="356">准备周一的演示</text>
+        </g>
+
+        <!-- task bars -->
+        <rect x="175" y="151" width="102" height="20" rx="4" fill="#7fd8a8" opacity="0.5"/>
+        <rect x="229" y="189" width="210" height="20" rx="4" fill="#9c8fd9" opacity="0.9"/>
+        <rect x="283" y="227" width="318" height="20" rx="4" fill="#57b6e4" opacity="0.9"/>
+        <rect x="391" y="265" width="372" height="20" rx="4" fill="#f4c340" opacity="0.9"/>
+        <rect x="499" y="303" width="48" height="20" rx="4" fill="#ff8a5c" opacity="0.9"/>
+        <rect x="553" y="341" width="102" height="20" rx="4" fill="#57b6e4" opacity="0.9"/>
+        </g>
+      </svg>
+    </div>
+    </div>
+    </div>
+    <button class="carousel-arrow prev" id="carousel-prev" type="button" aria-label="上一张">‹</button>
+    <button class="carousel-arrow next" id="carousel-next" type="button" aria-label="下一张">›</button>
+  </div>
+  <div class="carousel-dots" id="carousel-dots">
+    <button class="dot active" type="button" data-i="0" aria-label="Todo 笔记本"></button>
+    <button class="dot" type="button" data-i="1" aria-label="甘特图"></button>
+  </div>
+
+  <footer class="landing-footer">
+    Today, or not today, that is a question. — Vanessa Li
+  </footer>
+
+  <!-- 登录态感知：已登录则导航显示账号名 + 进入入口 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js?v=82"></script>
+  <script src="assets/auth.js?v=82"></script>
+  <script>
+    (async () => {
+      let session;
+      try { session = await FolioAuth.getSession(); } catch { return; }
+      if (!session) return;
+      const email = session.user.email || '已登录';
+      const initial = ((email || '').trim()[0] || '?').toUpperCase();
+      const actions = document.getElementById('nav-actions');
+      const ARROW = '<svg class="cta-arrow" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M23.73,11.356l-5.154-5.087c-.581-.574-1.575-.167-1.575,.644v3.587H1.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15.5v3.587c0,.811,.994,1.218,1.575,.644l5.154-5.087c.36-.356,.36-.932,0-1.288Z"/></svg>';
+      actions.innerHTML =
+        '<div class="user-menu" id="nav-user-menu">' +
+          '<button class="avatar" id="nav-avatar"></button>' +
+          '<div class="user-pop hidden" id="nav-pop">' +
+            '<div class="user-pop-email"></div>' +
+            '<button class="user-pop-logout" id="nav-logout">退出</button>' +
+          '</div>' +
+        '</div>' +
+        '<a class="nav-cta" href="app.html">开始记录 ' + ARROW + '</a>';
+      document.getElementById('nav-avatar').textContent = initial;
+      actions.querySelector('.user-pop-email').textContent = email;
+      const navAvatar = document.getElementById('nav-avatar');
+      const navPop = document.getElementById('nav-pop');
+      navAvatar.onclick = (e) => { e.stopPropagation(); navPop.classList.toggle('hidden'); };
+      document.getElementById('nav-logout').onclick = (e) => { e.preventDefault(); FolioAuth.signOut(); };
+      document.addEventListener('click', (e) => { if (!document.getElementById('nav-user-menu').contains(e.target)) navPop.classList.add('hidden'); });
+    })();
+  </script>
+  <script>
+    // hero 预览轮播：自动滑动 / 圆点指示（悬停或交互时暂停）
+    (() => {
+      const track = document.getElementById('carousel-track');
+      if (!track) return;
+      const wrap = document.getElementById('hero-carousel');
+      const slides = track.querySelectorAll('.carousel-slide');
+      const dots = document.querySelectorAll('#carousel-dots .dot');
+      const current = () => Math.round(track.scrollLeft / track.clientWidth);
+      let timer, snapTimer;
+      const goTo = (i) => {
+        track.style.scrollSnapType = 'none';        // 避免 proximity 把程序滚动吸附回起点
+        track.scrollLeft = track.clientWidth * i;   // 平滑过渡由 CSS scroll-behavior 提供
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(() => { track.style.scrollSnapType = ''; }, 600);
+      };
+      const start = () => { timer = setInterval(() => goTo((current() + 1) % slides.length), 4000); };
+      const stop = () => clearInterval(timer);
+      const restart = () => { stop(); start(); };
+      dots.forEach((d) => d.addEventListener('click', () => { goTo(+d.dataset.i); restart(); }));
+      document.getElementById('carousel-prev').addEventListener('click', () => { goTo((current() - 1 + slides.length) % slides.length); restart(); });
+      document.getElementById('carousel-next').addEventListener('click', () => { goTo((current() + 1) % slides.length); restart(); });
+      track.addEventListener('scroll', () => {
+        dots.forEach((d, k) => d.classList.toggle('active', k === current()));
+      }, { passive: true });
+      track.addEventListener('pointerdown', restart);
+      wrap.addEventListener('mouseenter', stop);
+      wrap.addEventListener('mouseleave', start);
+      start();
+    })();
+  </script>
+</body>
+</html>
